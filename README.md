@@ -12,14 +12,15 @@ Here you can find the materials of 3rd and 4th week of the "[Data Infrastructure
 
 **Goal**: learn how to run and schedule R jobs in the cloud.
 
-#### Welcome to AWS!
+### Welcome to AWS!
 
-1. Set up 2FA: https://console.aws.amazon.com/iam
-2. Secure your access keys:
+1. Use the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
+2. Set up 2FA: https://console.aws.amazon.com/iam
+3. Secure your access keys:
    
     > "When I woke up the next morning, I had four emails and a missed phone call from Amazon AWS - something about 140 servers running on my AWS account, mining Bitcoin" 
     -- [Hoffman said](https://www.theregister.co.uk/2015/01/06/dev_blunder_shows_github_crawling_with_keyslurping_bots)
 
     PS probably you do not really need to store any access keys, but you may rely on roles and KMS
 
-3. Let's use the `eu-west-1` Ireland region
+4. Let's use the `eu-west-1` Ireland region
