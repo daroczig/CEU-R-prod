@@ -3,22 +3,22 @@ Here you can find the materials for the 3rd and 4th week of the "[Data Infrastru
 Table of Contents
 =================
 
-      * [Schedule](#schedule)
-      * [Week 3: Using R in the Cloud](#week-3-using-r-in-the-cloud)
-         * [Welcome to AWS!](#welcome-to-aws)
-         * [Getting access to EC2 boxes](#getting-access-to-ec2-boxes)
-         * [Create and connect to an EC2 box](#create-and-connect-to-an-ec2-box)
-         * [Install RStudio Server on EC2](#install-rstudio-server-on-ec2)
-         * [Connect to the RStudio Server](#connect-to-the-rstudio-server)
-         * [Set up an easy to remember domain name](#set-up-an-easy-to-remember-domain-name)
-         * [Play with R for a bit](#play-with-r-for-a-bit)
-         * [Schedule R scripts](#schedule-r-scripts)
-         * [ScheduleR improvements](#scheduler-improvements)
-         * [Job Scheduler exercises](#job-scheduler-exercises)
-         * [First steps with interactive R-driven apps: Shiny](#first-steps-with-interactive-r-driven-apps-shiny)
-         * [Shiny exercises](#shiny-exercises)
-         * [Shiny Server](#shiny-server)
-         * [Further exercises](#further-exercises)
+* [Schedule](#schedule)
+* [Week 3: Using R in the Cloud](#week-3-using-r-in-the-cloud)
+    * [Welcome to AWS!](#welcome-to-aws)
+    * [Getting access to EC2 boxes](#getting-access-to-ec2-boxes)
+    * [Create and connect to an EC2 box](#create-and-connect-to-an-ec2-box)
+    * [Install RStudio Server on EC2](#install-rstudio-server-on-ec2)
+    * [Connect to the RStudio Server](#connect-to-the-rstudio-server)
+    * [Set up an easy to remember domain name](#set-up-an-easy-to-remember-domain-name)
+    * [Play with R for a bit](#play-with-r-for-a-bit)
+    * [Schedule R scripts](#schedule-r-scripts)
+    * [ScheduleR improvements](#scheduler-improvements)
+    * [Job Scheduler exercises](#job-scheduler-exercises)
+    * [First steps with interactive R-driven apps: Shiny](#first-steps-with-interactive-r-driven-apps-shiny)
+    * [Shiny exercises](#shiny-exercises)
+    * [Shiny Server](#shiny-server)
+    * [Further exercises](#further-exercises)
 
 ## Schedule
 
