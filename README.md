@@ -108,4 +108,55 @@ Here you can find the materials of 3rd and 4th week of the "[Data Infrastructure
 
 7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
 
+### Connect to the RStudio Server
+
+1. Confirm that the service is up and running and the port is open
+
+        ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen|grep LIST
+        tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
+        tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
+        tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
+
+2. Try to connect to the host from a browser
+3. Realize it's not working
+4. Open up port 8787 in the security group
+
+    ![](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2017/10/12/r-update-1.gif)
+
+5. Authentication: http://docs.rstudio.com/ide/server-pro/authenticating-users.html
+6. Create a new user:
+
+        sudo adduser rstudio-user
+
+7. Login & quick demo:
+
+        1+2
+        plot(mtcars)
+        install.packages('beanplot')
+        system('whoami')
+
+8. Reload webpage (F5)
+9. Demo the terminal:
+
+        $ sudo whoami
+        rstudio-user is not in the sudoers file.  This incident will be reported.
+
+8. Grant sudo access to the new user:
+
+        sudo apt install mc
+        sudo mc
+        sudo mcedit /etc/sudoers
+        sudo adduser rstudio-user admin
+        man adduser
+        man deluser
+
+Note 1: might need to relogin
+Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
+
+        rstudio-user ALL=(ALL) NOPASSWD:ALL
+
+Although also note (3) the related security risks.
+
+9. Custom login page: http://docs.rstudio.com/ide/server-pro/authenticating-users.html#customizing-the-sign-in-page
+10. Custom port: http://docs.rstudio.com/ide/server-pro/access-and-security.html#network-port-and-address
 
