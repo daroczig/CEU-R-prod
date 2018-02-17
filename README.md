@@ -53,3 +53,29 @@ Here you can find the materials of 3rd and 4th week of the "[Data Infrastructure
     
         chmod 0400 key.ppk
         
+### Create and connect to an EC2 box
+    
+1. Create a tiny EC2 instance
+
+    1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+    2. Click "Launch Instance"
+    3. Pick the `Ubuntu Server 16.04 LTS (HVM), SSD Volume Type` AMI
+    4. Pick `t2.micro` instance type
+    5. Click "Review and Launch"
+    6. Pick a unique name for the security group
+    7. Click "Launch"
+    
+2. Connect to the box
+    
+    1. Specify the hostname or IP address
+        
+    ![](https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/images/vm-putty-1.png)
+        
+    2. Specify the key for authentication
+        
+    ![](https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/images/vm-putty-2.png)
+        
+    3. Set the username to `ubuntu` on the Connection/Data tab
+    4. Save the Session profile
+    5. Click the "Open" button
+
