@@ -272,9 +272,9 @@ Although also note (3) the related security risks.
     2. Pick "Freestyle project"
     3. Click "OK"
     4. Add a new "Execute shell" build step
-    5. Enter the below command
+    5. Enter the below command to look up the most recent BTC price
 
-            R -e "library()
+            R -e "library(binancer);binance_coins_prices()[symbol == 'BTC', usd]"
 
     6. Run the job
 
@@ -286,22 +286,29 @@ Although also note (3) the related security risks.
 
 6. Rerun the job
 
-    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-success.jpg)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-success.png)
 
 ### ScheduleR improvements
 
-1. Create an R script and run with `Rscript` instead of `R`
+1. Create an R script and run with `Rscript` instead of `R` -- eg with the below content
+
+        library(binancer)
+        prices <- binance_coins_prices()
+        library(futile.logger)
+        flog.info('The current Bitcoin price is: %s', [symbol == 'BTC', usd])
+
 2. Learn about little R: https://github.com/eddelbuettel/littler
 3. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
 
-    1. Take a note on the SMTP settings:
+    1. Whitelist and confirm your e-mail address at https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-email:
+    2. Take a note on the SMTP settings:
 
         * Server: email-smtp.eu-west-1.amazonaws.com
         * Port: 587
         * TLS: Yes
 
-    2. Create SMTP credentials and note the username and password
-    3. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
+    3. Create SMTP credentials and note the username and password
+    4. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
 
         1. Set up the default FROM e-mail address: jenkins@ceudata.net
         2. Search for "Extended E-mail Notification" and configure
@@ -314,10 +321,10 @@ Although also note (3) the related security risks.
            * Check "Use SSL"
            * SMTP port: 587
 
-    4. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
-    5. Configure a job to alert if Bitcoin price is below $10K
+    5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
 
 ### Exercises
 
+* Configure your first job to alert if Bitcoin price is below $10K or higher than $12K
 * Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
 * Create an alert if BTC or ETH price changed more than 5% in the past 24 hours
