@@ -169,3 +169,77 @@ Although also note (3) the related security risks.
     - fill in the desired `Name` (subdomain)
     - paste the public IP address or hostname of your server in the `Value` field
     - click `Create`
+
+### Play with R for a bit
+
+1. Installing packages:
+
+        install.packages('ggplot2')
+
+2. Use binary packages instead via apt & Launchpad PPA:
+
+        sudo add-apt-repository ppa:marutter/rrutter
+        sudo add-apt-repository ppa:marutter/c2d4u
+        sudo apt-get update
+        sudo apt-get upgrade
+        sudo apt-get install r-cran-ggplot2
+
+3. Ready to use it from R after restarting the session:
+
+        library(ggplot2)
+        ggplot(mtcars, aes(hp)) + geom_histogram()
+
+4. Get some real-time data and visualize it:
+
+    1. Install devtools in the RStudio/Terminal:
+
+            sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite
+
+    2. Install an R package from GitHub to interact with a crypto exchange:
+
+            devtools::install_github('daroczig/binancer')
+
+    3. First steps with live data:
+
+            library(binancer)
+            klines <- get_klines('BTCUSDT', interval = '1m', limit = 60*3)
+            str(klines)
+            summary(klines$close)
+
+    4. Visualize the data
+
+            ggplot(klines, aes(close_time, close)) + geom_line()
+
+    5. Create a candle chart
+
+            library(scales)
+            ggplot(klines, aes(open_time)) +
+                geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+                geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+                theme_bw() + theme('legend.position' = 'none') + xlab('') +
+                ggtitle(paste('Last Updated:', Sys.time())) +
+                scale_y_continuous(labels = dollar) +
+                scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+
+    6. Compare prices of 4 currencies in the past 24 hours on 15 mins intervals:
+
+            library(data.table)
+            klines <- rbindlist(lapply(
+                c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
+                get_klines,
+                interval = '15m', limit = 4*24))
+            ggplot(klines, aes(open_time)) +
+                geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+                geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+                theme_bw() + theme('legend.position' = 'none') + xlab('') +
+                ggtitle(paste('Last Updated:', Sys.time())) +
+                scale_color_manual(values = c('#1a9850', '#d73027')) +
+                facet_wrap(~symbol, scales = 'free', nrow = 2)
+
+    7. Some further useful functions:
+
+        - `binance_ticker_all_prices()`
+        - `binance_coins_prices()`
+        - `binance_credentials` and `binance_balances`
+
+    8. Create an R script that reports and/or plots on some cryptocurrencies
