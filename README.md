@@ -388,7 +388,7 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 
 4. Visit Shiny Server on port 3838 from your browser
 
-    ![](https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/images/shiny-server.png)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/shiny-server.png)
 
 5. Always keep logs -- set this in the Shiny Server config & restart service:
 
