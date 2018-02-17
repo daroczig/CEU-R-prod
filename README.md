@@ -160,3 +160,12 @@ Although also note (3) the related security risks.
 9. Custom login page: http://docs.rstudio.com/ide/server-pro/authenticating-users.html#customizing-the-sign-in-page
 10. Custom port: http://docs.rstudio.com/ide/server-pro/access-and-security.html#network-port-and-address
 
+### Set up an easy to remember domain name
+
+1. Go to Route 53: https://console.aws.amazon.com/route53/home
+2. Go to Hosted Zones and click on ceudata.net
+3. Create a new Record, where
+
+    - fill in the desired `Name` (subdomain)
+    - paste the public IP address or hostname of your server in the `Value` field
+    - click `Create`
