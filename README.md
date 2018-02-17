@@ -243,3 +243,81 @@ Although also note (3) the related security risks.
         - `binance_credentials` and `binance_balances`
 
     8. Create an R script that reports and/or plots on some cryptocurrencies
+
+### Schedule R scripts
+
+![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
+
+1. Install Jenkins from the RStudio/Terminal: https://pkg.jenkins.io/debian-stable/
+
+        wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+        echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
+        sudo apt update
+        sudo apt install jenkins ## Install Java as well
+        sudo netstat -tapen | grep java
+
+2. Open up port 8080 in the related security group
+3. Access Jenkins from your browser and finish installation
+
+    1. Read the initial admin password from RStudio/Terminal via
+
+            sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+    2. Proceed with installing the suggested plugins
+    3. Create your first user (eg `ceu` + `data`)
+
+4. Create a new job:
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command
+
+        R -e "library()
+
+    6. Run the job
+
+    ![](images/jenkins-error.jpg)
+
+5. Install R packages system wide from RStudio/Terminal (more on this later):
+
+        sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer'))"
+
+6. Rerun the job
+
+    ![](images/jenkins-success.jpg)
+
+### ScheduleR improvements
+
+1. Create an R script and run with `Rscript` instead of `R`
+2. Learn about little R: https://github.com/eddelbuettel/littler
+3. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
+
+    1. Take a note on the SMTP settings:
+
+        * Server: email-smtp.eu-west-1.amazonaws.com
+        * Port: 587
+        * TLS: Yes
+
+    2. Create SMTP credentials and note the username and password
+    3. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
+
+        1. Set up the default FROM e-mail address: jenkins@ceudata.net
+        2. Search for "Extended E-mail Notification" and configure
+
+           * SMTP Server
+           * Click "Advanced"
+           * Check "Use SMTP Authentication"
+           * Enter User Name from the above steps from SNS
+           * Enter Password from the above steps from SNS
+           * Check "Use SSL"
+           * SMTP port: 587
+
+    4. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
+    5. Configure a job to alert if Bitcoin price is below $10K
+
+### Exercises
+
+* Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
+* Create an alert if BTC or ETH price changed more than 5% in the past 24 hours
