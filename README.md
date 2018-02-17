@@ -347,3 +347,31 @@ Although also note (3) the related security risks.
 4. Make the plot interactive eg with http://jkunst.com/highcharter
 
 See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
+
+### Shiny Server
+
+1. Install the `highcharter` package as a system user:
+
+        sudo apt-get install r-cran-dplyr r-cran-quantmod r-cran-xml r-cran-tidyr r-cran-igraph r-cran-lubridate r-cran-psych r-cran-broom r-cran-yaml r-cran-htmlwidgets
+        sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('highcharter', repos='https://cran.rstudio.com/'))"
+
+2. Install Shiny Server:
+
+        sudo R -e "install.packages('shiny', repos='https://cran.rstudio.com/')"
+        wget https://download3.rstudio.org/ubuntu-12.04/x86_64/shiny-server-1.5.6.875-amd64.deb
+        sudo gdebi shiny-server-1.5.6.875-amd64.deb
+
+3. Edit `site_dir` in `shiny-server.conf`:
+
+        sudo mcedit /etc/shiny-server/shiny-server.conf
+        sudo systemctl restart shiny-server
+
+4. Visit Shiny Server on port 3838 from your browser
+5. Always keep logs -- set this in the Shiny Server config & restart service:
+
+        preserve_logs true;
+
+5. Debug logs
+
+        ls -la /var/log/shiny-server
+
