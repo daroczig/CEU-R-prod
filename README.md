@@ -60,7 +60,7 @@ Here you can find the materials of 3rd and 4th week of the "[Data Infrastructure
     1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
     2. Click "Launch Instance"
     3. Pick the `Ubuntu Server 16.04 LTS (HVM), SSD Volume Type` AMI
-    4. Pick `t2.micro` instance type
+    4. Pick `t2.micro` instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
     5. Click "Review and Launch"
     6. Pick a unique name for the security group
     7. Click "Launch"
@@ -117,7 +117,7 @@ Here you can find the materials of 3rd and 4th week of the "[Data Infrastructure
         tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
         tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
 
-2. Try to connect to the host from a browser
+2. Try to connect to the host from a browser on port 8787, eg http://foobar.eu-west-1.compute.amazonaws.com:8787
 3. Realize it's not working
 4. Open up port 8787 in the security group
 
@@ -163,7 +163,7 @@ Although also note (3) the related security risks.
 ### Set up an easy to remember domain name
 
 1. Go to Route 53: https://console.aws.amazon.com/route53/home
-2. Go to Hosted Zones and click on ceudata.net
+2. Go to Hosted Zones and click on `ceudata.net`
 3. Create a new Record, where
 
     - fill in the desired `Name` (subdomain)
@@ -195,14 +195,14 @@ Although also note (3) the related security risks.
 
             sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite
 
-    2. Install an R package from GitHub to interact with a crypto exchange:
+    2. Install an R package from GitHub to interact with crypto exchanges:
 
             devtools::install_github('daroczig/binancer')
 
     3. First steps with live data:
 
             library(binancer)
-            klines <- get_klines('BTCUSDT', interval = '1m', limit = 60*3)
+            klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
             str(klines)
             summary(klines$close)
 
@@ -226,7 +226,7 @@ Although also note (3) the related security risks.
             library(data.table)
             klines <- rbindlist(lapply(
                 c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
-                get_klines,
+                binance_klines,
                 interval = '15m', limit = 4*24))
             ggplot(klines, aes(open_time)) +
                 geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
@@ -274,11 +274,11 @@ Although also note (3) the related security risks.
     4. Add a new "Execute shell" build step
     5. Enter the below command
 
-        R -e "library()
+            R -e "library()
 
     6. Run the job
 
-    ![](images/jenkins-error.jpg)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-errors.png)
 
 5. Install R packages system wide from RStudio/Terminal (more on this later):
 
@@ -286,7 +286,7 @@ Although also note (3) the related security risks.
 
 6. Rerun the job
 
-    ![](images/jenkins-success.jpg)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-success.jpg)
 
 ### ScheduleR improvements
 
