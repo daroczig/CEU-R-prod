@@ -6,7 +6,7 @@ shinyServer(function(input, output, session) {
 
         ## get real-time price data
         library(binancer)
-        eth <- binance_klines('ETHUSDT', interval = '1d')
+        eth <- binance_klines(paste0(input$symbol, 'USDT'), interval = '1d')
 
         ## convert to xts object
         library(xts)
