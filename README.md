@@ -323,7 +323,7 @@ Although also note (3) the related security risks.
 
     5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
 
-### Job Scheduler Exercises
+### Job Scheduler exercises
 
 * Configure your first job to alert if Bitcoin price is below $10K or higher than $12K
 * Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
@@ -339,7 +339,7 @@ Although also note (3) the related security risks.
 6. Disable the popup blocker in the right corner of the navigation bar
 7. Retry running the app and enjoy :)
 
-### Shiny Exercises
+### Shiny exercises
 
 1. Create a minimal dashboard showing the ETH prices in the past 24 hours
 2. Add a dropdown input field to the sidebar to let users change the interval of the plot (eg 1 min, 15 mins, 1 hour etc) -- read the `binance_klines` docs
@@ -375,3 +375,7 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 
         ls -la /var/log/shiny-server
 
+### Further exercises
+
+* Look at the `forecast` package and make predictions on future Bitcoin prices -- visualize on a dashboard
+* Look at the `knitr` or `pander` packages and schedule an HTML e-mail report including an image on the price changes -- refresh what we have ~learned~briefly covered in the DA1 class: https://github.com/daroczig/CEU-R-lab#week-6-100-min-introduction-to-r-markdown-and-shiny
