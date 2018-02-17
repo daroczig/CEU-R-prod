@@ -6,8 +6,9 @@ fluidPage(
     sidebarLayout(
         sidebarPanel(
             selectInput('symbol', 'Symbol', c('ETH', 'BTC')),
-            selectInput('interval', 'Interval', binancer:::BINANCE$INTERVALS)
+            selectInput('interval', 'Interval', binancer:::BINANCE$INTERVALS),
+            width = 2
         ),
-        mainPanel(highchartOutput('plot'))
+        mainPanel(highchartOutput('plot'), width = 10)
     )
 )
