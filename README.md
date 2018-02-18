@@ -19,6 +19,7 @@ Table of Contents
     * [Shiny exercises](#shiny-exercises)
     * [Shiny Server](#shiny-server)
     * [Further exercises](#further-exercises)
+    * [If in doubt](#if-in-doubt)
 
 ## Schedule
 
@@ -412,4 +413,4 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 
 Kill your current box and start a new one using the `data-infra-in-prod-R-image` AMI that already bundles all above steps:
 
-![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-errors.png)
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/custom-ami.png)
