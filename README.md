@@ -30,7 +30,7 @@ Table of Contents
 
 ## Week 3: Using R in the Cloud
 
-**Goal**: learn how to run and schedule R jobs in the cloud.
+**Goal**: learn how to run and schedule R jobs and apps in the cloud.
 
 ### Welcome to AWS!
 
@@ -77,6 +77,7 @@ Table of Contents
 
 1. Create a tiny EC2 instance
 
+    0. Optional: create an Elastic IP for your box
     1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
     2. Click "Launch Instance"
     3. Pick the `Ubuntu Server 16.04 LTS (HVM), SSD Volume Type` AMI
@@ -146,7 +147,7 @@ Table of Contents
 5. Authentication: http://docs.rstudio.com/ide/server-pro/authenticating-users.html
 6. Create a new user:
 
-        sudo adduser rstudio-user
+        sudo adduser ceu
 
 7. Login & quick demo:
 
@@ -159,21 +160,21 @@ Table of Contents
 9. Demo the terminal:
 
         $ sudo whoami
-        rstudio-user is not in the sudoers file.  This incident will be reported.
+        ceu is not in the sudoers file.  This incident will be reported.
 
 8. Grant sudo access to the new user:
 
-        sudo apt install mc
+        sudo apt install -y mc
         sudo mc
         sudo mcedit /etc/sudoers
-        sudo adduser rstudio-user admin
+        sudo adduser ceu admin
         man adduser
         man deluser
 
 Note 1: might need to relogin
 Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
 
-        rstudio-user ALL=(ALL) NOPASSWD:ALL
+        ceu ALL=(ALL) NOPASSWD:ALL
 
 Although also note (3) the related security risks.
 
@@ -194,7 +195,8 @@ Although also note (3) the related security risks.
 
 1. Installing packages:
 
-        install.packages('ggplot2')
+        ## don't do this at this point!
+        ## install.packages('ggplot2')
 
 2. Use binary packages instead via apt & Launchpad PPA:
 
@@ -213,7 +215,7 @@ Although also note (3) the related security risks.
 
     1. Install devtools in the RStudio/Terminal:
 
-            sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite
+            sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-snakecase
 
     2. Install an R package from GitHub to interact with crypto exchanges:
 
@@ -273,7 +275,7 @@ Although also note (3) the related security risks.
         wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
         echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
         sudo apt update
-        sudo apt install jenkins ## Install Java as well
+        sudo apt install jenkins ## installs Java as well
         sudo netstat -tapen | grep java
 
 2. Open up port 8080 in the related security group
@@ -284,7 +286,7 @@ Although also note (3) the related security risks.
             sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
     2. Proceed with installing the suggested plugins
-    3. Create your first user (eg `ceu` + `data`)
+    3. Create your first user (eg `ceu`)
 
 4. Create a new job:
 
@@ -351,6 +353,10 @@ Although also note (3) the related security risks.
 
 ### First steps with interactive R-driven apps: Shiny
 
+0. Install Shiny
+
+        sudo apt-get install r-cran-shiny r-cran-rmarkdown
+
 1. Refresh what we have ~learned~briefly covered in the DA1 class: https://github.com/daroczig/CEU-R-lab#week-6-100-min-introduction-to-r-markdown-and-shiny
 2. Create a new "Shiny Web Application" file
 3. Pick a name for the App and the "Single File" option
@@ -377,7 +383,6 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 
 2. Install Shiny Server:
 
-        sudo R -e "install.packages('shiny', repos='https://cran.rstudio.com/')"
         wget https://download3.rstudio.org/ubuntu-12.04/x86_64/shiny-server-1.5.6.875-amd64.deb
         sudo gdebi shiny-server-1.5.6.875-amd64.deb
 
@@ -402,3 +407,9 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 
 * Look at the `forecast` package and make predictions on future Bitcoin prices -- visualize on a dashboard
 * Look at the `knitr` or `pander` packages and schedule an HTML e-mail report including an image on the price changes -- refresh what we have ~learned~briefly covered in the DA1 class: https://github.com/daroczig/CEU-R-lab#week-6-100-min-introduction-to-r-markdown-and-shiny
+
+### If in doubt
+
+Kill your current box and start a new one using the `data-infra-in-prod-R-image` AMI that already bundles all above steps:
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-errors.png)
