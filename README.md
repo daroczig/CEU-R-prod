@@ -492,3 +492,20 @@ Check users:
 readLines('/etc/passwd')
 ```
 
+Configure Jenkins to recognize these system users:
+
+1. Go to Manage Jenkins
+2. Go to Configure Global Security
+3. Enable "Unix user/group database" in the Security Realm
+4. Add `jenkins` to the `shadow` group so that it can read the pass hashes
+
+```
+sudo adduser jenkins shadow
+```
+
+5. Restart Jenkins
+
+```
+sudo systemctl jenkins restart
+```
+
