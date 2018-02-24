@@ -869,11 +869,14 @@ sudo docker run --rm -ti ceudata /app.properties
     ggslackr(plot = p, channels = '#bots', width = 12)
     ```
 
-#### Notes on creating new jobs
+#### Exercise: Create a Jenkins job
 
-* Use your username as a prefix for all newly created jobs so that we can easily identify your jobs
+* Pick a coin from `binance_coins_prices()`
+* Write an R script in RStudio looking up the most recent price or prices, do some analysis or simple reporting on it
+* Create a Jenkins job to run it every minute -- using your username as a prefix for all newly created jobs so that we can easily identify your jobs
 * Let's create a view for every user
-* All jobs are running as the `jenkins` user
+* Note that all jobs are running as the `jenkins` user
+* If you get stuck, look up notes from last week
 
 #### More infra requirements
 
