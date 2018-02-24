@@ -442,11 +442,16 @@ Already installed software:
 
 Configured users: `ceu`
 
+**Notes**: the `sudo` commands are to be run on only one computer as those updates will take effect globally, so
+
+- run all steps if you are configuring the server
+- run only the steps in R / you were asked to run if you are a regular user
+
 #### Create a user for every member of the team
 
 We'll export the list of IAM users from AWS and create a system user for everyone.
 
-1. Attach a newly created IAM EC2 Role to the EC2 box and assign 'Read-only IAM access':
+1. Attach a newly created IAM EC2 Role (let's call it `ceudataserver`) to the EC2 box and assign 'Read-only IAM access':
 
     ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
 
@@ -501,7 +506,32 @@ readLines('/etc/passwd')
 
 #### Storing credentials and other secrets in a secure way in the cloud
 
-Using Amazon's KMS: 
+Using Amazon's KMS: https://aws.amazon.com/kms
+
+1. Go to IAM's Encryption Keys: https://console.aws.amazon.com/iam/home?region=eu-west-1#/encryptionKeys/us-east-1
+2. Create a new key: `ceudata`
+3. Optionally allow user access to the key
+4. Allow the `ceudataserver` IAM role to use the key
+5. Install `rJava`:
+
+    ```
+    sudo apt install r-cran-rjava
+    ```
+
+6. Install the `AWR.KMS` package globally:
+
+    ```
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('AWR.KMS', repos='https://cran.rstudio.com/'))"
+    ```
+
+7. First steps with securing sensitive information
+
+   ```r
+   library(AWR.KMS)
+   secret <- kms_encrypt('foobar', key = 'alias/ceudata')
+   secret
+   kms_decrypt(secret)
+   ```
 
 
 
