@@ -414,3 +414,48 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 Kill your current box and start a new one using the `data-infra-in-prod-R-image` AMI that already bundles all above steps:
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/custom-ami.png)
+
+## Week 4: Use Cases on Using R in the Cloud
+
+**Reminder**: what is
+- RStudio Server
+- Shiny Server
+- Jenkins
+
+### Stream processing with R
+
+TODO add slides
+
+#### Creating a central server
+
+Use our custom Amazon AMI: `data-infra-in-prod-R-image`
+
+Already installed software:
+
+- RStudio Server
+- Shiny Server
+- Jenkins
+
+#### Create a user for every member of the team
+
+Attach a newly created IAM EC2 Role to the EC2 box and assign 'Read-only IAM access':
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+
+Install AWS CLI tool:
+
+```
+sudo apt install awscli
+```
+
+List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+
+
+```
+aws iam list-users
+```
+
