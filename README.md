@@ -734,14 +734,66 @@ Run the app:
 
 1. Reset counters
 
-```r
-TODO
-```
+    ```r
+    library(rredis)
+    redisConnect()
+    keys <- redisKeys('country*')
+    redisDelete(keys)
+    ```
 
-2. Run the below Shiny app
+2. Install the `treemap` package
+
+    ```
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('treemap', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Run the below Shiny app
 
 ```r
-TODO
+## packages for plotting
+library(treemap)
+library(highcharter)
+
+## connect to Redis
+library(rredis)
+redisConnect()
+
+library(shiny)
+library(data.table)
+ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+server <- shinyServer(function(input, output, session) {
+
+    countries <- reactive({
+    
+        ## auto-update every 2 seconds
+        reactiveTimer(2000)()
+        
+        ## get frequencies
+        countries <- redisMGet(redisKeys('countrycode:*'))
+        countries <- data.table(
+          country = sub('^countrycode:', '', names(countries)),
+          N = as.numeric(countries))
+
+        ## color top 3
+        countries[, color := 1]
+        countries[country %in% countries[order(-N)][1:3, country],
+            color := 2]
+        
+        ## return
+        countries
+    })
+
+    output$treemap <- renderHighchart({
+        tm <- treemap(countries(), index = c('country'),
+                      vSize = 'N', vColor = 'color',
+                      type = 'value', draw = FALSE)
+        N <- sum(countries()$N)
+        hc_title(hctreemap(tm, animation = FALSE),
+                 text = sprintf('Transactions (N=%s)', N))
+    })
+
+})
+shinyApp(ui = ui, server = server, options = list(port = 8080))
 ```
 
 #### Create local Docker image
