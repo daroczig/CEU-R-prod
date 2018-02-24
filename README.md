@@ -589,7 +589,7 @@ Using Amazon's KMS: https://aws.amazon.com/kms
 
 #### Read some data from the Kinesis stream
 
-1. Allow Kinesis read-only access to the IAM role
+1. Allow Kinesis read-only access to the `ceudataserver` IAM role
 
 2. Install the R client
 
@@ -601,7 +601,7 @@ Using Amazon's KMS: https://aws.amazon.com/kms
 
    ```r
    library(AWR.Kinesis)
-   records <- kinesis_get_records('gergely-prep', 'eu-west-1')
+   records <- kinesis_get_records('ceudata', 'eu-west-1')
 
    library(jsonlite)
    records <- stream_in(textConnection(records))
@@ -620,7 +620,7 @@ Using Amazon's KMS: https://aws.amazon.com/kms
 1. Get sample raw data as per above
 
    ```r
-   records <- kinesis_get_records('gergely-prep', 'eu-west-1')
+   records <- kinesis_get_records('ceudata', 'eu-west-1')
    ```
 
 2. Function to parse and process it
@@ -659,6 +659,76 @@ Using Amazon's KMS: https://aws.amazon.com/kms
     library(ggplot2)
     ggplot(countries, aes(country, N)) + geom_bar(stat = 'identity')
     ```
+
+#### Create consumer processing the records from the stream
+
+1. Create a new folder for the Kinesis consumer files: `streamer`
+
+2. Create an `app.properties` file within that subfolder
+
+```
+executableName = ./app.R
+regionName = eu-west-1
+streamName = ceudata
+applicationName = demo_app
+AWSCredentialsProvider = DefaultAWSCredentialsProviderChain
+```
+
+3. Create the `app.R` file:
+
+```r
+#!/usr/bin/Rscript
+library(futile.logger)
+library(AWR.Kinesis)
+library(jsonlite)
+
+kinesis_consumer(
+
+    initialize = function() {
+        flog.info('Hello')
+        library(rredis)
+        redisConnect(nodelay = FALSE)
+        flog.info('Connected to Redis')
+    },
+
+    processRecords = function(records) {
+        flog.info(paste('Received', nrow(records), 'records from Kinesis'))
+        for (record in records$data) {
+            country <- fromJSON(record)$country
+            flog.debug(paste('Found 1 transaction going to', country))
+            redisIncr(sprintf('countrycode:%s', country))
+        }
+    },
+
+    updater = list(
+        list(1/6, function() {
+            flog.info('Checking overall counters')
+            countries <- redisMGet(redisKeys('countrycode:*'))
+            flog.info(paste(sum(as.numeric(countries)), 'records processed so far'))
+    })),
+
+    shutdown = function()
+        flog.info('Bye'),
+
+    checkpointing = 1,
+    logfile = 'app.log')
+```
+
+4. Allow writing checkpointing data to DynamoDB and CloudWatch in IAM
+
+5. Convert the above R script into an executable
+
+```
+chmod +x app.R
+```
+
+Run the app:
+
+```
+/usr/bin/java -cp /usr/local/lib/R/site-library/AWR/java/*:/usr/local/lib/R/site-library/AWR.Kinesis/java/*:./ \
+    com.amazonaws.services.kinesis.multilang.MultiLangDaemon \
+    ./app.properties
+```
 
 #### Create local Docker image
 
