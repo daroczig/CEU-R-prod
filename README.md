@@ -533,12 +533,46 @@ Using Amazon's KMS: https://aws.amazon.com/kms
    kms_decrypt(secret)
    ```
 
+#### Recap on redis
 
+1. Install server
 
-TODO create central R server with users from IAM set passwd to ceudata and permission to push to ECR (enough to demo)
+   ```
+   sudo apt install redis-server
+   netstat -tapen|grep LIST
+   ```
 
-TODO AWR.KMS example
-TODO deploy app with Shiny (incl docker)
+2. Install client
+
+    ```
+    sudo apt install r-cran-rredis
+    ```
+
+2. Interact from R
+
+    ```r
+    library(rredis)
+    redisConnect()
+    redisSet('foo', 'bar')
+    redisGet('foo')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+    redisMGet(c('counter', 'counter2'))
+    ````
+
+#### Create local Docker image
+
+TODO
+
+### ECR & ECS
+
+1. IAM role update
+2. docker push
+3. set up services etc as per slides
 
 ### Scheduling Jenkins jobs
 
