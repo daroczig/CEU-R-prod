@@ -563,7 +563,12 @@ Using Amazon's KMS: https://aws.amazon.com/kms
     redisDecr('counter2')
     redisMGet(c('counter', 'counter2'))
     ````
-    
+
+#### Set up a stream
+
+1. Go to AWS Console: https://eu-west-1.console.aws.amazon.com/kinesis/home?region=eu-west-1#/streams/list
+2. Start writing data to the stream: http://ceu.datapao.com
+
 #### Read some data from the Kinesis stream
 
 1. Allow Kinesis read-only access to the IAM role
@@ -636,12 +641,6 @@ Using Amazon's KMS: https://aws.amazon.com/kms
     library(ggplot2)
     ggplot(countries, aes(country, N)) + geom_bar(stat = 'identity')
     ```
-
-#### Set up a stream
-
-1. Go to AWS Console: https://eu-west-1.console.aws.amazon.com/kinesis/home?region=eu-west-1#/streams/list
-2. Start writing data to the stream: http://ceu.datapao.com
-
 
 #### Create local Docker image
 
