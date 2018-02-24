@@ -417,6 +417,8 @@ Kill your current box and start a new one using the `data-infra-in-prod-R-image`
 
 ## Week 4: Use Cases on Using R in the Cloud
 
+**Quiz**: no quiz today -- but please consider spending the related time later to fill in more details in the QA questionnaire on this class TODO
+
 **Reminder**: what is
 - RStudio Server
 - Shiny Server
@@ -428,7 +430,7 @@ Background: [slides](https://raw.githubusercontent.com/daroczig/CEU-R-prod/maste
 
 #### Create a central RStudio server
 
-We will use one decent sized node today instead of many tiny instances: `t2.xlarge` with 4 vCPI and 16 gigs of RAM
+We will use one decent sized node today instead of many tiny instances: `t2.xlarge` with 4 vCPU and 16 gigs of RAM
 
 Use our custom Amazon AMI: `data-infra-in-prod-R-image`
 
@@ -497,7 +499,20 @@ Check users:
 readLines('/etc/passwd')
 ```
 
-#### Configure Jenkins to recognize these system users
+#### Storing credentials and other secrets in a secure way in the cloud
+
+Using Amazon's KMS: 
+
+
+
+TODO create central R server with users from IAM set passwd to ceudata and permission to push to ECR (enough to demo)
+
+TODO AWR.KMS example
+TODO deploy app with Shiny (incl docker)
+
+### Scheduling Jenkins jobs
+
+#### Configure Jenkins to recognize the newly created Linux system users
 
 1. Go to Manage Jenkins
 2. Go to Configure Global Security
@@ -514,18 +529,25 @@ readLines('/etc/passwd')
    sudo systemctl jenkins restart
    ```
 
+#### Notes on creating new jobs
 
-TODO create central R server with users from IAM set passwd to ceudata and permission to push to ECR (enough to demo)
+* Use your username as a prefix for all newly created jobs so that we can easily identify your jobs
+* Let's create a view for every user
+* All jobs are running as the `jenkins` user
 
-TODO AWR.KMS example
-TODO deploy app with Shiny (incl docker)
+#### More infra requirements
 
-## Stream processing with R
+* Install Docker
+* Enable Docker usage for `jenkins`
 
-### Scheduling Jenkins jobs
+TODO Example Dockerfile
 
-TODO central Jenkins server that we leave on running -- use username prefix
-TODO slack bot 
+TODO docker build
+
+TODO docker run from jenkins using an R package not installed
+
+TODO create a Slack bot
+
 TODO e-mail noti config using mailgun or something
 
 ### Scaling Shiny with Shinyproxy.io and Docker images
