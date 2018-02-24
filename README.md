@@ -435,7 +435,7 @@ Kill your current box and start a new one using the `data-infra-in-prod-R-image`
 
 ## Week 4: Use Cases on Using R in the Cloud
 
-**Quiz**: no quiz today -- but please consider spending the related time later to fill in more details in the QA questionnaire on this class TODO
+**Quiz**: no quiz today -- but please consider spending the related time later to fill in the [QA questionnaire on this class](#feedback)
 
 **Reminder**: what is
 - RStudio Server
@@ -945,4 +945,11 @@ sudo docker run --rm -ti ceudata /app.properties
 
 ### Scaling Shiny with Shinyproxy.io and Docker images
 
-TODO survey on what was useful
+* Dockerize the Shiny app (including updates to the Redis connection)
+* Install ShinyProxy from shinyproxy.io
+* Look at the config at https://www.shinyproxy.io/configuration
+* Deploy on localhost or ECS
+
+## Feedback
+
+As you may know, we are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: TODO
