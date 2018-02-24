@@ -426,7 +426,9 @@ Kill your current box and start a new one using the `data-infra-in-prod-R-image`
 
 Background: [slides](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/AWR.Kinesis/AWR.Kinesis-talk.pdf)
 
-#### Creating a central server
+#### Create a central RStudio server
+
+We will use one decent sized node today instead of many tiny instances: `t2.xlarge` with 4 vCPI and 16 gigs of RAM
 
 Use our custom Amazon AMI: `data-infra-in-prod-R-image`
 
@@ -436,49 +438,52 @@ Already installed software:
 - Shiny Server
 - Jenkins
 
+Configured users: `ceu`
+
 #### Create a user for every member of the team
 
-Attach a newly created IAM EC2 Role to the EC2 box and assign 'Read-only IAM access':
+We'll export the list of IAM users from AWS and create a system user for everyone.
 
-![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+1. Attach a newly created IAM EC2 Role to the EC2 box and assign 'Read-only IAM access':
 
-![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
 
-![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
 
-Install AWS CLI tool:
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
 
-```
-sudo apt install awscli
-```
+2. Install AWS CLI tool:
 
-List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+    ```
+    sudo apt install awscli
+    ```
 
+3. List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
 
-```
-aws iam list-users
-```
+   ```
+   aws iam list-users
+   ```
 
-Export the list of users from R:
+4. Export the list of users from R:
 
-```
-library(jsonlite)
-users <- fromJSON(system('aws iam list-users', intern = TRUE))
-str(users)
-users[[1]]$UserName
-```
+   ```
+   library(jsonlite)
+   users <- fromJSON(system('aws iam list-users', intern = TRUE))
+   str(users)
+   users[[1]]$UserName
+   ```
 
-Create a new system user on the box (for RStudio Server access) for every IAM user:
+5. Create a new system user on the box (for RStudio Server access) for every IAM user:
 
-```
-library(futile.logger)
-for (user in users[[1]]$UserName) {
-  flog.info(sprintf('Creating %s', user))
-  system(sprintf("sudo adduser --disabled-password --quiet --gecos '' %s", user))
-  flog.info(sprintf('Setting password for %s', user))
-  system(sprintf("echo '%s:secretpass' | sudo chpasswd", user)) ## note the single quotes + sudo
-}
-```
+   ```
+   library(futile.logger)
+   for (user in users[[1]]$UserName) {
+     flog.info(sprintf('Creating %s', user))
+     system(sprintf("sudo adduser --disabled-password --quiet --gecos '' %s", user))
+     flog.info(sprintf('Setting password for %s', user))
+     system(sprintf("echo '%s:secretpass' | sudo chpasswd", user)) ## note the single quotes + sudo
+   }
+   ```
 
 Note, you may have to temporarily enable passwordless `sudo` for this user :/
 
