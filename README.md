@@ -20,6 +20,27 @@ Table of Contents
     * [Shiny Server](#shiny-server)
     * [Further exercises](#further-exercises)
     * [If in doubt](#if-in-doubt)
+* [Week 4: Use Cases on Using R in the Cloud](#week-4-use-cases-on-using-r-in-the-cloud)
+   * [Stream processing with R](#stream-processing-with-r)
+      * [Create a central RStudio server](#create-a-central-rstudio-server)
+      * [Create a user for every member of the team](#create-a-user-for-every-member-of-the-team)
+      * [Storing credentials and other secrets in a secure way in the cloud](#storing-credentials-and-other-secrets-in-a-secure-way-in-the-cloud)
+      * [Recap on redis](#recap-on-redis)
+      * [Set up a stream](#set-up-a-stream)
+      * [Read some data from the Kinesis stream](#read-some-data-from-the-kinesis-stream)
+      * [Write an R function to increment counters on new transactions](#write-an-r-function-to-increment-counters-on-new-transactions)
+      * [Create consumer processing the records from the stream](#create-consumer-processing-the-records-from-the-stream)
+      * [Run a Shiny app showing the progress](#run-a-shiny-app-showing-the-progress)
+      * [Create local Docker image](#create-local-docker-image)
+   * [ECR &amp; ECS](#ecr--ecs)
+   * [Scheduling Jenkins jobs](#scheduling-jenkins-jobs)
+      * [Configure Jenkins to recognize the newly created Linux system users](#configure-jenkins-to-recognize-the-newly-created-linux-system-users)
+      * [Set up a Slack bot](#set-up-a-slack-bot)
+      * [Exercise: Create a Jenkins job](#exercise-create-a-jenkins-job)
+      * [Exercise: Dockerize the Jenkins job](#exercise-dockerize-the-jenkins-job)
+   * [Scaling Shiny with Shinyproxy.io and Docker images](#scaling-shiny-with-shinyproxyio-and-docker-images)
+* [Feedback](#feedback)
+
 
 ## Schedule
 
@@ -414,3 +435,524 @@ See the `shiny/highcharter` subfolder for a possible solution if you get stuck.
 Kill your current box and start a new one using the `data-infra-in-prod-R-image` AMI that already bundles all above steps:
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/custom-ami.png)
+
+## Week 4: Use Cases on Using R in the Cloud
+
+**Quiz**: no quiz today -- but please consider spending the related time later to fill in the [QA questionnaire on this class](#feedback)
+
+**Reminder**: what is
+- RStudio Server
+- Shiny Server
+- Jenkins
+
+### Stream processing with R
+
+Background: [slides](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/AWR.Kinesis/AWR.Kinesis-talk.pdf)
+
+#### Create a central RStudio server
+
+We will use one decent sized node today instead of many tiny instances: `t2.xlarge` with 4 vCPU and 16 gigs of RAM
+
+Use our custom Amazon AMI: `data-infra-in-prod-R-image`
+
+Already installed software:
+
+- RStudio Server
+- Shiny Server
+- Jenkins
+
+Configured users: `ceu`
+
+**Notes**: the `sudo` commands are to be run on only one computer as those updates will take effect globally, so
+
+- run all steps if you are configuring the server
+- run only the steps in R / you were asked to run if you are a regular user
+
+#### Create a user for every member of the team
+
+We'll export the list of IAM users from AWS and create a system user for everyone.
+
+1. Attach a newly created IAM EC2 Role (let's call it `ceudataserver`) to the EC2 box and assign 'Read-only IAM access':
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+
+2. Install AWS CLI tool:
+
+    ```
+    sudo apt install awscli
+    ```
+
+3. List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+
+   ```
+   aws iam list-users
+   ```
+
+4. Export the list of users from R:
+
+   ```
+   library(jsonlite)
+   users <- fromJSON(system('aws iam list-users', intern = TRUE))
+   str(users)
+   users[[1]]$UserName
+   ```
+
+5. Create a new system user on the box (for RStudio Server access) for every IAM user:
+
+   ```
+   library(futile.logger)
+   for (user in users[[1]]$UserName) {
+     flog.info(sprintf('Creating %s', user))
+     system(sprintf("sudo adduser --disabled-password --quiet --gecos '' %s", user))
+     flog.info(sprintf('Setting password for %s', user))
+     system(sprintf("echo '%s:secretpass' | sudo chpasswd", user)) ## note the single quotes + sudo
+   }
+   ```
+
+Note, you may have to temporarily enable passwordless `sudo` for this user :/
+
+```
+ceu ALL=(ALL) NOPASSWD:ALL
+```
+
+Check users:
+
+```
+readLines('/etc/passwd')
+```
+
+#### Storing credentials and other secrets in a secure way in the cloud
+
+Using Amazon's KMS: https://aws.amazon.com/kms
+
+1. Go to IAM's Encryption Keys: https://console.aws.amazon.com/iam/home?region=eu-west-1#/encryptionKeys/us-east-1
+2. Create a new key: `ceudata`
+3. Optionally allow user access to the key
+4. Allow the `ceudataserver` IAM role to use the key
+5. Install `rJava`:
+
+    ```
+    sudo apt install r-cran-rjava
+    ```
+
+6. Install the `AWR.KMS` package globally:
+
+    ```
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('AWR.KMS', repos='https://cran.rstudio.com/'))"
+    ```
+
+7. First steps with securing sensitive information
+
+   ```r
+   library(AWR.KMS)
+   secret <- kms_encrypt('foobar', key = 'alias/ceudata')
+   secret
+   kms_decrypt(secret)
+   ```
+
+#### Recap on redis
+
+1. Install server
+
+   ```
+   sudo apt install redis-server
+   netstat -tapen|grep LIST
+   ```
+
+2. Install client
+
+    ```
+    sudo apt install r-cran-rredis
+    ```
+
+3. Interact from R
+
+    ```r
+    library(rredis)
+    redisConnect()
+    redisSet('foo', 'bar')
+    redisGet('foo')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+    redisMGet(c('counter', 'counter2'))
+    ````
+
+#### Set up a stream
+
+1. Go to AWS Console: https://eu-west-1.console.aws.amazon.com/kinesis/home?region=eu-west-1#/streams/list
+2. Start writing data to the stream: http://ceu.datapao.com
+
+#### Read some data from the Kinesis stream
+
+1. Allow Kinesis read-only access to the `ceudataserver` IAM role
+
+2. Install the R client
+
+    ```
+    sudo R -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/AWR.Kinesis'))"
+    ```
+
+3. Get a sample from the stream
+
+   ```r
+   library(AWR.Kinesis)
+   records <- kinesis_get_records('ceudata', 'eu-west-1')
+
+   library(jsonlite)
+   records <- stream_in(textConnection(records))
+   ```
+   
+4. Some quick counts
+
+    ```r
+    library(data.table)
+    records <- data.table(records)
+    records[, .N, by = country]
+    ```
+
+#### Write an R function to increment counters on new transactions
+
+1. Get sample raw data as per above
+
+   ```r
+   records <- kinesis_get_records('ceudata', 'eu-west-1')
+   ```
+
+2. Function to parse and process it
+
+    ```r
+    txprocessor <- function(record) {
+      country <- fromJSON(record)$country
+      flog.debug(paste('Found 1 transaction going to', country))
+      redisIncr(sprintf('countrycode:%s', country))
+    }
+    ```
+
+3. Iterate on all records
+
+    ```r
+    library(futile.logger)
+    library(rredis)
+    redisConnect()
+    for (record in records) {
+      txprocessor(record)
+    }
+    ```
+
+4. Check counters
+
+    ```r
+    countries <- redisMGet(redisKeys('countrycode:*'))
+    countries <- data.frame(
+      country = sub('^countrycode:', '', names(countries)),
+      N = as.numeric(countries))
+    ```
+
+5. Visualize
+
+    ```r
+    library(ggplot2)
+    ggplot(countries, aes(country, N)) + geom_bar(stat = 'identity')
+    ```
+
+#### Create consumer processing the records from the stream
+
+1. Create a new folder for the Kinesis consumer files: `streamer`
+
+2. Create an `app.properties` file within that subfolder
+
+```
+executableName = ./app.R
+regionName = eu-west-1
+streamName = ceudata
+applicationName = demo_app
+AWSCredentialsProvider = DefaultAWSCredentialsProviderChain
+```
+
+3. Create the `app.R` file:
+
+```r
+#!/usr/bin/Rscript
+library(futile.logger)
+library(AWR.Kinesis)
+library(jsonlite)
+
+kinesis_consumer(
+
+    initialize = function() {
+        flog.info('Hello')
+        library(rredis)
+        redisConnect(nodelay = FALSE)
+        flog.info('Connected to Redis')
+    },
+
+    processRecords = function(records) {
+        flog.info(paste('Received', nrow(records), 'records from Kinesis'))
+        for (record in records$data) {
+            country <- fromJSON(record)$country
+            flog.debug(paste('Found 1 transaction going to', country))
+            redisIncr(sprintf('countrycode:%s', country))
+        }
+    },
+
+    updater = list(
+        list(1/6, function() {
+            flog.info('Checking overall counters')
+            countries <- redisMGet(redisKeys('countrycode:*'))
+            flog.info(paste(sum(as.numeric(countries)), 'records processed so far'))
+    })),
+
+    shutdown = function()
+        flog.info('Bye'),
+
+    checkpointing = 1,
+    logfile = 'app.log')
+```
+
+4. Allow writing checkpointing data to DynamoDB and CloudWatch in IAM
+
+5. Convert the above R script into an executable
+
+```
+chmod +x app.R
+```
+
+Run the app:
+
+```
+/usr/bin/java -cp /usr/local/lib/R/site-library/AWR/java/*:/usr/local/lib/R/site-library/AWR.Kinesis/java/*:./ \
+    com.amazonaws.services.kinesis.multilang.MultiLangDaemon \
+    ./app.properties
+```
+
+#### Run a Shiny app showing the progress
+
+1. Reset counters
+
+    ```r
+    library(rredis)
+    redisConnect()
+    keys <- redisKeys('country*')
+    redisDelete(keys)
+    ```
+
+2. Install the `treemap` package
+
+    ```
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('treemap', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Run the below Shiny app
+
+```r
+## packages for plotting
+library(treemap)
+library(highcharter)
+
+## connect to Redis
+library(rredis)
+redisConnect()
+
+library(shiny)
+library(data.table)
+ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+server <- shinyServer(function(input, output, session) {
+
+    countries <- reactive({
+    
+        ## auto-update every 2 seconds
+        reactiveTimer(2000)()
+        
+        ## get frequencies
+        countries <- redisMGet(redisKeys('countrycode:*'))
+        countries <- data.table(
+          country = sub('^countrycode:', '', names(countries)),
+          N = as.numeric(countries))
+
+        ## color top 3
+        countries[, color := 1]
+        countries[country %in% countries[order(-N)][1:3, country],
+            color := 2]
+        
+        ## return
+        countries
+    })
+
+    output$treemap <- renderHighchart({
+        tm <- treemap(countries(), index = c('country'),
+                      vSize = 'N', vColor = 'color',
+                      type = 'value', draw = FALSE)
+        N <- sum(countries()$N)
+        hc_title(hctreemap(tm, animation = FALSE),
+                 text = sprintf('Transactions (N=%s)', N))
+    })
+
+})
+shinyApp(ui = ui, server = server, options = list(port = 8080))
+```
+
+#### Create local Docker image
+
+1. Install Docker
+
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt install docker-ce
+```
+
+2. Create a `Dockerfile` describing your Docker image based on https://github.com/cardcorp/card-rocker/blob/master/r-kinesis/Dockerfile
+
+```
+FROM cardcorp/r-kinesis:latest
+MAINTAINER Gergely Daroczi <daroczig@rapporter.net>
+
+## Install R package to interact with Redis
+RUN install2.r --error rredis && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+
+## Add consumer
+ADD app.properties /
+ADD app.R /
+```
+
+3. Build the Docker image via the above `Dockerfile`
+
+```
+sudo docker build -t ceudata .
+sudo docker images
+```
+
+4. Run it
+
+```
+sudo docker run --rm -ti ceudata /app.properties
+```
+
+5. Problem: cannot access Redis on `localhost` -> remote DB access & using credentials
+
+### ECR & ECS
+
+1. Update Redist config to require auth and to become accessible on the network interfaces
+
+    ```
+    sudo mcedit /etc/redis/redis.conf
+    ## bind
+    ## AUTH
+    sudo systemctl restart redis
+    sudo netstat -tapen | grep LIST
+    ```
+
+2. Open up the port in the Security Group (default port on `6379`)
+3. Try connecting from a remote machine, eg
+
+    ```r
+    redisConnect('127.0.0.1', password = 'ceudata')
+    ```
+
+4. Update the above R script to use the IP and password (via KMS) and restart the Docker container for a local test
+5. Update IAM role to be able to push to ECR
+6. `docker push`
+7. Set up ECS task definition and service etc as per slides
+
+### Scheduling Jenkins jobs
+
+#### Configure Jenkins to recognize the newly created Linux system users
+
+1. Go to Manage Jenkins
+2. Go to Configure Global Security
+3. Enable "Unix user/group database" in the Security Realm
+4. Add `jenkins` to the `shadow` group so that it can read the pass hashes
+
+    ```
+    sudo adduser jenkins shadow
+    ```
+
+5. Restart Jenkins
+
+   ```
+   sudo systemctl jenkins restart
+   ```
+
+#### Set up a Slack bot
+
+1. A custom Slack app is already created at https://api.slack.com/apps/A9FBHCLPR, but feel free to create a new one and use the related app in the following steps
+2. Look up the app's bots in the sidebar
+3. Look up the OAuth Access Token and encrypt via KMS
+
+    ```r
+    library(AWR.KMS)
+    kms_encrypt('token', key = 'alias/ceudata')
+    ```
+
+4. Install the Slack R client
+
+    ```
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    token <- kms_decrypt('ciphertext')
+    slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:)
+    text_slackr(text = 'Hi there!', channel = '#bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    text_slackr(text = msg, preformatted = FALSE, channel = '#bots')
+    ```
+
+7. Or plot
+
+    ```r
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#bots', width = 12)
+    ```
+
+#### Exercise: Create a Jenkins job
+
+* Pick a coin from `binance_coins_prices()`
+* Write an R script in RStudio looking up the most recent price or prices, do some analysis or simple reporting on it
+* Create a Jenkins job to run it every minute -- using your username as a prefix for all newly created jobs so that we can easily identify your jobs
+* Let's create a view for every user
+* Note that all jobs are running as the `jenkins` user
+* If you get stuck, look up notes from last week
+* What happens if the job fails? Create an alert with the failure message!
+
+#### Exercise: Dockerize the Jenkins job
+
+* Enable Docker usage for `jenkins`
+
+    ```
+    sudo adduser jenkins docker
+    sudo systemctl jenkins restart
+    ```
+* Create a Dockerfile including R package installations
+* Build the Docker image
+* Update the Jenkins job to call `docker run` instead of directly `Rscript`
+
+### Scaling Shiny with Shinyproxy.io and Docker images
+
+* Dockerize the Shiny app (including updates to the Redis connection)
+* Install ShinyProxy from shinyproxy.io
+* Look at the config at https://www.shinyproxy.io/configuration
+* Deploy on localhost or ECS
+
+## Feedback
+
+As you may know, we are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://gdaroczi.typeform.com/to/OXxs1y
