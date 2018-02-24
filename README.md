@@ -424,7 +424,7 @@ Kill your current box and start a new one using the `data-infra-in-prod-R-image`
 
 ### Stream processing with R
 
-TODO add slides
+Background: [slides](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/AWR.Kinesis/AWR.Kinesis-talk.pdf)
 
 #### Creating a central server
 
