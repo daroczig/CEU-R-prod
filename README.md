@@ -635,6 +635,23 @@ TODO
    sudo systemctl jenkins restart
    ```
 
+#### Set up a Slack bot
+
+1. TODO
+
+2. Install the R client
+
+    ```
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Init and fist messages with `slackr`
+
+    ```r
+    slackr_setup(username = 'ceudatabot', api_token = 'Using KMS, right???')
+    text_slackr(text = 'Hi there!', channel = 'bots', icon_emoji = ':r:')
+    ```
+
 #### Notes on creating new jobs
 
 * Use your username as a prefix for all newly created jobs so that we can easily identify your jobs
