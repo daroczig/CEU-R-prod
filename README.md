@@ -594,7 +594,48 @@ Using Amazon's KMS: https://aws.amazon.com/kms
 
 #### Write an R function to increment counters on new transactions
 
+1. Get sample raw data as per above
 
+   ```r
+   records <- kinesis_get_records('gergely-prep', 'eu-west-1')
+   ```
+
+2. Function to parse and process it
+
+    ```r
+    txprocessor <- function(record) {
+      country <- fromJSON(record)$country
+      flog.debug(paste('Found 1 transaction going to', country))
+      redisIncr(sprintf('countrycode:%s', country))
+    }
+    ```
+
+3. Iterate on all records
+
+    ```r
+    library(futile.logger)
+    library(rredis)
+    redisConnect()
+    for (record in records) {
+      txprocessor(record)
+    }
+    ```
+
+4. Check counters
+
+    ```r
+    countries <- redisMGet(redisKeys('countrycode:*'))
+    countries <- data.frame(
+      country = sub('^countrycode:', '', names(countries)),
+      N = as.numeric(countries))
+    ```
+
+5. Visualize
+
+    ```r
+    library(ggplot2)
+    ggplot(countries, aes(country, N)) + geom_bar(stat = 'identity')
+    ```
 
 #### Set up a stream
 
