@@ -459,3 +459,36 @@ List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/lis
 aws iam list-users
 ```
 
+Export the list of users from R:
+
+```
+library(jsonlite)
+users <- fromJSON(system('aws iam list-users', intern = TRUE))
+str(users)
+users[[1]]$UserName
+```
+
+Create a new system user on the box (for RStudio Server access) for every IAM user:
+
+```
+library(futile.logger)
+for (user in users[[1]]$UserName) {
+  flog.info(sprintf('Creating %s', user))
+  system(sprintf("sudo adduser --disabled-password --quiet --gecos '' %s", user))
+  flog.info(sprintf('Setting password for %s', user))
+  system(sprintf("echo '%s:secretpass' | sudo chpasswd", user)) ## note the single quotes + sudo
+}
+```
+
+Note, you may have to temporarily enable passwordless `sudo` for this user :/
+
+```
+ceu ALL=(ALL) NOPASSWD:ALL
+```
+
+Check users:
+
+```
+readLines('/etc/passwd')
+```
+
