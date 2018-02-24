@@ -548,7 +548,7 @@ Using Amazon's KMS: https://aws.amazon.com/kms
     sudo apt install r-cran-rredis
     ```
 
-2. Interact from R
+3. Interact from R
 
     ```r
     library(rredis)
@@ -563,8 +563,50 @@ Using Amazon's KMS: https://aws.amazon.com/kms
     redisDecr('counter2')
     redisMGet(c('counter', 'counter2'))
     ````
+    
+#### Read some data from the Kinesis stream
+
+1. Allow Kinesis read-only access to the IAM role
+
+2. Install the R client
+
+    ```
+    sudo R -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/AWR.Kinesis'))"
+    ```
+
+3. Get a sample from the stream
+
+   ```r
+   library(AWR.Kinesis)
+   records <- kinesis_get_records('gergely-prep', 'eu-west-1')
+
+   library(jsonlite)
+   records <- stream_in(textConnection(records))
+   ```
+   
+4. Some quick counts
+
+    ```r
+    library(data.table)
+    records <- data.table(records)
+    records[, .N, by = country]
+    ```
+
+#### Write an R function to increment counters on new transactions
+
+
+
+#### Set up a stream
+
+1. Go to AWS Console: https://eu-west-1.console.aws.amazon.com/kinesis/home?region=eu-west-1#/streams/list
+2. Start writing data to the stream: http://ceu.datapao.com
+
 
 #### Create local Docker image
+
+TODO
+
+#### Allow access to read from Kinesis
 
 TODO
 
