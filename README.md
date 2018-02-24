@@ -877,21 +877,19 @@ sudo docker run --rm -ti ceudata /app.properties
 * Let's create a view for every user
 * Note that all jobs are running as the `jenkins` user
 * If you get stuck, look up notes from last week
+* What happens if the job fails? Create an alert with the failure message!
 
-#### More infra requirements
+#### Exercise: Dockerize the Jenkins job
 
-* Install Docker
 * Enable Docker usage for `jenkins`
 
-TODO Example Dockerfile
-
-TODO docker build
-
-TODO docker run from jenkins using an R package not installed
-
-TODO create a Slack bot
-
-TODO e-mail noti config using mailgun or something
+    ```
+    sudo adduser jenkins docker
+    sudo systemctl jenkins restart
+    ```
+* Create a Dockerfile including R package installations
+* Build the Docker image
+* Update the Jenkins job to call `docker run` instead of directly `Rscript`
 
 ### Scaling Shiny with Shinyproxy.io and Docker images
 
