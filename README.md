@@ -730,19 +730,83 @@ Run the app:
     ./app.properties
 ```
 
+#### Run a Shiny app showing the progress
+
+1. Reset counters
+
+```r
+TODO
+```
+
+2. Run the below Shiny app
+
+```r
+TODO
+```
+
 #### Create local Docker image
 
-TODO
+1. Install Docker
 
-#### Allow access to read from Kinesis
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt-get update
+sudo apt install docker-ce
+```
 
-TODO
+2. Create a `Dockerfile` describing your Docker image based on https://github.com/cardcorp/card-rocker/blob/master/r-kinesis/Dockerfile
+
+```
+FROM cardcorp/r-kinesis:latest
+MAINTAINER Gergely Daroczi <daroczig@rapporter.net>
+
+## Install R package to interact with Redis
+RUN install2.r --error rredis && rm -rf /tmp/downloaded_packages/ /tmp/*.rds
+
+## Add consumer
+ADD app.properties /
+ADD app.R /
+```
+
+3. Build the Docker image via the above `Dockerfile`
+
+```
+sudo docker build -t ceudata .
+sudo docker images
+```
+
+4. Run it
+
+```
+sudo docker run --rm -ti ceudata /app.properties
+```
+
+5. Problem: cannot access Redis on `localhost` -> remote DB access & using credentials
 
 ### ECR & ECS
 
-1. IAM role update
-2. docker push
-3. set up services etc as per slides
+1. Update Redist config to require auth and to become accessible on the network interfaces
+
+    ```
+    sudo mcedit /etc/redis/redis.conf
+    ## bind
+    ## AUTH
+    sudo systemctl restart redis
+    sudo netstat -tapen | grep LIST
+    ```
+
+2. Open up the port in the Security Group (default port on `6379`)
+3. Try connecting from a remote machine, eg
+
+    ```r
+    redisConnect('127.0.0.1', password = 'ceudata')
+    ```
+
+4. Update the above R script to use the IP and password (via KMS) and restart the Docker container for a local test
+5. Update IAM role to be able to push to ECR
+6. `docker push`
+7. Set up ECS task definition and service etc as per slides
 
 ### Scheduling Jenkins jobs
 
