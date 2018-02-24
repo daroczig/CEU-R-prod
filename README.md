@@ -952,4 +952,4 @@ sudo docker run --rm -ti ceudata /app.properties
 
 ## Feedback
 
-As you may know, we are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: TODO
+As you may know, we are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://gdaroczi.typeform.com/to/OXxs1y
