@@ -29,15 +29,18 @@ Table of Contents
       * [Set up a stream](#set-up-a-stream)
       * [Read some data from the Kinesis stream](#read-some-data-from-the-kinesis-stream)
       * [Write an R function to increment counters on new transactions](#write-an-r-function-to-increment-counters-on-new-transactions)
+      * [Create consumer processing the records from the stream](#create-consumer-processing-the-records-from-the-stream)
+      * [Run a Shiny app showing the progress](#run-a-shiny-app-showing-the-progress)
       * [Create local Docker image](#create-local-docker-image)
-      * [Allow access to read from Kinesis](#allow-access-to-read-from-kinesis)
    * [ECR &amp; ECS](#ecr--ecs)
    * [Scheduling Jenkins jobs](#scheduling-jenkins-jobs)
       * [Configure Jenkins to recognize the newly created Linux system users](#configure-jenkins-to-recognize-the-newly-created-linux-system-users)
       * [Set up a Slack bot](#set-up-a-slack-bot)
-      * [Notes on creating new jobs](#notes-on-creating-new-jobs)
-      * [More infra requirements](#more-infra-requirements)
+      * [Exercise: Create a Jenkins job](#exercise-create-a-jenkins-job)
+      * [Exercise: Dockerize the Jenkins job](#exercise-dockerize-the-jenkins-job)
    * [Scaling Shiny with Shinyproxy.io and Docker images](#scaling-shiny-with-shinyproxyio-and-docker-images)
+* [Feedback](#feedback)
+
 
 ## Schedule
 
