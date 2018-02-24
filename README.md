@@ -829,19 +829,44 @@ sudo docker run --rm -ti ceudata /app.properties
 
 #### Set up a Slack bot
 
-1. TODO
+1. A custom Slack app is already created at https://api.slack.com/apps/A9FBHCLPR, but feel free to create a new one and use the related app in the following steps
+2. Look up the app's bots in the sidebar
+3. Look up the OAuth Access Token and encrypt via KMS
 
-2. Install the R client
+    ```r
+    library(AWR.KMS)
+    kms_encrypt('token', key = 'alias/ceudata')
+    ```
+
+4. Install the Slack R client
 
     ```
     sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
     ```
 
-3. Init and fist messages with `slackr`
+5. Init and send our first messages with `slackr`
 
     ```r
-    slackr_setup(username = 'ceudatabot', api_token = 'Using KMS, right???')
-    text_slackr(text = 'Hi there!', channel = 'bots', icon_emoji = ':r:')
+    token <- kms_decrypt('ciphertext')
+    slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:)
+    text_slackr(text = 'Hi there!', channel = '#bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    text_slackr(text = msg, preformatted = FALSE, channel = '#bots')
+    ```
+
+7. Or plot
+
+    ```r
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#bots', width = 12)
     ```
 
 #### Notes on creating new jobs
