@@ -951,6 +951,12 @@ slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:')
 text_slackr(text = msg, preformatted = FALSE, channel = '#bots')
 ```
 
+#### Exercise: Create another Jenkins job
+
+1. Get a sample from the Kinesis strem
+2. Sum up the amounts
+3. Report in the #bots channel
+
 #### Exercise: Dockerize the Jenkins job
 
 * Enable Docker usage for `jenkins`
