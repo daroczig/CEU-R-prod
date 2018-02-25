@@ -902,8 +902,10 @@ sudo docker run --rm -ti ceudata /app.properties
 5. Init and send our first messages with `slackr`
 
     ```r
+    library(AWR.KMS)
     token <- kms_decrypt('ciphertext')
-    slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:)
+    library(slackr)
+    slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:')
     text_slackr(text = 'Hi there!', channel = '#bots')
     ```
 
@@ -933,6 +935,21 @@ sudo docker run --rm -ti ceudata /app.properties
 * Note that all jobs are running as the `jenkins` user
 * If you get stuck, look up notes from last week
 * What happens if the job fails? Create an alert with the failure message!
+
+Example code:
+
+```
+library(binancer)
+prices <- binance_coins_prices()
+msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+
+library(AWR.KMS)
+token <- kms_decrypt("***")
+
+library(slackr)
+slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:')
+text_slackr(text = msg, preformatted = FALSE, channel = '#bots')
+```
 
 #### Exercise: Dockerize the Jenkins job
 
