@@ -66,6 +66,20 @@ Midnight (CET) on April 30, 2019
 ### Getting help
 
 Contact Cagdas Yetkin (TA) at YetkinC@ceu.edu
+
+## Week 1: Intro - Infrastructure Applications
+
+By Zoltan Toth: https://ceulearning.ceu.edu/course/view.php?id=9300&section=1
+
+
+## Week 2: Streaming
+
+By Zoltan Toth: https://ceulearning.ceu.edu/course/view.php?id=9300&section=2
+
+## Week 3: Lambda Architecture and Serverless Computing
+
+By Zoltan Toth: https://ceulearning.ceu.edu/course/view.php?id=9300&section=3
+
 ## Week 4: Using R in the Cloud
 
 **Goal**: learn how to run and schedule R jobs in the cloud.
