@@ -6,6 +6,14 @@ Table of Contents
 * [Table of Contents](#table-of-contents)
    * [Schedule](#schedule)
    * [Home assignment](#home-assignment)
+      * [Tech setup](#tech-setup)
+      * [Required output](#required-output)
+      * [Delivery method](#delivery-method)
+      * [Submission deadline](#submission-deadline)
+      * [Getting help](#getting-help)
+   * [Week 1: Intro - Infrastructure Applications](#week-1-intro---infrastructure-applications)
+   * [Week 2: Streaming](#week-2-streaming)
+   * [Week 3: Lambda Architecture and Serverless Computing](#week-3-lambda-architecture-and-serverless-computing)
    * [Week 4: Using R in the Cloud](#week-4-using-r-in-the-cloud)
       * [Background: Example use-cases and why to use R in the cloud?](#background-example-use-cases-and-why-to-use-r-in-the-cloud)
       * [Welcome to AWS!](#welcome-to-aws)
@@ -15,12 +23,15 @@ Table of Contents
       * [Connect to the RStudio Server](#connect-to-the-rstudio-server)
       * [Set up an easy to remember domain name](#set-up-an-easy-to-remember-domain-name)
       * [Play with R for a bit](#play-with-r-for-a-bit)
+      * [Schedule R commands](#schedule-r-commands)
       * [Schedule R scripts](#schedule-r-scripts)
       * [ScheduleR improvements](#scheduler-improvements)
       * [Intro to redis](#intro-to-redis)
       * [Job Scheduler exercises](#job-scheduler-exercises)
       * [Note on logging](#note-on-logging)
       * [Homework](#homework)
+   * [Week 5: Scaling R applications](#week-5-scaling-r-applications)
+   * [Week 6: Stream processing with R](#week-6-stream-processing-with-r)
    * [Feedback](#feedback)
 
 ## Schedule
@@ -340,7 +351,7 @@ Although also note (3) the related security risks.
         - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
         - write a bot buying and selling crypto on a virtual exchange
 
-### Schedule R scripts
+### Schedule R commands
 
 ![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
 
@@ -384,17 +395,21 @@ Although also note (3) the related security risks.
 
     ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
 
-### ScheduleR improvements
+### Schedule R scripts
 
-1. Create an R script and run with `Rscript` instead of `R` -- eg with the below content
+1. Create an R script with the below content and save on the server:
 
         library(binancer)
         prices <- binance_coins_prices()
         library(futile.logger)
         flog.info('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
+        
+2. Instead of calling `R -e "..."` in the Jenkins jobs, reference the above R script with `Rscript` instead
 
-2. Learn about little R: https://github.com/eddelbuettel/littler
-3. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
+### ScheduleR improvements
+
+1. Learn about little R: https://github.com/eddelbuettel/littler
+2. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
 
     1. Whitelist and confirm your e-mail address at https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-email:
     2. Take a note on the SMTP settings:
@@ -419,6 +434,7 @@ Although also note (3) the related security risks.
 
     5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
 
+3. Look at other Jenkins plugins
 
 ### Intro to redis
 
