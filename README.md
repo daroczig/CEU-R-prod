@@ -5,6 +5,7 @@ Table of Contents
 
 * [Table of Contents](#table-of-contents)
    * [Schedule](#schedule)
+   * [Home assignment](#home-assignment)
    * [Week 4: Using R in the Cloud](#week-4-using-r-in-the-cloud)
       * [Background: Example use-cases and why to use R in the cloud?](#background-example-use-cases-and-why-to-use-r-in-the-cloud)
       * [Welcome to AWS!](#welcome-to-aws)
@@ -28,6 +29,43 @@ Table of Contents
 * 15:10 - 15:30 Coffee break
 * 15:30 - 17:10 Session 2
 
+## Home assignment
+
+The goal of this assignment is to confirm that the students have a general understanding on how to build data pipelines using Amazon Web Services and R or Databricks, and can actually implement a stream processing application (either running in almost real-time or batched/scheduled way) in practice.
+
+### Tech setup
+
+To minimize the system administration and most of the engineering tasks for the students, the below pre-configured tools are provided as free options, but students can decide to build their own environment (on the top of or independently from these) and feel free to use any other tools:
+
+* "binance" stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
+* "data-infra-in-prod-R-image-v2" Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “data” or “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `AWR.Kinesis` and the `binancer` package)
+* "all-the-r-things" security group with the ports already opened for RStudio Server, Shiny Server, Jenkins and Redis as well
+* "all-the-aws-things" EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and encrypt/decrypt access to the "all-the-keys" KMS key
+* "all-the-keys" KMS key that you can use to decrypt the below string to get a Slack access token for the "ceu-data-bot" user: TODO
+* lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
+
+### Required output
+
+* Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour and reads 250 messages from the "binance" stream. Use this sample to
+
+    * Draw a barplot on the overall number of units per symbol in the "#bots-final-project" Slack channel based on the number of transactions returned from the Kinesis stream
+    * Get the current symbol prices from the Binance API, and compute the overall price of the 250 transactions in USD and print to the console
+    
+* Suggested project (for grade up to "A"): Create a stream processing application using the `AWR.Kinesis` R package + Redis. Create a dashboard output showing the overall prices in USD as reported by the Binance API at the time of request, broken down by the symbol pairs (e.g. a treemap). Create at least two more additional chart that displays a metric you find meaningful.
+
+### Delivery method
+
+* Document and explain your solution along the code you wrote in a PDF document. Include screenshots of your browser showing what you are doing in RStudio Server or eg Jenkins -- including the URL nav bar.
+* STOP the EC2 Instance you worked on, but don’t terminate it, so we can start it and check how it works. 
+* Please send us the PDF and the instance id of your EC2 instance when you are finished to ceu-data@googlegroups.com. Please include your student ID both in the PDF and the email.
+
+### Submission deadline
+
+Midnight (CET) on April 30, 2019
+
+### Getting help
+
+Contact Cagdas Yetkin (TA) at YetkinC@ceu.edu
 ## Week 4: Using R in the Cloud
 
 **Goal**: learn how to run and schedule R jobs in the cloud.
