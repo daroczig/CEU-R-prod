@@ -65,7 +65,7 @@ Midnight (CET) on April 30, 2019
 
 ### Getting help
 
-Contact Cagdas Yetkin (TA) at YetkinC@ceu.edu
+Contact Cagdas Yetkin (TA) on the `ceu-bizanalytics` Slack or at YetkinC@ceu.edu
 
 ## Week 1: Intro - Infrastructure Applications
 
@@ -450,6 +450,10 @@ https://daroczig.github.io/logger
 ### Homework
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week!
+
+## Week 5: Scaling R applications
+
+## Week 6: Stream processing with R
 
 ## Feedback
 
