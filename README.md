@@ -91,7 +91,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 ### Welcome to AWS!
 
 1. Use the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
-2. Set up 2FA: https://console.aws.amazon.com/iam
+2. Set up 2FA (go to IAM / Users / username / Security credentials / Assigned MFA device): https://console.aws.amazon.com/iam
 3. Secure your access keys:
 
     > "When I woke up the next morning, I had four emails and a missed phone call from Amazon AWS - something about 140 servers running on my AWS account, mining Bitcoin"
@@ -108,7 +108,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 **Note**: we follow the instructions on Windows in the Computer Lab, but please find below how to access the boxes from Mac or Linux as well when working with the instances remotely.
 
-1. Create (or import) an SSH key in AWS: https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#KeyPairs:sort=keyName
+1. Create (or import) an SSH key in AWS (EC2 / Key Pairs): https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#KeyPairs:sort=keyName
 2. Get an SSH client:
 
     * Windows -- Download and install PuTTY: https://www.putty.org
@@ -142,8 +142,9 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
     3. Pick the `Ubuntu Server 18.04 LTS (HVM), SSD Volume Type` AMI
     4. Pick `t2.micro` instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
     5. Click "Review and Launch"
-    6. Pick a unique name for the security group
+    6. Pick a unique name for the security group after clicking "Edit Security Group"
     7. Click "Launch"
+    8. Select your AWS key created above and launch
 
 2. Connect to the box
 
@@ -158,6 +159,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
     3. Set the username to `ubuntu` on the Connection/Data tab
     4. Save the Session profile
     5. Click the "Open" button
+    6. Accept & cache server's host key
 
 ### Install RStudio Server on EC2
 
@@ -181,10 +183,12 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 6. Check process and open ports
 
-        sudo ps aux| grep rstudio
+        rstudio-server status
         sudo rstudio-server status
+        sudo ps aux| grep rstudio
         sudo systemctl status rstudio-server
-        sudo netstat -tapen|grep LIST
+        sudo netstat -tapen | grep LIST
+        sudo netstat -tapen
 
 7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
 
@@ -192,7 +196,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 1. Confirm that the service is up and running and the port is open
 
-        ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen|grep LIST
+        ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
         tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
         tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
         tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
@@ -212,16 +216,19 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
         1+2
         plot(mtcars)
-        install.packages('beanplot')
+        install.packages('fortunes')
+        library(fortunes)
+        fortune()
+        fortune(200)
         system('whoami')
 
-8. Reload webpage (F5)
+8. Reload webpage (F5), realize we continue where we left the browser :)
 9. Demo the terminal:
 
         $ sudo whoami
         ceu is not in the sudoers file.  This incident will be reported.
 
-8. Grant sudo access to the new user:
+8. Grant sudo access to the new user by going back to SSH with `root` access:
 
         sudo apt install -y mc
         sudo mc
@@ -230,7 +237,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
         man adduser
         man deluser
 
-Note 1: might need to relogin
+Note 1: might need to relogin / restart RStudio / reload R / reload page
 Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
 
         ceu ALL=(ALL) NOPASSWD:ALL
@@ -260,7 +267,9 @@ Although also note (3) the related security risks.
 2. Use binary packages instead via apt & Launchpad PPA:
 
         sudo add-apt-repository ppa:marutter/rrutter
+
         sudo add-apt-repository ppa:marutter/c2d4u
+        
         sudo apt-get update
         sudo apt-get upgrade
         sudo apt-get install r-cran-ggplot2
@@ -274,11 +283,12 @@ Although also note (3) the related security risks.
 
     1. Install devtools in the RStudio/Terminal:
 
-            sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-snakecase
+            sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
 
     2. Install an R package from GitHub to interact with crypto exchanges:
 
-            devtools::install_github('daroczig/binancer')
+            install.packages('snakecase')
+            devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
 
     3. First steps with live data:
 
@@ -289,6 +299,7 @@ Although also note (3) the related security risks.
 
     4. Visualize the data
 
+            library(ggplot2)
             ggplot(klines, aes(close_time, close)) + geom_line()
 
     5. Create a candle chart
@@ -323,7 +334,11 @@ Although also note (3) the related security risks.
         - `binance_coins_prices()`
         - `binance_credentials` and `binance_balances`
 
-    8. Create an R script that reports and/or plots on some cryptocurrencies
+    8. Create an R script that reports and/or plots on some cryptocurrencies, ideas:
+    
+        - compute the (relative) change in prices of cryptocurrencies in the past 24 / 168 hours
+        - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
+        - write a bot buying and selling crypto on a virtual exchange
 
 ### Schedule R scripts
 
@@ -334,7 +349,7 @@ Although also note (3) the related security risks.
         wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
         echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
         sudo apt update
-        sudo apt install jenkins ## installs Java as well
+        sudo apt install openjdk-8-jdk-headless jenkins ## installing Java as well
         sudo netstat -tapen | grep java
 
 2. Open up port 8080 in the related security group
@@ -359,7 +374,7 @@ Although also note (3) the related security risks.
 
     6. Run the job
 
-    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-errors.png)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-errors.png)
 
 5. Install R packages system wide from RStudio/Terminal (more on this later):
 
@@ -367,7 +382,7 @@ Although also note (3) the related security risks.
 
 6. Rerun the job
 
-    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/jenkins-success.png)
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
 
 ### ScheduleR improvements
 
