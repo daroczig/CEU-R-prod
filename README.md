@@ -36,8 +36,6 @@ Table of Contents
          * [Note on storing the Slack token](#note-on-storing-the-slack-token)
          * [Using Slack from R](#using-slack-from-r)
       * [Job Scheduler exercises](#job-scheduler-exercises)
-      * [Dockerizing R scripts](#dockerizing-r-scripts)
-      * [Note on logging](#note-on-logging)
    * [Week 6: Stream processing with R](#week-6-stream-processing-with-r)
    * [Feedback](#feedback)
 
