@@ -386,7 +386,7 @@ Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tuto
 
 ## Week 5: Scaling R applications
 
-Quiz: 
+Quiz: https://goo.gl/forms/oKQ0zILuQljgBxyH3
 
 ### Start your cloud instance
 
