@@ -479,22 +479,29 @@ We need a persistent storage for our Jenkins jobs ... let's give a try to a key-
 2. Install client
 
     ```
-    sudo apt install r-cran-rredis
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('rredis', repos='https://cran.rstudio.com/'))"
     ```
 
 3. Interact from R
 
     ```r
+    ## set up and initialize the connection to the local redis server
     library(rredis)
     redisConnect()
+    
+    ## set/get values
     redisSet('foo', 'bar')
     redisGet('foo')
+    
+    ## increment and decrease counters
     redisIncr('counter')
     redisIncr('counter')
     redisIncr('counter')
     redisGet('counter')
     redisDecr('counter')
     redisDecr('counter2')
+    
+    ## get multiple values at once
     redisMGet(c('counter', 'counter2'))
     ```
 
@@ -502,6 +509,37 @@ We need a persistent storage for our Jenkins jobs ... let's give a try to a key-
 
     - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
     - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+
+Example solution:
+
+```r
+library(rredis)
+redisConnect()
+
+redisSet('price:BTC', binance_klines('BTCUSDT', interval = '1m', limit = 1)$close)
+redisSet('price:ETH', binance_klines('ETHUSDT', interval = '1m', limit = 1)$close)
+
+redisGet('price:BTC')
+redisGet('price:ETH')
+
+redisMGet(c('price:BTC', 'price:ETH'))
+```
+
+Example solution using a helper function doing some logging:
+
+```r
+store <- function(symbol) {
+  print(paste('Looking up and storing', symbol))
+  redisSet(paste('price', symbol, sep = ':'), 
+           binance_klines(paste0(symbol, 'USDT'), interval = '1m', limit = 1)$close)
+}
+
+store('BTC')
+store('ETH')
+
+## list all keys with the "price" prefix and lookup the actual values
+redisMGet(redisKeys('price:*'))
+```
 
 ### Interacting with Slack
 
@@ -590,47 +628,32 @@ We need a persistent storage for our Jenkins jobs ... let's give a try to a key-
 * Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day
 * Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
 
-### Dockerizing R scripts
+Example solution for (1):
 
-Exercise: create a new GitHub repository with a `Dockerfile` installing `botor` (and its dependencies), `binancer` and `slackr` to be able to run the above jobs in a Docker container. Set up a DockerHub registry for the Docker image and start using in the Jenkins jobs.
+```r
+## get data right from the Binance API
+library(binancer)
+btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
 
-Hints:
+## or from the local cache (updated every minute from Jenkins as per above)
+library(rredis)
+btc <- redisGet('price:BTC')
 
-- create a new GitHub repo
-- create a new RStudio project using the git repo
-- set the default git user on the EC2 box
-
-    ```shell
-    git config --global user.email "you@example.com"
-    git config --global user.name "Your Name"
-    ```
-
-- create a Personal Access Token set up on GitHub for HTTPS auth on your EC2 box
-- example GitHub repo: https://github.com/daroczig/ceu-de3-docker-prep
-- example DockerHub repo: https://cloud.docker.com/repository/registry-1.docker.io/daroczig/ceu-de3-week5-prep
-- install Docker on EC2:
-
-    ```shell
-    sudo apt update
-    sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    sudo add-apt-repository \
-      "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-    sudo apt-get update
-    sudo apt-get install docker-ce
-    ```
-
-- example run:
-
-    ```shell
-    docker run --rm -ti daroczig/ceu-de3-week5-prep R -e "binancer::binance_klines('BTCUSDT', interval = '1m', limit = 1)[1, close]"
-    ```
-
-### Note on logging
-
-https://daroczig.github.io/logger
+## send alert
+if (btc < 3800 | btc > 4000) {
+  library(botor)
+  token <- kms_decrypt('AQICAHgTG+lvWpBOjwX4kAP2TTx+kP07ZEllSpqh7pvh9N6L6wEcOn1eIIcW1lX57oKF0GfCAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDGvtEjjWZmpfVBigHQIBEIBFHD8IJ0BKUwb+1A5nJLZSpKam/ESW2t4BYX4x1u8rv2ODoRbzPNHmeoo2gYkZ4wTJY6vtkdPUdr1ZUeJnWFnIkPNW8+6m')
+  library(slackr)
+  slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:')
+  text_slackr(
+    text = paste('uh ... oh... BTC price:', btc), 
+    channel = '#ba-de3-2018-bots')
+}
+```
 
 ## Week 6: Stream processing with R
+
+TODO
 
 ## Feedback
 
