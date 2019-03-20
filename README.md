@@ -351,7 +351,7 @@ Although also note (3) the related security risks.
         - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
         - write a bot buying and selling crypto on a virtual exchange
 
-### Schedule R commands
+### Prepare to schedule R commands
 
 ![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
 
@@ -373,7 +373,28 @@ Although also note (3) the related security risks.
     2. Proceed with installing the suggested plugins
     3. Create your first user (eg `ceu`)
 
-4. Create a new job:
+### Homework
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week!
+
+## Week 5: Scaling R applications
+
+Quiz: 
+
+### Start your cloud instance
+
+1. Go to the AWS EC2 console. Don't forget to use the Ireland region: https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+2. Create a new EC2 instance using the `de3-week5` AMI and `t2.small` instance size using a new security group with a unique name and opening up the 8787 and 8080 ports
+3. Log in to RStudio using the new instance's public IP address and 8787 port, then the `ceu` username and `ceudata` password
+4. Check if the price of a Bitcoin is more than $4,000 (feel free to scroll up to get some hints from last week's R scripts)
+
+### Schedule R commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Log in to Jenkins using your instance's public IP address and port 8080
+2. Use the `ceu` username and `ceudata` password
+3. Create a "New Item" (job):
 
     1. Enter the name of the job: `get current Bitcoin price`
     2. Pick "Freestyle project"
@@ -387,9 +408,10 @@ Although also note (3) the related security risks.
 
     ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-errors.png)
 
+4. Debug & figure out what's the problem ...
 5. Install R packages system wide from RStudio/Terminal (more on this later):
 
-        sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer'))"
+        sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
 
 6. Rerun the job
 
@@ -397,14 +419,14 @@ Although also note (3) the related security risks.
 
 ### Schedule R scripts
 
-1. Create an R script with the below content and save on the server:
+1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
 
         library(binancer)
         prices <- binance_coins_prices()
         library(futile.logger)
         flog.info('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
         
-2. Instead of calling `R -e "..."` in the Jenkins jobs, reference the above R script with `Rscript` instead
+2. Instead of calling `R -e "..."` in the Jenkins jobs, reference the above R script using `Rscript` instead
 
 ### ScheduleR improvements
 
@@ -434,15 +456,17 @@ Although also note (3) the related security risks.
 
     5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
 
-3. Look at other Jenkins plugins
+3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
 
 ### Intro to redis
+
+We need a persistent storage for our Jenkins jobs ... let's give a try to a key-value database:
 
 1. Install server
 
    ```
    sudo apt install redis-server
-   netstat -tapen|grep LIST
+   netstat -tapen | grep LIST
    ```
 
 2. Install client
@@ -467,22 +491,105 @@ Although also note (3) the related security risks.
     redisMGet(c('counter', 'counter2'))
     ```
 
+4. Exercises
+
+    - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+    - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+
+### Interacting with Slack
+
+1. Join the #ba-de3-2018-bots channel
+2. A custom Slack app is already created at https://api.slack.com/apps/A9FBHCLPR, but feel free to create a new one and use the related app in the following steps
+3. Look up the app's bots in the sidebar
+4. Look up the Access Token
+
+#### Using Slack from Jenkins
+
+1. Get familiar with the Slack Notifier Jenkins plugin: https://plugins.jenkins.io/slack
+2. Configure global Slack options (what about storing the token?)
+3. Set up post-hook actions to alert in Slack if a Jenkins job is failing
+
+#### Note on storing the Slack token
+
+1. Do not store the token in plain-text!
+2. Let's use Amazon's Key Management Service: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (slides 73-75)
+3. Instead of using the Java SDK, let's install `boto3` Python module and use via `reticulate`:
+
+    ```shell
+    sudo apt install python-pip
+    sudo pip install boto3
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('reticulate', repos='https://cran.rstudio.com/'))"
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/botor', upgrade_dependencies = FALSE))"
+    ```
+
+4. Create a KMS key in IAM: `alias/all-the-keys`
+5. Grant access to that KMS key by using an IAM role: https://console.aws.amazon.com/iam/home?region=eu-west-1#/roles with the `AWSKeyManagementServicePowerUser` policy and explicit grant access to the key
+6. Attach the newly created IAM role
+7. Use this KMS key to encrypt the Slack token:
+
+    ```r
+    library(botor)
+    botor(region = 'us-east-1')
+    kms_encrypt('token', key = 'alias/all-the-keys')
+    ```
+
+8. Store the ciphertext and use `kms_decrypt` to decrypt later, see eg 
+
+    ```r
+    kms_decrypt("AQICAHgTG+lvWpBOjwX4kAP2TTx+kP07ZEllSpqh7pvh9N6L6wHIA1zHbFByziZDVyfcL4hiAAAAZjBkBgkqhkiG9w0BBwagVzBVAgEAMFAGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMzoyflIia43kBbeSQAgEQgCP1oJhVadkkhhkkDYT1VpPDW/O/xdcoj+luBnZIs4O/adBgAQ==")
+    ```
+
+#### Using Slack from R
+
+4. Install the Slack R client
+
+    ```
+    sudo apt install r-cran-rlang r-cran-purrr r-cran-tibble r-cran-dplyr
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    library(botor)
+    token <- kms_decrypt('AQICAHgTG+lvWpBOjwX4kAP2TTx+kP07ZEllSpqh7pvh9N6L6wEcOn1eIIcW1lX57oKF0GfCAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDGvtEjjWZmpfVBigHQIBEIBFHD8IJ0BKUwb+1A5nJLZSpKam/ESW2t4BYX4x1u8rv2ODoRbzPNHmeoo2gYkZ4wTJY6vtkdPUdr1ZUeJnWFnIkPNW8+6m')
+    library(slackr)
+    slackr_setup(username = 'ceudatabot', api_token = token, icon_emoji = ':r:')
+    text_slackr(text = 'Hi there!', channel = '#ba-de3-2018-bots)
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    text_slackr(text = msg, preformatted = FALSE, channel = '#ba-de3-2018-bots')
+    ```
+
+7. Or plot
+
+    ```r
+    library(ggplot2)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#ba-de3-2018-bots', width = 12)
+    ```
+
 ### Job Scheduler exercises
 
-* Configure a Jenkins job to alert if Bitcoin price is below $3.8K or higher than $4K
-* Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+* Create a Jenkins job to alert if Bitcoin price is below $3.8K or higher than $4K
+* Create a Jenkins job to alert if Bitcoin price changed more than $200 in the past hour
+* Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day
 * Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
-* Create an alert if BTC or ETH price changed more than 5% in the past 24 hours
+
+### Dockerizing R scripts
+
+Exercise: create a new GitHub repository with a `Dockerfile` installing `botor` (and its dependencies), `binancer` and `slackr` to be able to run the above jobs in a Docker container. Set up a DockerHub registry for the Docker image and start using in the Jenkins jobs.
 
 ### Note on logging
 
 https://daroczig.github.io/logger
-
-### Homework
-
-Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week!
-
-## Week 5: Scaling R applications
 
 ## Week 6: Stream processing with R
 
