@@ -651,7 +651,146 @@ if (btc < 3800 | btc > 4000) {
 
 ## Week 6: Stream processing with R
 
-TODO
+### Background: Example use-case and why to use R to do stream processing? 
+
+https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
+### Setting up a demo stream
+
+This section describes how to set up a Kinesis stream with 5 shards on the live Binance transactions read from its websocket -- running in a Docker container, then feeding the JSON lines to Kinesis via the Amazon Kinesis Agent.
+
+**Please note that you don't have to do all these steps on your computer, it's enough if I do all these once for the class.**
+
+1. Start a `t2.micro` instance running Amazon Linux (easier to install the Kinesis Agent) with a known key. Make sure to set a name and enable termination protection!
+
+2. Install Docker (note that we are not on Ubuntu today, but using Red Hat's `yum` package manager):
+
+    ```
+    sudo yum install docker
+    sudo service docker start
+    sudo service docker status
+    ```
+
+3. Let's use a small Python app relying on the Binance API to fetch live transactions and store in a local file: 
+
+    * sources: https://github.com/daroczig/ceu-de3-docker-binance-streamer
+    * docker: https://cloud.docker.com/repository/registry-1.docker.io/daroczig/ceu-de3-docker-binance-streamer
+
+    Usage:
+
+    ```
+    screen -RRd streamer
+    sudo docker run -ti --rm  daroczig/ceu-de3-docker-binance-streamer > /tmp/transactions.json
+    ## "C-a c" to create a new screen, then you can switch with C-a "
+    ls -latr /tmp
+    tail -f /tmp/transactions.json
+    ```
+
+4. Install the Kinesis Agent:
+
+    As per https://docs.aws.amazon.com/firehose/latest/dev/writing-with-agents.html#download-install:
+    
+    ```
+    sudo yum install –y https://s3.amazonaws.com/streaming-data-agent/aws-kinesis-agent-latest.amzn1.noarch.rpm
+    ```
+
+5. Create a new Kinesis Stream (called `crypto`) at https://eu-west-1.console.aws.amazon.com/kinesis
+
+6. Configure the Kinesis Agent:
+
+    ```
+    sudo yum install mc
+    sudo mcedit /etc/aws-kinesis/agent.json
+    ```
+    
+    Running the above commands, edit the config file to update the Kinesis endpoint, the name of the stream on the local file path:
+    
+    ```
+    {
+      "cloudwatch.emitMetrics": true,
+      "kinesis.endpoint": "https://kinesis.eu-west-1.amazonaws.com",
+      "firehose.endpoint": "",
+
+      "flows": [
+        {
+          "filePattern": "/tmp/transactions.json",
+          "kinesisStream": "crypto",
+          "partitionKeyOption": "RANDOM"
+        }
+      ]
+    }
+    ```
+
+7. Restart the Agent:
+
+    ```
+    sudo service aws-kinesis-agent start
+    ```
+    
+8. Check the status and logs:
+
+    ```
+    sudo service aws-kinesis-agent status
+    sudo journalctl -xe
+    ls -latr /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+    tail -f /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+    ```
+
+9. Attach an IAM role that can write to Kinesis and Cloudwatch, eg the `kinesis-admin` in the CEU account, then restart the agent
+
+    ```
+    sudo service aws-kinesis-agent restart
+    ```
+
+10. Check the AWS console's monitor if all looks good there as well: https://eu-west-1.console.aws.amazon.com/kinesis/home?region=eu-west-1#/streams/details?streamName=crypto&tab=monitoring
+
+### A simple stream consumer app in R
+
+**From now on, please do all the below steps on your computer -- everyone back to work!**
+
+Start a `t2.small` instance using the `de3-week6` AMI -- running RStudio Server, Jenkins and a couple of extra packages and tools pre-installed from last week. Let's use the same `kinesis-admin` IAM role so that we can easily read from the stream.
+
+Last week we used the `boto3` Python module from R, this week we will integrate Java -- by calling the AWS Java SDK to interact with our Kinesis stream, then later on to run a Java daemon to manage our stream processing application.
+
+First, let's install Java and the `rJava` R package:
+
+```
+sudo apt install r-cran-rjava
+```
+
+Then the R package wrapping the AWS Java SDK and the Kinesis client, then update to the most recent dev version right away:
+
+```
+sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('AWR.Kinesis', repos='https://cran.rstudio.com/'))"
+sudo R -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/AWR.Kinesis'))"
+```
+
+Note, after installing Java, you might need to run `sudo R CMD javareconf` and/or restart R or the RStudio Server via `sudo rstudio-server restart` :/
+
+```
+Error : .onLoad failed in loadNamespace() for 'rJava', details:
+  call: dyn.load(file, DLLpath = DLLpath, ...)
+  error: unable to load shared object '/usr/lib/R/site-library/rJava/libs/rJava.so':
+  libjvm.so: cannot open shared object file: No such file or directory
+```
+
+And after all, a couple lines of R code to get some data from the stream:
+
+```r
+library(rJava)
+library(AWR.Kinesis)
+records <- kinesis_get_records('crypto', 'eu-west-1')
+str(records)
+records[1]
+
+library(jsonlite)
+fromJSON(records[1])
+```
+
+**Exercise**: parse the loaded 25 records into a `data.table` object with proper column types. Get some help on the data format from the [Binance API docs](https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams)!
+
+
+
 
 ## Feedback
 
