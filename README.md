@@ -37,6 +37,13 @@ Table of Contents
          * [Using Slack from R](#using-slack-from-r)
       * [Job Scheduler exercises](#job-scheduler-exercises)
    * [Week 6: Stream processing with R](#week-6-stream-processing-with-r)
+      * [Background: Example use-case and why to use R to do stream processing?](#background-example-use-case-and-why-to-use-r-to-do-stream-processing)
+      * [Setting up a demo stream](#setting-up-a-demo-stream)
+      * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
+      * [Actual stream processing instead of analyzing batch data](#actual-stream-processing-instead-of-analyzing-batch-data)
+      * [Stream processor daemon](#stream-processor-daemon)
+      * [Shiny app showing the progress](#shiny-app-showing-the-progress)
+      * [Dockerizing R scripts](#dockerizing-r-scripts)
    * [Feedback](#feedback)
 
 ## Schedule
