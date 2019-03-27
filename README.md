@@ -801,6 +801,36 @@ fromJSON(records[1])
 * count the overall value of transactions in USD (hint: `binance_ticker_all_prices()` and `binance_coins_prices()`)
 * visualize the distribution of symbol pairs
 
+```
+dt <- rbindlist(lapply(records[records != '\r\n'], fromJSON))
+str(dt)
+setnames(dt, 'a', 'seller_id')
+setnames(dt, 'b', 'buyer_id')
+setnames(dt, 'E', 'event_timestamp')
+dt[, event_timestamp := as.POSIXct(event_timestamp, origin = '1970-01-01')]
+setnames(dt, 'q', 'quantity')
+setnames(dt, 'p', 'price')
+setnames(dt, 's', 'symbol')
+setnames(dt, 't', 'trade_id')
+setnames(dt, 'T', 'trade_timestamp')
+dt[, trade_timestamp := as.POSIXct(trade_timestamp, origin = '1970-01-01')]
+str(dt)
+
+for (id in grep('_id', names(dt), value = TRUE)) {
+  dt[, (id) := as.character(get(id))]  
+}
+str(dt)
+
+binance_coins_prices()
+
+dt[, .N, by = symbol]
+dt[symbol=='ETHUSDT']
+dt[, from := substr(symbol, 1, 3)]
+dt <- merge(dt, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = TRUE, all.y = FALSE)
+dt[, value := as.numeric(quantity) * usd]
+dt[, sum(value)]
+```
+
 ### Actual stream processing instead of analyzing batch data
 
 Let's write an R function to increment counters on the number of transactions per symbols:
