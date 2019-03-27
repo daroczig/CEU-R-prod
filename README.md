@@ -787,7 +787,12 @@ library(jsonlite)
 fromJSON(records[1])
 ```
 
-**Exercise**: parse the loaded 25 records into a `data.table` object with proper column types. Get some help on the data format from the [Binance API docs](https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams)!
+**Exercise**: 
+
+* parse the loaded 25 records into a `data.table` object with proper column types. Get some help on the data format from the [Binance API docs](https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams)!
+* count the overall number of units exchanged
+* count the overall value of transactions in USD (hint: `binance_ticker_all_prices()` and `binance_coins_prices()`)
+* visualize the distribution of symbol pairs
 
 
 
