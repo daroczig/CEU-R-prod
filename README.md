@@ -53,11 +53,11 @@ The goal of this assignment is to confirm that the students have a general under
 
 To minimize the system administration and most of the engineering tasks for the students, the below pre-configured tools are provided as free options, but students can decide to build their own environment (on the top of or independently from these) and feel free to use any other tools:
 
-* "binance" stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
-* "data-infra-in-prod-R-image-v2" Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “data” or “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `AWR.Kinesis` and the `binancer` package)
-* "all-the-r-things" security group with the ports already opened for RStudio Server, Shiny Server, Jenkins and Redis as well
-* "all-the-aws-things" EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and encrypt/decrypt access to the "all-the-keys" KMS key
-* "all-the-keys" KMS key that you can use to decrypt the below string to get a Slack access token for the "ceu-data-bot" user: TODO
+* `crypto` stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
+* `de3-home-assignment` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `AWR.Kinesis` and the `binancer` package)
+* `all-the-r-things` security group with the ports already opened for RStudio Server, Shiny Server, Jenkins and Redis as well
+* `kinesis-admin` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and encrypt/decrypt access to the "all-the-keys" KMS key
+* `all-the-keys` KMS key that you can use to decrypt the below string to get a Slack access token for the `ceu-data-bot` user: `AQICAHgTG+lvWpBOjwX4kAP2TTx+kP07ZEllSpqh7pvh9N6L6wEcOn1eIIcW1lX57oKF0GfCAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDGvtEjjWZmpfVBigHQIBEIBFHD8IJ0BKUwb+1A5nJLZSpKam/ESW2t4BYX4x1u8rv2ODoRbzPNHmeoo2gYkZ4wTJY6vtkdPUdr1ZUeJnWFnIkPNW8+6m`
 * lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
 
 ### Required output
@@ -72,8 +72,8 @@ To minimize the system administration and most of the engineering tasks for the 
 ### Delivery method
 
 * Document and explain your solution along the code you wrote in a PDF document. Include screenshots of your browser showing what you are doing in RStudio Server or eg Jenkins -- including the URL nav bar.
-* STOP the EC2 Instance you worked on, but don’t terminate it, so we can start it and check how it works. 
-* Please send us the PDF and the instance id of your EC2 instance when you are finished to ceu-data@googlegroups.com. Please include your student ID both in the PDF and the email.
+* STOP the EC2 Instance you worked on, but don’t terminate it, so we can start it and check how it works. Note that your instance will be terminated by us after the end of the class.
+* Please send us the PDF and the `instance_id` of your EC2 instance when you are finished to ceu-data@googlegroups.com. Please include your student ID both in the PDF and the email.
 
 ### Submission deadline
 
