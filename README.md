@@ -794,6 +794,56 @@ fromJSON(records[1])
 * count the overall value of transactions in USD (hint: `binance_ticker_all_prices()` and `binance_coins_prices()`)
 * visualize the distribution of symbol pairs
 
+### Actual stream processing instead of analyzing batch data
+
+Let's write an R function to increment counters on the number of transactions per symbols:
+
+1. Get sample raw data as per above
+
+   ```r
+   records <- kinesis_get_records('crypto', 'eu-west-1')
+   ```
+
+2. Function to parse and process it
+
+    ```r
+    txprocessor <- function(record) {
+      symbol <- fromJSON(record)$s
+      log_info(paste('Found 1 transaction on', symbol))
+      redisIncr(paste('symbol', symbol, sep = ':'))
+    }
+    ```
+
+3. Iterate on all records
+
+    ```r
+    library(logger)
+    library(rredis)
+    redisConnect()
+    for (record in records) {
+      txprocessor(record)
+    }
+    ```
+
+4. Check counters
+
+    ```r
+    symbols <- redisMGet(redisKeys('symbol:*'))
+    symbols <- data.frame(
+      symbol = sub('^symbol:', '', names(symbols)),
+      N = as.numeric(symbols))
+    symbols
+    ```
+
+5. Visualize
+
+    ```r
+    library(ggplot2)
+    ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity')
+    ```
+
+6. Rerun step (1) and (2), then (3) and (5).
+
 
 
 
