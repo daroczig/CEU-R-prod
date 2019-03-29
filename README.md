@@ -510,6 +510,8 @@ We need a persistent storage for our Jenkins jobs ... let's give a try to a key-
     redisMGet(c('counter', 'counter2'))
     ```
 
+For more examples and ideas, see the [`rredis` package vignette](https://cran.r-project.org/web/packages/rredis/vignettes/rredis.pdf) or try the interactive, genaral (not R-specific) [redis tutorial](https://try.redis.io).
+
 4. Exercises
 
     - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
@@ -807,13 +809,14 @@ str(dt)
 setnames(dt, 'a', 'seller_id')
 setnames(dt, 'b', 'buyer_id')
 setnames(dt, 'E', 'event_timestamp')
-dt[, event_timestamp := as.POSIXct(event_timestamp, origin = '1970-01-01')]
+## Unix timestamp / Epoch (number of seconds since Jan 1, 1970): https://www.epochconverter.com
+dt[, event_timestamp := as.POSIXct(event_timestamp / 1000, origin = '1970-01-01')]
 setnames(dt, 'q', 'quantity')
 setnames(dt, 'p', 'price')
 setnames(dt, 's', 'symbol')
 setnames(dt, 't', 'trade_id')
 setnames(dt, 'T', 'trade_timestamp')
-dt[, trade_timestamp := as.POSIXct(trade_timestamp, origin = '1970-01-01')]
+dt[, trade_timestamp := as.POSIXct(trade_timestamp / 1000, origin = '1970-01-01')]
 str(dt)
 
 for (id in grep('_id', names(dt), value = TRUE)) {
@@ -821,6 +824,7 @@ for (id in grep('_id', names(dt), value = TRUE)) {
 }
 str(dt)
 
+library(binancer)
 binance_coins_prices()
 
 dt[, .N, by = symbol]
@@ -879,7 +883,7 @@ Let's write an R function to increment counters on the number of transactions pe
     ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity')
     ```
 
-6. Rerun step (1) and (2), then (3) and (5).
+6. Rerun step (1) and (3) to do the data processing, then (4) and (5) for the updated data visualization.
 
 ### Stream processor daemon
 
@@ -1058,3 +1062,4 @@ Hints:
 ## Feedback
 
 We are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://gdaroczi.typeform.com/to/gDz58K
+
