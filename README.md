@@ -277,27 +277,31 @@ Although also note (3) the related security risks.
 
 4. Get some real-time data and visualize it:
 
-    1. Install devtools in the RStudio/Terminal:
+    1. Install the `devtools` R package and a few others (binary distribution) in the RStudio/Terminal:
 
         ```sh
         sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
         ```
 
-    2. Install an R package from GitHub to interact with crypto exchanges:
+    2. Switch back to the R console and install the `binancer`  R package from GitHub to interact with crypto exchanges (note the extra dependency to be installed from CRAN):
 
         ```r
         install.packages('snakecase')
         devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
         ```
 
-    3. First steps with live data:
+    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity:
 
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
+
+        <details><summary>I give up ... show me the solution :/</summary>
         ```r
         library(binancer)
         klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
         str(klines)
         summary(klines$close)
         ```
+        </details>
 
     4. Visualize the data
 
