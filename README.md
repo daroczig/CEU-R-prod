@@ -129,10 +129,15 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
         R
 
+    For example:
+
+        1 + 4
+        hist(mtcars$hp)
+
 5. Install RStudio Server
 
-        wget https://download2.rstudio.org/rstudio-server-1.1.463-amd64.deb
-        sudo gdebi rstudio-server-1.1.463-amd64.deb
+        wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5033-amd64.deb
+        sudo gdebi rstudio-server-1.2.5033-amd64.deb
 
 6. Check process and open ports
 
