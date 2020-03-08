@@ -143,8 +143,8 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
         rstudio-server status
         sudo rstudio-server status
-        sudo ps aux| grep rstudio
         sudo systemctl status rstudio-server
+        sudo ps aux| grep rstudio
         sudo netstat -tapen | grep LIST
         sudo netstat -tapen
 
@@ -183,8 +183,12 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 8. Reload webpage (F5), realize we continue where we left the browser :)
 9. Demo the terminal:
 
-        $ sudo whoami
-        ceu is not in the sudoers file.  This incident will be reported.
+    ```shell
+    $ whoami
+    ceu
+    $ sudo whoami
+    ceu is not in the sudoers file.  This incident will be reported.
+    ```
 
 8. Grant sudo access to the new user by going back to SSH with `root` access:
 
