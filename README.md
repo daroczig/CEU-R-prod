@@ -294,8 +294,7 @@ Although also note (3) the related security risks.
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
-        <details><summary>I give up ... show me the solution :/</summary><p>
-        ```r
+        <details><summary>I give up ... show me the solution :/</summary><p>```r
         library(binancer)
         klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
         str(klines)
