@@ -320,7 +320,7 @@ Although also note (3) the related security risks.
         ```
         </details>
 
-    4. Visualize the data, eg
+    4. Visualize the data, eg on a simple line chart:
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
@@ -332,7 +332,9 @@ Although also note (3) the related security risks.
         ```
         </details>
 
-    5. Create a candle chart, something like:
+    5. Now create a candle chart, something like:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
 
         <details><summary>Click here for the code generating the above ...</summary>
 
@@ -348,7 +350,9 @@ Although also note (3) the related security risks.
         ```
         </details>
 
-    6. Compare prices of 4 currencies in the past 24 hours on 15 mins intervals:
+    6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
         <details><summary>Click here for the code generating the above ...</summary>
 
