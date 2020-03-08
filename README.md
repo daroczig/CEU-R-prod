@@ -47,7 +47,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 ### Welcome to AWS!
 
 1. Use the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
-2. Secure your access key ...
+2. Secure your access key(s), other credentials and any login information ...
 
     <details><summary>... because a truly wise person learns from the mistakes of others!</summary>
 
