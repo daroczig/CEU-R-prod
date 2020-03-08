@@ -67,23 +67,31 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
     * Windows -- Download and install PuTTY: https://www.putty.org
     * Mac -- Install PuTTY for Mac using homebrew or macports
 
-            sudo brew install putty
-            sudo port install putty
+        ```shell
+        sudo brew install putty
+        sudo port install putty
+        ```
 
     * Linux -- probably the OpenSSH client is already installed, but to use the same tools on all operating systems, please install and use PuTTY on Linux too, eg on Ubuntu:
 
-            sudo apt install putty
+        ```shell
+        sudo apt install putty
+        ```
 
 3. Convert the generated pem key to PuTTY format
 
     * GUI: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html#putty-private-key
     * CLI:
 
-            puttygen key.pem -O private -o key.ppk
+        ```shell
+        puttygen key.pem -O private -o key.ppk
+        ```
 
 4. Make sure the key is readable only by your Windows/Linux/Mac user, eg
 
-        chmod 0400 key.ppk
+    ```shell
+    chmod 0400 key.ppk
+    ```
 
 ### Create and connect to an EC2 box
 
@@ -119,34 +127,46 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 1. Look at the docs: https://www.rstudio.com/products/rstudio/download-server
 2. Download Ubuntu `apt` package list
 
-        sudo apt update
+    ```shell
+    sudo apt update
+    ```
 
 3. Install dependencies
 
-        sudo apt install r-base gdebi-core
+    ```shell
+    sudo apt install r-base gdebi-core
+    ```
 
 4. Try R
 
-        R
+    ```shell
+    R
+    ```
 
     For example:
 
-        1 + 4
-        hist(mtcars$hp)
+    ```r
+    1 + 4
+    hist(mtcars$hp)
+    ```
 
 5. Install RStudio Server
 
-        wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5033-amd64.deb
-        sudo gdebi rstudio-server-1.2.5033-amd64.deb
+    ```shell
+    wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5033-amd64.deb
+    sudo gdebi rstudio-server-1.2.5033-amd64.deb
+    ```
 
 6. Check process and open ports
 
-        rstudio-server status
-        sudo rstudio-server status
-        sudo systemctl status rstudio-server
-        sudo ps aux| grep rstudio
-        sudo netstat -tapen | grep LIST
-        sudo netstat -tapen
+    ```shell
+    rstudio-server status
+    sudo rstudio-server status
+    sudo systemctl status rstudio-server
+    sudo ps aux| grep rstudio
+    sudo netstat -tapen | grep LIST
+    sudo netstat -tapen
+    ```
 
 7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
 
@@ -154,10 +174,12 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 1. Confirm that the service is up and running and the port is open
 
-        ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
-        tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
-        tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
-        tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
+    ```shell
+    ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
+    tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
+    tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
+    tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
+    ```
 
 2. Try to connect to the host from a browser on port 8787, eg http://foobar.eu-west-1.compute.amazonaws.com:8787
 3. Realize it's not working
@@ -172,13 +194,15 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 7. Login & quick demo:
 
-        1+2
-        plot(mtcars)
-        install.packages('fortunes')
-        library(fortunes)
-        fortune()
-        fortune(200)
-        system('whoami')
+    ```r
+    1+2
+    plot(mtcars)
+    install.packages('fortunes')
+    library(fortunes)
+    fortune()
+    fortune(200)
+    system('whoami')
+    ```
 
 8. Reload webpage (F5), realize we continue where we left the browser :)
 9. Demo the terminal:
@@ -192,17 +216,21 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 8. Grant sudo access to the new user by going back to SSH with `root` access:
 
-        sudo apt install -y mc
-        sudo mc
-        sudo mcedit /etc/sudoers
-        sudo adduser ceu admin
-        man adduser
-        man deluser
+    ```shell
+    sudo apt install -y mc
+    sudo mc
+    sudo mcedit /etc/sudoers
+    sudo adduser ceu admin
+    man adduser
+    man deluser
+    ```
 
 Note 1: might need to relogin / restart RStudio / reload R / reload page
 Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
 
-        ceu ALL=(ALL) NOPASSWD:ALL
+    ```shell
+    ceu ALL=(ALL) NOPASSWD:ALL
+    ```
 
 Although also note (3) the related security risks.
 
@@ -223,72 +251,90 @@ Although also note (3) the related security risks.
 
 1. Installing packages:
 
-        ## don't do this at this point!
-        ## install.packages('ggplot2')
+    ```shell
+    ## don't do this at this point!
+    ## install.packages('ggplot2')
+    ```
 
 2. Use binary packages instead via apt & Launchpad PPA:
 
-        sudo add-apt-repository ppa:marutter/rrutter
+    ```shell
+    sudo add-apt-repository ppa:marutter/rrutter
 
-        sudo add-apt-repository ppa:marutter/c2d4u
+    sudo add-apt-repository ppa:marutter/c2d4u
         
-        sudo apt-get update
-        sudo apt-get upgrade
-        sudo apt-get install r-cran-ggplot2
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get install r-cran-ggplot2
+    ```
 
 3. Ready to use it from R after restarting the session:
 
-        library(ggplot2)
-        ggplot(mtcars, aes(hp)) + geom_histogram()
+    ```r
+    library(ggplot2)
+    ggplot(mtcars, aes(hp)) + geom_histogram()
+    ```
 
 4. Get some real-time data and visualize it:
 
     1. Install devtools in the RStudio/Terminal:
 
-            sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
+        ```shell
+        sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
+        ```
 
     2. Install an R package from GitHub to interact with crypto exchanges:
 
-            install.packages('snakecase')
-            devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
+        ```shell
+        install.packages('snakecase')
+        devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
+        ```
 
     3. First steps with live data:
 
-            library(binancer)
-            klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
-            str(klines)
-            summary(klines$close)
+        ```shell
+        library(binancer)
+        klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+        str(klines)
+        summary(klines$close)
+        ```
 
     4. Visualize the data
 
-            library(ggplot2)
-            ggplot(klines, aes(close_time, close)) + geom_line()
+        ```shell
+        library(ggplot2)
+        ggplot(klines, aes(close_time, close)) + geom_line()
+        ```
 
     5. Create a candle chart
 
-            library(scales)
-            ggplot(klines, aes(open_time)) +
-                geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
-                geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
-                theme_bw() + theme('legend.position' = 'none') + xlab('') +
-                ggtitle(paste('Last Updated:', Sys.time())) +
-                scale_y_continuous(labels = dollar) +
-                scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+        ```shell
+        library(scales)
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_y_continuous(labels = dollar) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+        ```
 
     6. Compare prices of 4 currencies in the past 24 hours on 15 mins intervals:
 
-            library(data.table)
-            klines <- rbindlist(lapply(
-                c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
-                binance_klines,
-                interval = '15m', limit = 4*24))
-            ggplot(klines, aes(open_time)) +
-                geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
-                geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
-                theme_bw() + theme('legend.position' = 'none') + xlab('') +
-                ggtitle(paste('Last Updated:', Sys.time())) +
-                scale_color_manual(values = c('#1a9850', '#d73027')) +
-                facet_wrap(~symbol, scales = 'free', nrow = 2)
+        ```shell
+        library(data.table)
+        klines <- rbindlist(lapply(
+            c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
+            binance_klines,
+            interval = '15m', limit = 4*24))
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) +
+             facet_wrap(~symbol, scales = 'free', nrow = 2)
+        ```
 
     7. Some further useful functions:
 
@@ -308,18 +354,22 @@ Although also note (3) the related security risks.
 
 1. Install Jenkins from the RStudio/Terminal: https://pkg.jenkins.io/debian-stable/
 
-        wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
-        echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
-        sudo apt update
-        sudo apt install openjdk-8-jdk-headless jenkins ## installing Java as well
-        sudo netstat -tapen | grep java
+    ```shell
+    wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+    echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
+    sudo apt update
+    sudo apt install openjdk-8-jdk-headless jenkins ## installing Java as well
+    sudo netstat -tapen | grep java
+    ```
 
 2. Open up port 8080 in the related security group
 3. Access Jenkins from your browser and finish installation
 
     1. Read the initial admin password from RStudio/Terminal via
 
-            sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```shell
+        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```
 
     2. Proceed with installing the suggested plugins
     3. Create your first user (eg `ceu`)
