@@ -67,14 +67,14 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
     * Windows -- Download and install PuTTY: https://www.putty.org
     * Mac -- Install PuTTY for Mac using homebrew or macports
 
-        ```shell
+        ```sh
         sudo brew install putty
         sudo port install putty
         ```
 
     * Linux -- probably the OpenSSH client is already installed, but to use the same tools on all operating systems, please install and use PuTTY on Linux too, eg on Ubuntu:
 
-        ```shell
+        ```sh
         sudo apt install putty
         ```
 
@@ -83,13 +83,13 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
     * GUI: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html#putty-private-key
     * CLI:
 
-        ```shell
+        ```sh
         puttygen key.pem -O private -o key.ppk
         ```
 
 4. Make sure the key is readable only by your Windows/Linux/Mac user, eg
 
-    ```shell
+    ```sh
     chmod 0400 key.ppk
     ```
 
@@ -127,19 +127,19 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 1. Look at the docs: https://www.rstudio.com/products/rstudio/download-server
 2. Download Ubuntu `apt` package list
 
-    ```shell
+    ```sh
     sudo apt update
     ```
 
 3. Install dependencies
 
-    ```shell
+    ```sh
     sudo apt install r-base gdebi-core
     ```
 
 4. Try R
 
-    ```shell
+    ```sh
     R
     ```
 
@@ -152,14 +152,14 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 5. Install RStudio Server
 
-    ```shell
+    ```sh
     wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.2.5033-amd64.deb
     sudo gdebi rstudio-server-1.2.5033-amd64.deb
     ```
 
 6. Check process and open ports
 
-    ```shell
+    ```sh
     rstudio-server status
     sudo rstudio-server status
     sudo systemctl status rstudio-server
@@ -174,7 +174,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 1. Confirm that the service is up and running and the port is open
 
-    ```shell
+    ```sh
     ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
     tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
     tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
@@ -207,7 +207,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 8. Reload webpage (F5), realize we continue where we left the browser :)
 9. Demo the terminal:
 
-    ```shell
+    ```sh
     $ whoami
     ceu
     $ sudo whoami
@@ -216,7 +216,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 8. Grant sudo access to the new user by going back to SSH with `root` access:
 
-    ```shell
+    ```sh
     sudo apt install -y mc
     sudo mc
     sudo mcedit /etc/sudoers
@@ -228,7 +228,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 Note 1: might need to relogin / restart RStudio / reload R / reload page
 Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
 
-    ```shell
+    ```sh
     ceu ALL=(ALL) NOPASSWD:ALL
     ```
 
@@ -251,14 +251,14 @@ Although also note (3) the related security risks.
 
 1. Installing packages:
 
-    ```shell
+    ```sh
     ## don't do this at this point!
     ## install.packages('ggplot2')
     ```
 
 2. Use binary packages instead via apt & Launchpad PPA:
 
-    ```shell
+    ```sh
     sudo add-apt-repository ppa:marutter/rrutter
 
     sudo add-apt-repository ppa:marutter/c2d4u
@@ -279,20 +279,20 @@ Although also note (3) the related security risks.
 
     1. Install devtools in the RStudio/Terminal:
 
-        ```shell
+        ```sh
         sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
         ```
 
     2. Install an R package from GitHub to interact with crypto exchanges:
 
-        ```shell
+        ```sh
         install.packages('snakecase')
         devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
         ```
 
     3. First steps with live data:
 
-        ```shell
+        ```sh
         library(binancer)
         klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
         str(klines)
@@ -301,14 +301,14 @@ Although also note (3) the related security risks.
 
     4. Visualize the data
 
-        ```shell
+        ```sh
         library(ggplot2)
         ggplot(klines, aes(close_time, close)) + geom_line()
         ```
 
     5. Create a candle chart
 
-        ```shell
+        ```sh
         library(scales)
         ggplot(klines, aes(open_time)) +
             geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
@@ -321,7 +321,7 @@ Although also note (3) the related security risks.
 
     6. Compare prices of 4 currencies in the past 24 hours on 15 mins intervals:
 
-        ```shell
+        ```sh
         library(data.table)
         klines <- rbindlist(lapply(
             c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
@@ -354,7 +354,7 @@ Although also note (3) the related security risks.
 
 1. Install Jenkins from the RStudio/Terminal: https://pkg.jenkins.io/debian-stable/
 
-    ```shell
+    ```sh
     wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
     echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
     sudo apt update
@@ -367,7 +367,7 @@ Although also note (3) the related security risks.
 
     1. Read the initial admin password from RStudio/Terminal via
 
-        ```shell
+        ```sh
         sudo cat /var/lib/jenkins/secrets/initialAdminPassword
         ```
 
