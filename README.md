@@ -85,7 +85,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
         sudo apt install putty
         ```
 
-3. Convert the generated pem key to PuTTY format
+3. ~~Convert the generated pem key to PuTTY format~~Non need to do this anymore, AWS can provide the key as PPK now.
 
     * GUI: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html#putty-private-key
     * CLI:
