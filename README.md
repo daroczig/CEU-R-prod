@@ -16,6 +16,9 @@ Table of Contents
       * [Set up an easy to remember domain name](#set-up-an-easy-to-remember-domain-name)
       * [Play with R for a bit](#play-with-r-for-a-bit)
       * [Prepare to schedule R commands](#prepare-to-schedule-r-commands)
+      * [Schedule R commands](#schedule-r-commands)
+      * [Schedule R scripts](#schedule-r-scripts)
+      * [ScheduleR improvements](#scheduler-improvements)
       * [Homework](#homework)
    * [Week 2: Scaling R applications](#week-2-scaling-r-applications)
    * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
@@ -450,8 +453,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
     ```r
     library(binancer)
     prices <- binance_coins_prices()
-    library(futile.logger)
-    flog.info('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
+    sprintf('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
     ```
         
 2. Instead of calling `R -e "..."` in the Jenkins jobs, reference the above R script using `Rscript` instead
@@ -488,7 +490,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
 ### Homework
 
-Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week!
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
 ## Week 2: Scaling R applications
 
