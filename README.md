@@ -410,6 +410,82 @@ Although also note (3) the related security risks.
     2. Proceed with installing the suggested plugins
     3. Create your first user (eg `ceu`)
 
+### Schedule R commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Log in to Jenkins using your instance's public IP address and port 8080
+2. Use the `ceu` username and `ceudata` password
+3. Create a "New Item" (job):
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to look up the most recent BTC price
+
+        ```sh
+        R -e "library(binancer);binance_coins_prices()[symbol == 'BTC', usd]"
+        ```
+
+    6. Run the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/jenkins-errors.png)
+
+4. Debug & figure out what's the problem ...
+5. Install R packages system wide from RStudio/Terminal (more on this later):
+
+    ```sh
+    sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
+    ```
+
+6. Rerun the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
+
+### Schedule R scripts
+
+1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    library(futile.logger)
+    flog.info('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
+    ```
+        
+2. Instead of calling `R -e "..."` in the Jenkins jobs, reference the above R script using `Rscript` instead
+
+### ScheduleR improvements
+
+1. Learn about little R: https://github.com/eddelbuettel/littler
+2. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
+
+    1. Whitelist and confirm your e-mail address at https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-email:
+    2. Take a note on the SMTP settings:
+
+        * Server: email-smtp.eu-west-1.amazonaws.com
+        * Port: 587
+        * TLS: Yes
+
+    3. Create SMTP credentials and note the username and password
+    4. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
+
+        1. Set up the default FROM e-mail address: jenkins@ceudata.net
+        2. Search for "Extended E-mail Notification" and configure
+
+           * SMTP Server
+           * Click "Advanced"
+           * Check "Use SMTP Authentication"
+           * Enter User Name from the above steps from SNS
+           * Enter Password from the above steps from SNS
+           * Check "Use SSL"
+           * SMTP port: 587
+
+    5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
+
+3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
+
 ### Homework
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week!
