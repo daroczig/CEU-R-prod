@@ -352,7 +352,7 @@ Although also note (3) the related security risks.
 
     6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
 
-        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
 
         <details><summary>Click here for the code generating the above ...</summary>
 
