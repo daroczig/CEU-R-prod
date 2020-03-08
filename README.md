@@ -57,11 +57,12 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
     > "Nevertheless, now I know that Bitcoin can be mined with SQL, which is priceless ;-)"
     -- [Uri Shaked](https://medium.com/@urish/thank-you-google-how-to-mine-bitcoin-on-googles-bigquery-1c8e17b04e62)
 
+    So set up 2FA (go to IAM / Users / username / Security credentials / Assigned MFA device): https://console.aws.amazon.com/iam
+
     PS probably you do not really need to store any access keys, but you may rely on roles (and the Key Management Service, and the Secrets Manager and so on)
     </details>
 
-3. So set up 2FA (go to IAM / Users / username / Security credentials / Assigned MFA device): https://console.aws.amazon.com/iam
-4. Let's use the `eu-west-1` Ireland region
+3. Let's use the `eu-west-1` Ireland region
 
 ### Getting access to EC2 boxes
 
