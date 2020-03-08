@@ -174,7 +174,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 
 1. Confirm that the service is up and running and the port is open
 
-    ```sh
+    ```console
     ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
     tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
     tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
@@ -207,7 +207,7 @@ http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Dat
 8. Reload webpage (F5), realize we continue where we left the browser :)
 9. Demo the terminal:
 
-    ```sh
+    ```console
     $ whoami
     ceu
     $ sudo whoami
