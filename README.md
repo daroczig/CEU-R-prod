@@ -290,7 +290,7 @@ Although also note (3) the related security risks.
         devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
         ```
 
-    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity:
+    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity -- something like:
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
@@ -301,7 +301,7 @@ Although also note (3) the related security risks.
         str(klines)
         summary(klines$close)
         ```
-        </details></p>
+        </p></details>
 
     4. Visualize the data
 
