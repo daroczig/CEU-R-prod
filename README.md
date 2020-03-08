@@ -280,19 +280,19 @@ Although also note (3) the related security risks.
     1. Install devtools in the RStudio/Terminal:
 
         ```sh
-        sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-futile.logger r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
+        sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
         ```
 
     2. Install an R package from GitHub to interact with crypto exchanges:
 
-        ```sh
+        ```r
         install.packages('snakecase')
         devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
         ```
 
     3. First steps with live data:
 
-        ```sh
+        ```r
         library(binancer)
         klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
         str(klines)
@@ -301,14 +301,14 @@ Although also note (3) the related security risks.
 
     4. Visualize the data
 
-        ```sh
+        ```r
         library(ggplot2)
         ggplot(klines, aes(close_time, close)) + geom_line()
         ```
 
     5. Create a candle chart
 
-        ```sh
+        ```r
         library(scales)
         ggplot(klines, aes(open_time)) +
             geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
@@ -321,7 +321,7 @@ Although also note (3) the related security risks.
 
     6. Compare prices of 4 currencies in the past 24 hours on 15 mins intervals:
 
-        ```sh
+        ```r
         library(data.table)
         klines <- rbindlist(lapply(
             c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
