@@ -133,6 +133,7 @@ Details to be shared later.
 Alternatively, you can connect via a standard SSH client on a Mac or Linux, something like:
 
 ```sh
+chmod 0400 /path/to/your/pem
 ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 ```
 
