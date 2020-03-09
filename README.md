@@ -130,6 +130,12 @@ Details to be shared later.
     5. Click the "Open" button
     6. Accept & cache server's host key
 
+Alternatively, you can connect via a standard SSH client on a Mac or Linux, something like:
+
+```sh
+ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
+```
+
 ### Install RStudio Server on EC2
 
 1. Look at the docs: https://www.rstudio.com/products/rstudio/download-server
