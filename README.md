@@ -530,17 +530,18 @@ Rscript /home/ceu/de4.R
 ### 💪 ScheduleR improvements
 
 1. Learn about little R: https://github.com/eddelbuettel/littler
-2. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
+2. Set up e-mail notifications via eg mailjet.com
 
-    1. Whitelist and confirm your e-mail address at https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#verified-senders-email:
-    2. Take a note on the SMTP settings:
+    1. Sign up, confirm your e-mail address and domain
+    2. Take a note on the SMTP settings, eg
 
-        * Server: email-smtp.eu-west-1.amazonaws.com
-        * Port: 587
-        * TLS: Yes
+        * SMTP server: in-v3.mailjet.com
+        * Port: 465
+        * SSL: Yes
+        * Username: ***
+        * Password: ***
 
-    3. Create SMTP credentials and note the username and password
-    4. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
+    3. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
 
         1. Set up the default FROM e-mail address: jenkins@ceudata.net
         2. Search for "Extended E-mail Notification" and configure
@@ -551,9 +552,14 @@ Rscript /home/ceu/de4.R
            * Enter User Name from the above steps from SNS
            * Enter Password from the above steps from SNS
            * Check "Use SSL"
-           * SMTP port: 587
+           * SMTP port: 465
 
     5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
+    6. Configure the job to send the whole e-mail body as the deault body template for all outgoing emails
+
+    ```shell
+    ${BUILD_LOG, maxLines=1000}
+    ```
 
 3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
 
