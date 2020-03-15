@@ -464,10 +464,6 @@ Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tuto
 
 ## Week 2: Scaling R applications
 
-### Quiz
-
-Please fill in the form at [ ](https://goo.gl/forms/oKQ0zILuQljgBxyH3)
-
 ### Recap
 
 What we convered last week:
@@ -487,6 +483,11 @@ What we convered last week:
 Note the above detailed steps for the above!
 
 Also, in the below steps, you can skip running all the instructions prefixed with 💪 -- as the Amazon AMI has already configured so for your convenience, and these steps are just here as an FYI if you want to reproduce the same environment later (eg for a hobby project or work).
+
+
+### Quiz
+
+Please fill in the form at [ ](https://goo.gl/forms/oKQ0zILuQljgBxyH3)
 
 ### Preparations
 
@@ -621,7 +622,7 @@ For more examples and ideas, see the [`rredis` package vignette](https://cran.r-
     - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
     - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
 
-Example solution:
+<details><summary>Example solution ...</summary>
 
 ```r
 library(rredis)
@@ -635,8 +636,9 @@ redisGet('price:ETH')
 
 redisMGet(c('price:BTC', 'price:ETH'))
 ```
+</details>
 
-Example solution using a helper function doing some logging:
+<details><summary>Example solution using a helper function doing some logging ...</summary>
 
 ```r
 store <- function(symbol) {
@@ -651,6 +653,7 @@ store('ETH')
 ## list all keys with the "price" prefix and lookup the actual values
 redisMGet(redisKeys('price:*'))
 ```
+</details>
 
 More on databases at the "Mastering R" class in the Spring semester ;)
 
@@ -753,7 +756,7 @@ We will also cover this in more details in the Mastering R class in the Spring s
 * Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day
 * Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
 
-Example solution for (1):
+<details><summary>Example solution for the first exercise ...</summary>
 
 ```r
 ## get data right from the Binance API
@@ -775,6 +778,7 @@ if (btc < 3800 | btc > 4000) {
     channel = '#ba-de4-2019-bots')
 }
 ```
+</details>
 
 ## Week 3: Stream processing with R
 
