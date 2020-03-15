@@ -22,7 +22,7 @@ Table of Contents
       * [Set up an easy to remember IP address](#-set-up-an-easy-to-remember-ip-address)
       * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
       * [Schedule R scripts](#schedule-r-scripts)
-      * [ScheduleR improvements](#scheduler-improvements)
+      * [ScheduleR improvements](#-scheduler-improvements)
    * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
    * [Contact](#contact)
 
@@ -458,7 +458,24 @@ Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tuto
 
 ### Quiz
 
-Please fill in the form at 
+Please fill in the form at [ ](https://goo.gl/forms/oKQ0zILuQljgBxyH3)
+
+### Recap
+
+What we convered last week:
+
+1. 2FA/MFA in AWS
+2. Creating EC2 nodes
+3. Connecting to EC2 nodes via SSH/Putty
+4. Updating security groups
+5. Installing RStudio Server
+6. The difference between R Console and Shell
+7. Adding new Linux users
+8. Granting `sudo` access to Linux users
+9. Installing R packages system-wide VS in the user's home folder
+10. Installing and setting up Jenkins
+
+Note the above detailed steps for the above!
 
 ### Preparations
 
@@ -504,9 +521,13 @@ Optionally you can associate a subdomain with your node, using the above created
     sprintf('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
     ```
         
-2. Instead of calling `R -e "..."` in the Jenkins jobs, reference the above R script using `Rscript` instead
+2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
 
-### ScheduleR improvements
+```shell
+Rscript /home/ceu/de4.R
+```
+
+### 💪 ScheduleR improvements
 
 1. Learn about little R: https://github.com/eddelbuettel/littler
 2. Set up e-mail notifications via SNS: https://eu-west-1.console.aws.amazon.com/ses/home?region=eu-west-1#
