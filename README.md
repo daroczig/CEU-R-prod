@@ -18,13 +18,21 @@ Table of Contents
       * [Schedule R commands](#schedule-r-commands)
       * [Homework](#homework)
    * [Week 2: Scaling R applications](#week-2-scaling-r-applications)
+      * [Recap](#recap)
       * [Preparations](#preparations)
       * [Set up an easy to remember IP address](#-set-up-an-easy-to-remember-ip-address)
       * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
       * [ScheduleR improvements](#-scheduler-improvements)
       * [Schedule R scripts](#schedule-r-scripts)
+      * [Intro to redis](#intro-to-redis)
+      * [Interacting with Slack](#interacting-with-slack)
+         * [Using Slack from Jenkins](#using-slack-from-jenkins)
+         * [Note on storing the Slack token](#note-on-storing-the-slack-token)
+         * [Using Slack from R](#using-slack-from-r)
+      * [Better handling of secrets and credentials](#better-handling-of-secrets-and-credentials)
+      * [Job Scheduler exercises](#job-scheduler-exercises)
   * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
-   * [Contact](#contact)
+  * [Contact](#contact)
 
 ## Schedule
 
