@@ -111,7 +111,7 @@ Details to be shared later.
     1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
     2. Click "Launch Instance"
     3. Pick the `Ubuntu Server 18.04 LTS (HVM), SSD Volume Type` AMI
-    4. Pick `t2.micro` instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
+    4. Pick `t3.micro` instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
     5. Click "Review and Launch"
     6. Pick a unique name for the security group after clicking "Edit Security Group"
     7. Click "Launch"
@@ -466,7 +466,7 @@ What we convered last week:
 
 1. 2FA/MFA in AWS
 2. Creating EC2 nodes
-3. Connecting to EC2 nodes via SSH/Putty
+3. Connecting to EC2 nodes via SSH/Putty (note the difference between the PPK and PEM key formats)
 4. Updating security groups
 5. Installing RStudio Server
 6. The difference between R Console and Shell
@@ -474,6 +474,7 @@ What we convered last week:
 8. Granting `sudo` access to Linux users
 9. Installing R packages system-wide VS in the user's home folder
 10. Installing and setting up Jenkins
+11. Debugging issues, eg small instance with limited memory for compiling packages from source and user permissions
 
 Note the above detailed steps for the above!
 
@@ -487,7 +488,7 @@ Also, in the below steps, you can skip running all the instructions prefixed wit
 4. Go to the EC2 console at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
 5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneded keys.
 6. 💪 Check on the wasted money in the AWS Cost Explorer
-7. Create a new EC2 instance using the `de4-week2` AMI and `t3.small` instance size using a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
+7. Create a new `t3.micro` instance using the `de4-week2` AMI and `t3.small` instance size using a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
 8. Log in to RStudio using the new instance's public IP address and 8787 port, then the `ceu` username and `ceudata` password
 9. Check if the price of a Bitcoin is more than $4,000 (feel free to scroll up to get some hints from last week's R scripts)
 
@@ -645,9 +646,97 @@ redisMGet(redisKeys('price:*'))
 
 More on databases at the "Mastering R" class in the Spring semester ;)
 
+### Interacting with Slack
 
+1. Join the #ba-de4-2019-bots channel in the `ceu-bizanalytics` Slack
+2. 💪 A custom Slack app is already created at https://api.slack.com/apps/A9FBHCLPR, but feel free to create a new one and use the related app in the following steps
+3. Look up the app's bots in the sidebar
+4. Look up the Access Token
 
-To be uploaded.
+#### Using Slack from Jenkins
+
+1. Get familiar with the Slack Notifier Jenkins plugin: https://plugins.jenkins.io/slack
+2. Configure global Slack options (what about storing the token?)
+3. Set up post-hook actions to alert in Slack if a Jenkins job is failing
+
+TODO where to add satrday talk slides?
+
+#### Note on storing the Slack token
+
+1. Do not store the token in plain-text!
+2. Let's use Amazon's Key Management Service: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (slides 73-75)
+3. 💪 Instead of using the Java SDK, let's install `boto3` Python module and use via `reticulate`:
+
+    ```shell
+    sudo apt install python4-pip
+    sudo pip3 install boto3
+    sudo Rscript -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('reticulate', repos='https://cran.rstudio.com/'))"
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/botor', upgrade_dependencies = FALSE))"
+    ```
+
+4. 💪 Create a KMS key in IAM: `alias/de4`
+5. Grant access to that KMS key by creating an EC2 IAM role at https://console.aws.amazon.com/iam/home?region=eu-west-1#/roles with the `AWSKeyManagementServicePowerUser` policy and explicit grant access to the key in the KMS console
+6. Attach the newly created IAM role
+7. Use this KMS key to encrypt the Slack token:
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    kms_encrypt('token', key = 'alias/de4')
+    ```
+
+8. Store the ciphertext and use `kms_decrypt` to decrypt later, see eg 
+
+    ```r
+    kms_decrypt("AQICAHhh7Ku/BWdSbCqos9k49Vnk1+WytvoesgX+1bOvLAlyegHa210D93pgytNnThR9qVVxAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKkH9le72xKmMsgjTQIBEIBT/7MbIV2sG6Hh+fb8BJQ9a6VNOZ1rhPAgvSET6IUdiki92fMZ6dDBOpmSSuaa3t8KIF9KtrlbQAYQNtPVHUvFl1GpyM0k8bD7jLSsUPeRjFNoI+Q=")
+    ```
+
+#### Using Slack from R
+
+4. 💪 Install the Slack R client
+
+    ```
+    sudo apt install r-cran-rlang r-cran-purrr r-cran-tibble r-cran-dplyr
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    library(botor)
+    token <- kms_decrypt("AQICAHhh7Ku/BWdSbCqos9k49Vnk1+WytvoesgX+1bOvLAlyegHa210D93pgytNnThR9qVVxAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKkH9le72xKmMsgjTQIBEIBT/7MbIV2sG6Hh+fb8BJQ9a6VNOZ1rhPAgvSET6IUdiki92fMZ6dDBOpmSSuaa3t8KIF9KtrlbQAYQNtPVHUvFl1GpyM0k8bD7jLSsUPeRjFNoI+Q=")
+    library(slackr)
+    slackr_setup(username = 'jenkins', api_token = token, icon_emoji = ':jenkins-rage:')
+    text_slackr(text = 'Hi there!', channel = '#ba-de4-2019-bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    text_slackr(text = msg, preformatted = FALSE, channel = '#ba-de4-2019-bots')
+    ```
+
+7. Or plot
+
+    ```r
+    library(ggplot2)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#ba-de4-2019-bots', width = 12)
+    ```
+
+### Better handling of secrets and credentials
+
+Besides KMS, there are a few other great options as well, see eg the System Manager's Parameter Store at https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/?region=eu-west-1 (which will need you to grant access to SSM for the related IAM role, eg via attaching the `AmazonSSMReadOnlyAccess` policy):
+
+```r
+ssm_get_parameter('slack')
+```
+
+We will also cover this in more details in the Mastering R class in the Spring semester.
 
 ## Week 3: Stream processing with R
 
