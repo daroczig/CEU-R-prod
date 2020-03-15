@@ -21,9 +21,9 @@ Table of Contents
       * [Preparations](#preparations)
       * [Set up an easy to remember IP address](#-set-up-an-easy-to-remember-ip-address)
       * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
-      * [Schedule R scripts](#schedule-r-scripts)
       * [ScheduleR improvements](#-scheduler-improvements)
-   * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
+      * [Schedule R scripts](#schedule-r-scripts)
+  * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
    * [Contact](#contact)
 
 ## Schedule
@@ -477,6 +477,8 @@ What we convered last week:
 
 Note the above detailed steps for the above!
 
+Also, in the below steps, you can skip running all the instructions prefixed with 💪 -- as the Amazon AMI has already configured so for your convenience, and these steps are just here as an FYI if you want to reproduce the same environment later (eg for a hobby project or work).
+
 ### Preparations
 
 1. Log in to the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
@@ -510,22 +512,6 @@ Optionally you can associate a subdomain with your node, using the above created
     - click `Create`
 
 4. Now you will be able to access your box using this custon (sub)domain, no need to remember IP addresses.
-
-### Schedule R scripts
-
-1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
-
-    ```r
-    library(binancer)
-    prices <- binance_coins_prices()
-    sprintf('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
-    ```
-        
-2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
-
-```shell
-Rscript /home/ceu/de4.R
-```
 
 ### 💪 ScheduleR improvements
 
@@ -562,6 +548,102 @@ Rscript /home/ceu/de4.R
     ```
 
 3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
+
+### Schedule R scripts
+
+1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    sprintf('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
+    ```
+        
+2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
+
+```shell
+Rscript /home/ceu/de4.R
+```
+
+### Intro to redis
+
+We need a persistent storage for our Jenkins jobs ... let's give a try to a key-value database:
+
+1. 💪 Install server
+
+   ```
+   sudo apt install redis-server
+   netstat -tapen | grep LIST
+   ```
+
+2. 💪 Install client
+
+    ```
+    sudo Rscript -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('rredis', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Interact from R
+
+    ```r
+    ## set up and initialize the connection to the local redis server
+    library(rredis)
+    redisConnect()
+    
+    ## set/get values
+    redisSet('foo', 'bar')
+    redisGet('foo')
+    
+    ## increment and decrease counters
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+    
+    ## get multiple values at once
+    redisMGet(c('counter', 'counter2'))
+    ```
+
+For more examples and ideas, see the [`rredis` package vignette](https://cran.r-project.org/web/packages/rredis/vignettes/rredis.pdf) or try the interactive, genaral (not R-specific) [redis tutorial](https://try.redis.io).
+
+4. Exercises
+
+    - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+    - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+
+Example solution:
+
+```r
+library(rredis)
+redisConnect()
+
+redisSet('price:BTC', binance_klines('BTCUSDT', interval = '1m', limit = 1)$close)
+redisSet('price:ETH', binance_klines('ETHUSDT', interval = '1m', limit = 1)$close)
+
+redisGet('price:BTC')
+redisGet('price:ETH')
+
+redisMGet(c('price:BTC', 'price:ETH'))
+```
+
+Example solution using a helper function doing some logging:
+
+```r
+store <- function(symbol) {
+  print(paste('Looking up and storing', symbol))
+  redisSet(paste('price', symbol, sep = ':'), 
+           binance_klines(paste0(symbol, 'USDT'), interval = '1m', limit = 1)$close)
+}
+
+store('BTC')
+store('ETH')
+
+## list all keys with the "price" prefix and lookup the actual values
+redisMGet(redisKeys('price:*'))
+```
+
+More on databases at the "Mastering R" class in the Spring semester ;)
 
 
 
