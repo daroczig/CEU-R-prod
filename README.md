@@ -13,14 +13,16 @@ Table of Contents
       * [Create and connect to an EC2 box](#create-and-connect-to-an-ec2-box)
       * [Install RStudio Server on EC2](#install-rstudio-server-on-ec2)
       * [Connect to the RStudio Server](#connect-to-the-rstudio-server)
-      * [Set up an easy to remember domain name](#set-up-an-easy-to-remember-domain-name)
       * [Play with R for a bit](#play-with-r-for-a-bit)
       * [Prepare to schedule R commands](#prepare-to-schedule-r-commands)
       * [Schedule R commands](#schedule-r-commands)
-      * [Schedule R scripts](#schedule-r-scripts)
-      * [ScheduleR improvements](#scheduler-improvements)
       * [Homework](#homework)
    * [Week 2: Scaling R applications](#week-2-scaling-r-applications)
+      * [Preparations](#preparations)
+      * [Set up an easy to remember IP address](#set-up-an-easy-to-remember-ip-address)
+      * [Set up an easy to remember domain name](#set-up-an-easy-to-remember-domain-name)
+      * [Schedule R scripts](#schedule-r-scripts)
+      * [ScheduleR improvements](#scheduler-improvements)
    * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
    * [Contact](#contact)
 
@@ -252,16 +254,6 @@ Although also note (3) the related security risks.
 9. Custom login page: http://docs.rstudio.com/ide/server-pro/authenticating-users.html#customizing-the-sign-in-page
 10. Custom port: http://docs.rstudio.com/ide/server-pro/access-and-security.html#network-port-and-address
 
-### Set up an easy to remember domain name
-
-1. Go to Route 53: https://console.aws.amazon.com/route53/home
-2. Go to Hosted Zones and click on `ceudata.net`
-3. Create a new Record, where
-
-    - fill in the desired `Name` (subdomain)
-    - paste the public IP address or hostname of your server in the `Value` field
-    - click `Create`
-
 ### Play with R for a bit
 
 1. Installing packages:
@@ -458,6 +450,50 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
     ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
 
+### Homework
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
+
+## Week 2: Scaling R applications
+
+### Quiz
+
+Please fill in the form at 
+
+### Preparations
+
+1. Log in to the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
+2. Did you use 2FA / MFA?!
+3. Use the Ireland regiuon
+4. Go to the EC2 console at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneded keys.
+6. 💪 Check on the wasted money in the AWS Cost Explorer
+7. Create a new EC2 instance using the `de4-week2` AMI and `t3.small` instance size using a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
+8. Log in to RStudio using the new instance's public IP address and 8787 port, then the `ceu` username and `ceudata` password
+9. Check if the price of a Bitcoin is more than $4,000 (feel free to scroll up to get some hints from last week's R scripts)
+
+### 💪 Set up an easy to remember IP address
+
+Optionally you can associate a fixed IP address to your box:
+
+1. Allocate a new Elastic IP address at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Addresses:
+2. Name this resource by assigning a "Name" tag
+3. Associate this Elastic IP with your stopped box, then start it
+
+### 💪 Set up an easy to remember domain name
+
+Optionally you can associate a subdomain with your node, using the above created Elastic IP address:
+
+1. Go to Route 53: https://console.aws.amazon.com/route53/home
+2. Go to Hosted Zones and click on `ceudata.net`
+3. Create a new Record, where
+
+    - fill in the desired `Name` (subdomain)
+    - paste the public IP address or hostname of your server in the `Value` field
+    - click `Create`
+
+4. Now you will be able to access your box using this custon (sub)domain, no need to remember IP addresses.
+
 ### Schedule R scripts
 
 1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
@@ -500,11 +536,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
 3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
 
-### Homework
 
-Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
-
-## Week 2: Scaling R applications
 
 To be uploaded.
 
