@@ -738,6 +738,36 @@ ssm_get_parameter('slack')
 
 We will also cover this in more details in the Mastering R class in the Spring semester.
 
+### Job Scheduler exercises
+
+* Create a Jenkins job to alert if Bitcoin price is below $3.8K or higher than $4K
+* Create a Jenkins job to alert if Bitcoin price changed more than $200 in the past hour
+* Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day
+* Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
+
+Example solution for (1):
+
+```r
+## get data right from the Binance API
+library(binancer)
+btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
+
+## or from the local cache (updated every minute from Jenkins as per above)
+library(rredis)
+btc <- redisGet('price:BTC')
+
+## send alert
+if (btc < 3800 | btc > 4000) {
+  library(botor)
+  token <- ssm_get_parameter('slack')
+  library(slackr)
+  slackr_setup(username = 'jenkins', api_token = token, icon_emoji = ':jenkins-rage:')
+  text_slackr(
+    text = paste('uh ... oh... BTC price:', btc), 
+    channel = '#ba-de4-2019-bots')
+}
+```
+
 ## Week 3: Stream processing with R
 
 To be uploaded.
