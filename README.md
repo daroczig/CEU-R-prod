@@ -504,7 +504,7 @@ Also, in the below steps, you can skip running all the instructions prefixed wit
 
 ### Quiz
 
-Please fill in the form at [ ](https://goo.gl/forms/oKQ0zILuQljgBxyH3)
+Please fill in the form at https://goo.gl/forms/oKQ0zILuQljgBxyH3
 
 ### Preparations
 
