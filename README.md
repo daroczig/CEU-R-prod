@@ -670,7 +670,9 @@ More on databases at the "Mastering R" class in the Spring semester ;)
 2. Configure global Slack options (what about storing the token?)
 3. Set up post-hook actions to alert in Slack if a Jenkins job is failing
 
-TODO where to add satrday talk slides?
+#### Talk: Productionizing R in the Cloud
+
+Slides at http://bit.ly/satrday-la-2018-daroczig
 
 #### Note on storing the Slack token
 
@@ -766,6 +768,10 @@ btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
 ## or from the local cache (updated every minute from Jenkins as per above)
 library(rredis)
 btc <- redisGet('price:BTC')
+
+## log whatever was retreived
+library(logger)
+log_info('The current price of a Bitcoin is ${btc}')
 
 ## send alert
 if (btc < 3800 | btc > 4000) {
