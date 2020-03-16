@@ -464,6 +464,21 @@ Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tuto
 
 ## Week 2: Scaling R applications
 
+### Intro to the online version of this class
+
+* I highly recommended to get a second screen for your laptop: it can be a monitor attached to your laptop, or the TV in your living room connected via HDMI cable to your laptop, or if you have a spare tablet or laptop that you can use -- all should work fine. The goal is to have a dedicated screen for the video-conferencing, so that you can follow the stream (and ask questions), and have your usual laptop screen to do the exercises etc
+* It's much better to use a headphone (compared to using the laptop speakers and microphone) so that you hear better all the others and also the others can better understand you
+* Please click on the "mute" button on your end when not asking questions to reduce background noise
+* Please DO feel free to ask questions and interact with the course at any time -- doing the class remotely doesn't mean you are just watching a video! Please raise your voice if something is not clear, and follow the exercises to make the most out of this unfortunate situation.
+
+Quick intro to Google Hangouts / Meet:
+
+* mute/unmute
+* enable/disable camera (save bandwith and CPU cycles)
+* share your screen or a window
+* chat sidebar
+* alternative way of reaching me: email, slack, moodle
+
 ### Recap
 
 What we convered last week:
