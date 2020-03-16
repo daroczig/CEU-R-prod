@@ -464,6 +464,8 @@ Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tuto
 
 ## Week 2: Scaling R applications
 
+> Hello folks, we'll start at 15:30.
+
 ### Intro to the online version of this class
 
 * I highly recommended to get a second screen for your laptop: it can be a monitor attached to your laptop, or the TV in your living room connected via HDMI cable to your laptop, or if you have a spare tablet or laptop that you can use -- all should work fine. The goal is to have a dedicated screen for the video-conferencing, so that you can follow the stream (and ask questions), and have your usual laptop screen to do the exercises etc
