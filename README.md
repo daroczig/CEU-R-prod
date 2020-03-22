@@ -44,7 +44,39 @@ Table of Contents
 
 The goal of this assignment is to confirm that the students have a general understanding on how to build data pipelines using Amazon Web Services and R, and can actually implement a stream processing application (either running in almost real-time or batched/scheduled way) in practice.
 
-Details to be shared later.
+### Tech setup
+
+To minimize the system administration and most of the engineering tasks for the students, the below pre-configured tools are provided as free options, but students can decide to build their own environment (on the top of or independently from these) and feel free to use any other tools:
+
+* `CEU-Binance` stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
+* `de4-week2` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `botor`, `AWR.Kinesis` and the `binancer` package)
+* `gergely-week2` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and encrypt/decrypt access to the "all-the-keys" KMS key
+* `de4` KMS key that you can use to decrypt the below string to get a Slack access token for the `ceu-data-bot` user: `AQICAHhh7Ku/BWdSbCqos9k49Vnk1+WytvoesgX+1bOvLAlyegHa210D93pgytNnThR9qVVxAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKkH9le72xKmMsgjTQIBEIBT/7MbIV2sG6Hh+fb8BJQ9a6VNOZ1rhPAgvSET6IUdiki92fMZ6dDBOpmSSuaa3t8KIF9KtrlbQAYQNtPVHUvFl1GpyM0k8bD7jLSsUPeRjFNoI+Q=`
+* lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
+
+### Required output
+
+* Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour and reads 250 messages from the "CEU-Binance" stream. Use this batch of data to
+
+    * Draw a barplot on the overall number of units per symbol in the "#bots-final-project" Slack channel based on the number of transactions returned from the Kinesis stream
+    * Get the current symbol prices from the Binance API, and compute the overall price of the 250 transactions in USD and print to the console
+    
+* Suggested project (for grade up to "A"): Create a stream processing application using the `AWR.Kinesis` R package's daemon + Redis (similar to what we did on the 3rd week) to record the overall amount of coins exchanged on Binance (per symbol) in the most recent micro-batch (in other words, whatever records the Java daemon reports, sum up amount by symbol and store in Redis). No need to clear the cache ... so if a symbol was not included in a batch, don't update those keys in Redis. Create a Jenkins job that reads from this Redis cache and prints the overall value (in USD) of the transactions -- based on the coin prices reported by the Binance API at the time of request. Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
+
+### Delivery method
+
+* Create a PDF document that describes your solution and all the main steps involved with low level details: attach screenshots (includeing the URL nav bar and the date/time widget of your OS, so like full-screen and not area-picked screenshots) of your browser showing what you are doing in RStudio Server or eg Jenkins, make sure that the code you wrote is either visible on the screenshots, or included in the PDF. The minimal amount of screenshots are: EC2 creation, R code shown in your RStudio Server, Jenkins job config page, Jenkins job output, Slack channel notifications.
+* STOP the EC2 Instance you worked on, but don’t terminate it, so we can start it and check how it works. Note that your instance will be terminated by us after the end of the class.
+* Include the `instance_id` on the first page of the PDF, along with your name or student id.
+* Upload the PDF to Moodle.
+
+### Submission deadline
+
+Midnight (CET) on April 19, 2019
+
+### Getting help
+
+Contact Mihaly Orsos (TA) on the `ceu-bizanalytics` Slack or at OrsosM@ceu.edu
 
 ## Week 1: Using R in the Cloud
 
