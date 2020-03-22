@@ -1274,6 +1274,76 @@ chmod +x app.R
 
 7. Check on `app.log`
 
+### Shiny app showing the progress
+
+1. Reset counters
+
+    ```r
+    library(rredis)
+    redisConnect()
+    keys <- redisKeys('symbol*')
+    redisDelete(keys)
+    ```
+
+2. 💪 Install the `treemap` package
+
+    ```
+    sudo apt install r-cran-httpuv r-cran-shiny r-cran-xtable r-cran-htmltools r-cran-igraph r-cran-lubridate r-cran-tidyr r-cran-quantmod r-cran-broom r-cran-zoo r-cran-htmlwidgets r-cran-tidyselect r-cran-rlist r-cran-rlang r-cran-xml
+    sudo R -e "devtools::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages(c('treemap', 'highcharter'), repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Run the below Shiny app
+
+```r
+## packages for plotting
+library(treemap)
+library(highcharter)
+
+## connect to Redis
+library(rredis)
+redisConnect()
+
+library(shiny)
+library(data.table)
+ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+server <- shinyServer(function(input, output, session) {
+
+    symbols <- reactive({
+    
+        ## auto-update every 2 seconds
+        reactiveTimer(2000)()
+        
+        ## get frequencies
+        symbols <- redisMGet(redisKeys('symbol:*'))
+        symbols <- data.table(
+          symbol = sub('^symbol:', '', names(symbols)),
+          N = as.numeric(symbols))
+
+        ## color top 3
+        symbols[, color := 1]
+        symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
+        
+        ## return
+        symbols
+    })
+
+    output$treemap <- renderHighchart({
+        tm <- treemap(symbols(), index = c('symbol'),
+                      vSize = 'N', vColor = 'color',
+                      type = 'value', draw = FALSE)
+        N <- sum(symbols()$N)
+        hc_title(hctreemap(tm, animation = FALSE),
+                 text = sprintf('Transactions (N=%s)', N))
+    })
+
+})
+shinyApp(ui = ui, server = server, options = list(port = 3838))
+```
+
+
+
+
+
 
 
 ## Feedback
