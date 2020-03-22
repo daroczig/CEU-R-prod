@@ -34,9 +34,9 @@ Table of Contents
   * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
       * [Recap](#recap-1)
       * [Quiz](#quiz-1)
+      * [Background: Example use-case and why to use R to do stream processing?](#background-example-use-case-and-why-to-use-r-to-do-stream-processing)
       * [Preparations](#preparations-1)
       * [Configuring for standard ports](#-configuring-for-standard-ports)
-      * [Background: Example use-case and why to use R to do stream processing?](#background-example-use-case-and-why-to-use-r-to-do-stream-processing)
       * [Setting up a demo stream](#-setting-up-a-demo-stream)
       * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
       * [Parsing and structuring records read from the stream](#parsing-and-structuring-records-read-from-the-stream)
@@ -868,6 +868,11 @@ You can skip running all the below instructions prefixed with 💪 -- as the Ama
 
 Instead of doing a quiz this week ... you get all the 10% for rather providing some (anonymous) [feedback](#feedback) on this course at the end of the class today.
 
+
+### Background: Example use-case and why to use R to do stream processing? 
+
+https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
 ### Preparations
 
 1. Log in to the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
@@ -956,10 +961,6 @@ And we also need to let Jenkins also know about the custom path, so edit the `JE
 ```
 
 Then restart Jenkins, and good to go!
-
-### Background: Example use-case and why to use R to do stream processing? 
-
-https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
 
 ### 💪 Setting up a demo stream
 
