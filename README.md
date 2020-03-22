@@ -805,7 +805,12 @@ if (btc < 3800 | btc > 4000) {
 
 ## Week 3: Stream processing with R
 
-To be uploaded.
+### Quiz
+
+Instead of doing a quiz this week ... you get all the 10% for rather providing some (anonymous) [feedback](#feedback) on this course at the end of the class today.
+## Feedback
+
+We are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://forms.gle/C5YDtJNxj7kTHjxU9
 
 ## Contact
 
