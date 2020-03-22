@@ -1081,6 +1081,7 @@ Exercises:
 * visualize the distribution of symbol pairs
 
 <details><summary>A potential solution that you should not look at before thinking ...</summary>
+
 ```shell
 library(data.table)
 dt <- rbindlist(lapply(records$Records, function(record) {
