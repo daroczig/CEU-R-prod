@@ -820,6 +820,84 @@ Instead of doing a quiz this week ... you get all the 10% for rather providing s
 7. Log in to RStudio using the new instance's public IP address and 8787 port (or skip using the port and go with the `/rstudio` path as per below), then the `ceu` username and `ceudata` password
 8. Create and run *once* an R script in RStudio Server that reports in the #ba-de4-2019-bots channel that you are ready
 
+### 💪 Configuring for standard ports
+
+To avoid using ports like `8787` and `8080`, let's configure our services to listen on the standard 80 (HTTP) and potentially on the 443 (HTTPS) port as well, and serve RStudio on the `/rstudio`, and Jenkins on the `/jenkins` path.
+
+For this end, we will use Nginx as a reverse-proxy, so let's install it first:
+
+```shell
+sudo apt install -y nginx
+```
+
+Then we need to edit the main site's configuration at `/etc/nginx/sites-enabled/default` to act as a proxy, which also do some transformations, eg rewriting the URL (removing the `/rstudio` path) before hitting RStudio Server:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location ^~ /rstudio {
+        rewrite ^/rstudio/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:8787/$1;
+        proxy_redirect http://127.0.0.1:8787/ $scheme://$http_host/rstudio/;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+And restart Nginx:
+
+```shell
+sudo systemctl restart nginx
+```
+
+Let's see if the port is open on the machine:
+
+```shell
+sudo netstat -tapen|grep LIST
+```
+
+Let's see if we can access RStudio Server on the new path:
+
+```shell
+curl localhost/rstudio
+```
+
+Now let's see from the outside world ... and realize that we need to open up port 80!
+
+Now we need to tweak the config to support Jenkins as well, but the above Nginx rewrite hack will not work, so we will just make it a standard reverse-proxy, eg:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location ^~ /rstudio {
+        rewrite ^/rstudio/(.*)$ /$1 break;
+        proxy_pass http://127.0.0.1:8787/$1;
+        proxy_redirect http://127.0.0.1:8787/ $scheme://$http_host/rstudio/;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+    }
+    location ^~ /jenkins/ {
+        proxy_pass http://127.0.0.1:8080/jenkins/;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+And we also need to let Jenkins also know about the custom path, so edit the `JENKINS_ARGS` config in `/etc/default/jenkins` by adding:
+
+```shell
+--prefix=/jenkins
+```
+
+Then restart Jenkins, and good to go!
+
 ## Feedback
 
 We are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://forms.gle/C5YDtJNxj7kTHjxU9
