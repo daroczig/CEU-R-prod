@@ -501,7 +501,6 @@ Note the above detailed steps for the above!
 
 Also, in the below steps, you can skip running all the instructions prefixed with 💪 -- as the Amazon AMI has already configured so for your convenience, and these steps are just here as an FYI if you want to reproduce the same environment later (eg for a hobby project or work).
 
-
 ### Quiz
 
 Please fill in the form at https://goo.gl/forms/oKQ0zILuQljgBxyH3
@@ -804,6 +803,21 @@ if (btc < 3800 | btc > 4000) {
 </details>
 
 ## Week 3: Stream processing with R
+
+### Recap
+
+What we convered last week:
+
+1. AWS resurce cleanup
+2. New EC2 node using a custom AMI
+3. Concept of Elastic IP
+4. Using domain names
+5. Scheduling Jenkins jobs
+6. Introduction to Redis
+7. Interacting with Slack from R and Jenkins jobs
+8. Securely handle credentials in R
+
+You can skip running all the below instructions prefixed with 💪 -- as the Amazon AMI has already configured so for your convenience, and these steps are just here as an FYI if you want to reproduce the same environment later (eg for a hobby project or work).
 
 ### Quiz
 
