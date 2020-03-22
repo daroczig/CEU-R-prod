@@ -67,6 +67,8 @@ To minimize the system administration and most of the engineering tasks for the 
 
 ### Required output
 
+Make sure to clean-up your EC2 nodes, security groups, keys etc created in the past weeks, as left-over AWS resources [will contribute negative points to your final grade](#preparations-1)!
+
 * Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour and reads 250 messages from the "CEU-Binance" stream. Use this batch of data to
 
     * Draw a barplot on the overall number of units per symbol in the "#bots-final-project" Slack channel based on the number of transactions returned from the Kinesis stream
