@@ -725,7 +725,7 @@ Slides at http://bit.ly/satrday-la-2018-daroczig
 
 4. 💪 Install the Slack R client
 
-    ```
+    ```shell
     sudo apt install r-cran-rlang r-cran-purrr r-cran-tibble r-cran-dplyr
     sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
     ```
