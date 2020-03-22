@@ -808,6 +808,18 @@ if (btc < 3800 | btc > 4000) {
 ### Quiz
 
 Instead of doing a quiz this week ... you get all the 10% for rather providing some (anonymous) [feedback](#feedback) on this course at the end of the class today.
+
+### Preparations
+
+1. Log in to the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
+2. Did you use 2FA / MFA?!
+3. Use the Ireland regiuon
+4. Go to the EC2 console
+5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneded keys. **Left over AWS resources (created before March 24) will contribute negative points to the final grade of the student starting the AWS instance etc!**
+6. Create a new `t3.micro` instance using the `de4-week3` AMI, the `gergely-week2` IAM role, and a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
+7. Log in to RStudio using the new instance's public IP address and 8787 port, then the `ceu` username and `ceudata` password
+8. Create and run *once* an R script in RStudio Server that reports in the #ba-de4-2019-bots channel that you are ready
+
 ## Feedback
 
 We are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://forms.gle/C5YDtJNxj7kTHjxU9
