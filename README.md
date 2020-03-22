@@ -898,6 +898,11 @@ And we also need to let Jenkins also know about the custom path, so edit the `JE
 
 Then restart Jenkins, and good to go!
 
+### Background: Example use-case and why to use R to do stream processing? 
+
+https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
+
 ## Feedback
 
 We are continuously trying to improve the content of this class and looking forward to any feedback and suggestions: https://forms.gle/C5YDtJNxj7kTHjxU9
