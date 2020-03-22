@@ -1075,6 +1075,93 @@ dt[, sum(value)]
 ```
 </summary>
 
+### Actual stream processing instead of analyzing batch data
+
+Let's write an R function to increment counters on the number of transactions per symbols:
+
+1. Get sample raw data as per above (you might need to get a new shard iterator if expired):
+
+   ```r
+   records <- kinesis_get_records(shard_iterator$ShardIterator)$Record
+   ```
+
+2. Function to parse and process it
+
+    ```r
+    txprocessor <- function(record) {
+      symbol <- fromJSON(as.character(record$Data))$s
+      log_info(paste('Found 1 transaction on', symbol))
+      redisIncr(paste('symbol', symbol, sep = ':'))
+    }
+    ```
+
+3. Iterate on all records
+
+    ```r
+    library(logger)
+    library(rredis)
+    redisConnect()
+    for (record in records) {
+      txprocessor(record)
+    }
+    ```
+
+4. Check counters
+
+    ```r
+    symbols <- redisMGet(redisKeys('symbol:*'))
+    symbols
+    
+    symbols <- data.frame(
+      symbol = sub('^symbol:', '', names(symbols)),
+      N = as.numeric(symbols))
+    symbols
+    ```
+
+5. Visualize
+
+    ```r
+    library(ggplot2)
+    ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity')
+    ```
+
+6. Rerun step (1) and (3) to do the data processing, then (4) and (5) for the updated data visualization.
+
+7. 🤦‍♂️
+
+8. Let's make use of the next shard iterator:
+
+    ```r
+    ## reset counters
+    redisDelete(redisKeys('symbol:*'))
+    
+    ## get the first shard iterator
+    shard_iterator <- kinesis_get_shard_iterator('crypt', '0')$ShardIterator
+    
+    while (TRUE) {
+    
+      response <- kinesis_get_records(shard_iterator)
+
+      ## get the next iterator
+      shard_iterator <- response$NextShardIterator
+
+      ## extract records
+      records <- response$Record
+      for (record in records) {
+        txprocessor(record)
+      }
+
+      ## summarize
+      symbols <- redisMGet(redisKeys('symbol:*'))
+      symbols <- data.frame(
+        symbol = sub('^symbol:', '', names(symbols)),
+        N = as.numeric(symbols))
+
+      ## visualize
+      print(ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity') + ggtitle(sum(symbols$N)))
+    }
+    ```
+
 
 ## Feedback
 
