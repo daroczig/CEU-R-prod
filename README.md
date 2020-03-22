@@ -916,6 +916,94 @@ Then restart Jenkins, and good to go!
 
 https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
 
+### 💪 Setting up a demo stream
+
+This section describes how to set up a Kinesis stream with 5 shards on the live Binance transactions read from its websocket -- running in a Docker container, then feeding the JSON lines to Kinesis via the Amazon Kinesis Agent.
+
+1. Start a `t2.micro` instance running "Amazon Linux AMI 2018.03.0" (where it's easier to install the Kinesis Agent compared to using eg Ubuntu) with a known key. Make sure to set a name and enable termination protection (in the instance details)! Use SSH, Putty or eg the browser-based SSH connection.
+
+2. Install Docker (note that we are not on Ubuntu today, but using Red Hat's `yum` package manager):
+
+    ```
+    sudo yum install docker
+    sudo service docker start
+    sudo service docker status
+    ```
+
+3. Let's use a small Python app relying on the Binance API to fetch live transactions and store in a local file: 
+
+    * sources: https://github.com/daroczig/ceu-de3-docker-binance-streamer
+    * docker: https://cloud.docker.com/repository/registry-1.docker.io/daroczig/ceu-de3-docker-binance-streamer
+
+    Usage:
+
+    ```
+    screen -RRd streamer
+    sudo docker run -ti --rm  daroczig/ceu-de3-docker-binance-streamer > /tmp/transactions.json
+    ## "C-a c" to create a new screen, then you can switch with C-a "
+    ls -latr /tmp
+    tail -f /tmp/transactions.json
+    ```
+
+4. Install the Kinesis Agent:
+
+    As per https://docs.aws.amazon.com/firehose/latest/dev/writing-with-agents.html#download-install:
+    
+    ```
+    sudo yum install -y aws-kinesis-agent
+    ```
+
+5. Create a new Kinesis Stream (called `crypto`) at https://eu-west-1.console.aws.amazon.com/kinesis
+
+6. Configure the Kinesis Agent:
+
+    ```
+    sudo yum install mc
+    sudo mcedit /etc/aws-kinesis/agent.json
+    ```
+    
+    Running the above commands, edit the config file to update the Kinesis endpoint, the name of the stream on the local file path:
+    
+    ```
+    {
+      "cloudwatch.emitMetrics": true,
+      "kinesis.endpoint": "https://kinesis.eu-west-1.amazonaws.com",
+      "firehose.endpoint": "",
+
+      "flows": [
+        {
+          "filePattern": "/tmp/transactions.json",
+          "kinesisStream": "crypto",
+          "partitionKeyOption": "RANDOM"
+        }
+      ]
+    }
+    ```
+
+7. Restart the Agent:
+
+    ```
+    sudo service aws-kinesis-agent start
+    ```
+    
+8. Check the status and logs:
+
+    ```
+    sudo service aws-kinesis-agent status
+    sudo journalctl -xe
+    ls -latr /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+    tail -f /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+    ```
+
+9. Make sure that the IAM role write to Kinesis and Cloudwatch, eg by attaching the `AmazonKinesisFullAccess` policy, then restart the agent
+
+    ```
+    sudo service aws-kinesis-agent restart
+    ```
+
+10. Check the AWS console's monitor if all looks good there as well
+11. Note for the need of permissions to `cloudwatch:PutMetricData`
+
 
 ## Feedback
 
