@@ -817,7 +817,7 @@ Instead of doing a quiz this week ... you get all the 10% for rather providing s
 4. Go to the EC2 console
 5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneded keys. **Left over AWS resources (created before March 24) will contribute negative points to the final grade of the student starting the AWS instance etc!**
 6. Create a new `t3.micro` instance using the `de4-week3` AMI, the `gergely-week2` IAM role, and a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
-7. Log in to RStudio using the new instance's public IP address and 8787 port, then the `ceu` username and `ceudata` password
+7. Log in to RStudio using the new instance's public IP address and 8787 port (or skip using the port and go with the `/rstudio` path as per below), then the `ceu` username and `ceudata` password
 8. Create and run *once* an R script in RStudio Server that reports in the #ba-de4-2019-bots channel that you are ready
 
 ## Feedback
