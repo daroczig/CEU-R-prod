@@ -1117,7 +1117,7 @@ dt <- merge(dt, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = 
 dt[, value := as.numeric(quantity) * usd]
 dt[, sum(value)]
 ```
-</summary>
+</details>
 
 ### Actual stream processing instead of analyzing batch data
 
