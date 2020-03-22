@@ -32,6 +32,17 @@ Table of Contents
       * [Better handling of secrets and credentials](#better-handling-of-secrets-and-credentials)
       * [Job Scheduler exercises](#job-scheduler-exercises)
   * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
+      * [Recap](#recap-1)
+      * [Quiz](#quiz-1)
+      * [Preparations](#preparations-1)
+      * [Configuring for standard ports](#-configuring-for-standard-ports)
+      * [Background: Example use-case and why to use R to do stream processing?](#background-example-use-case-and-why-to-use-r-to-do-stream-processing)
+      * [Setting up a demo stream](#-setting-up-a-demo-stream)
+      * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
+      * [Parsing and structuring records read from the stream](#parsing-and-structuring-records-read-from-the-stream)
+      * [Stream processor daemon](#stream-processor-daemon)
+      * [Shiny app showing the progress](#shiny-app-showing-the-progress)
+      * [Dockerizing R scripts](#dockerizing-r-scripts)
   * [Contact](#contact)
 
 ## Schedule
@@ -1070,7 +1081,7 @@ Exercises:
 * visualize the distribution of symbol pairs
 
 <details><summary>A potential solution that you should not look at before thinking ...</summary>
-```
+```shell
 library(data.table)
 dt <- rbindlist(lapply(records$Records, function(record) {
   fromJSON(as.character(record$Data))
