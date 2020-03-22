@@ -1341,51 +1341,52 @@ chmod +x app.R
 
 3. Run the below Shiny app
 
-```r
-## packages for plotting
-library(treemap)
-library(highcharter)
+    ```r
+    ## packages for plotting
+    library(treemap)
+    library(highcharter)
 
-## connect to Redis
-library(rredis)
-redisConnect()
+    ## connect to Redis
+    library(rredis)
+    redisConnect()
 
-library(shiny)
-library(data.table)
-ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
-server <- shinyServer(function(input, output, session) {
+    library(shiny)
+    library(data.table)
+    ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+    server <- shinyServer(function(input, output, session) {
 
-    symbols <- reactive({
-    
-        ## auto-update every 2 seconds
-        reactiveTimer(2000)()
+        symbols <- reactive({
         
-        ## get frequencies
-        symbols <- redisMGet(redisKeys('symbol:*'))
-        symbols <- data.table(
-          symbol = sub('^symbol:', '', names(symbols)),
-          N = as.numeric(symbols))
+            ## auto-update every 2 seconds
+            reactiveTimer(2000)()
+            
+            ## get frequencies
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            symbols <- data.table(
+                symbol = sub('^symbol:', '', names(symbols)),
+                N = as.numeric(symbols))
 
-        ## color top 3
-        symbols[, color := 1]
-        symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
-        
-        ## return
-        symbols
+            ## color top 3
+            symbols[, color := 1]
+            symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
+
+            ## return
+            symbols
+
+        })
+
+        output$treemap <- renderHighchart({
+            tm <- treemap(symbols(), index = c('symbol'),
+                          vSize = 'N', vColor = 'color',
+                          type = 'value', draw = FALSE)
+            N <- sum(symbols()$N)
+            hc_title(hctreemap(tm, animation = FALSE),
+            text = sprintf('Transactions (N=%s)', N))
+        })
+
     })
-
-    output$treemap <- renderHighchart({
-        tm <- treemap(symbols(), index = c('symbol'),
-                      vSize = 'N', vColor = 'color',
-                      type = 'value', draw = FALSE)
-        N <- sum(symbols()$N)
-        hc_title(hctreemap(tm, animation = FALSE),
-                 text = sprintf('Transactions (N=%s)', N))
-    })
-
-})
-shinyApp(ui = ui, server = server, options = list(port = 3838))
-```
+    shinyApp(ui = ui, server = server, options = list(port = 3838))
+    ```
 
 ### Dockerizing R scripts
 
