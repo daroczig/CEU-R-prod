@@ -995,7 +995,7 @@ This section describes how to set up a Kinesis stream with 5 shards on the live 
     tail -f /var/log/aws-kinesis-agent/aws-kinesis-agent.log
     ```
 
-9. Make sure that the IAM role write to Kinesis and Cloudwatch, eg by attaching the `AmazonKinesisFullAccess` policy, then restart the agent
+9. Make sure that the IAM role can write to Kinesis and Cloudwatch, eg by attaching the `AmazonKinesisFullAccess` policy, then restart the agent
 
     ```
     sudo service aws-kinesis-agent restart
@@ -1340,11 +1340,41 @@ server <- shinyServer(function(input, output, session) {
 shinyApp(ui = ui, server = server, options = list(port = 3838))
 ```
 
+### Dockerizing R scripts
 
+Exercise: create a new GitHub repository with a `Dockerfile` installing `botor` (and its dependencies), `binancer` and `slackr` to be able to run the above jobs in a Docker container. Set up a DockerHub registry for the Docker image and start using in the Jenkins jobs.
 
+Hints:
 
+- create a new GitHub repo
+- create a new RStudio project using the git repo
+- set the default git user on the EC2 box
 
+    ```shell
+    git config --global user.email "you@example.com"
+    git config --global user.name "Your Name"
+    ```
 
+- create a Personal Access Token set up on GitHub for HTTPS auth on your EC2 box
+- example GitHub repo: https://github.com/daroczig/ceu-de3-docker-prep
+- example DockerHub repo: https://cloud.docker.com/repository/registry-1.docker.io/daroczig/ceu-de3-week5-prep
+- install Docker on EC2:
+
+    ```shell
+    sudo apt update
+    sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository \
+      "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get update
+    sudo apt-get install docker-ce
+    ```
+
+- example run:
+
+    ```shell
+    docker run --rm -ti daroczig/ceu-de3-week5-prep R -e "binancer::binance_klines('BTCUSDT', interval = '1m', limit = 1)[1, close]"
+    ```
 
 ## Feedback
 
