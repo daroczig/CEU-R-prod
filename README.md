@@ -830,7 +830,7 @@ Instead of doing a quiz this week ... you get all the 10% for rather providing s
 3. Use the Ireland regiuon
 4. Go to the EC2 console
 5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneded keys. **Left over AWS resources (created before March 24) will contribute negative points to the final grade of the student starting the AWS instance etc!**
-6. Create a new `t3.micro` instance using the `de4-week3` AMI, the `gergely-week2` IAM role, and a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
+6. Create a new `t3.small` instance using the `de4-week3` AMI, the `gergely-week2` IAM role, and a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
 7. Log in to RStudio using the new instance's public IP address and 8787 port (or skip using the port and go with the `/rstudio` path as per below), then the `ceu` username and `ceudata` password
 8. Create and run *once* an R script in RStudio Server that reports in the #ba-de4-2019-bots channel that you are ready
 
@@ -1161,6 +1161,119 @@ Let's write an R function to increment counters on the number of transactions pe
       print(ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity') + ggtitle(sum(symbols$N)))
     }
     ```
+
+### Stream processor daemon
+
+0. So far, we used the `boto3` Python module from R via `botor` to interact with AWS, but this time we will integrate Java -- by calling the AWS Java SDK to interact with our Kinesis stream, then later on to run a Java daemon to manage our stream processing application.
+
+    1. 💪 First, let's install Java and the `rJava` R package:
+
+    ```shell
+    sudo apt install r-cran-rjava
+    ```
+
+    2. 💪 Then the R package wrapping the AWS Java SDK and the Kinesis client, then update to the most recent dev version right away:
+
+    ```shell
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('AWR.Kinesis', repos='https://cran.rstudio.com/'))"
+    sudo R -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/AWR.Kinesis'))"
+    ```
+
+    3. 💪 Note, after installing Java, you might need to run `sudo R CMD javareconf` and/or restart R or the RStudio Server via `sudo rstudio-server restart` :/
+
+    ```shell
+    Error : .onLoad failed in loadNamespace() for 'rJava', details:
+      call: dyn.load(file, DLLpath = DLLpath, ...)
+      error: unable to load shared object '/usr/lib/R/site-library/rJava/libs/rJava.so':
+      libjvm.so: cannot open shared object file: No such file or directory
+    ```
+
+    4. And after all, a couple lines of R code to get some data from the stream via the Java SDK (just like we did above with the Python backend):
+
+    ```r
+    library(rJava)
+    library(AWR.Kinesis)
+    records <- kinesis_get_records('crypto', 'eu-west-1')
+    str(records)
+    records[1]
+
+    library(jsonlite)
+    fromJSON(records[1])
+    ```
+
+1. Create a new folder for the Kinesis consumer files: `streamer`
+
+2. Create an `app.properties` file within that subfolder
+
+```
+executableName = ./app.R
+regionName = eu-west-1
+streamName = crypto
+applicationName = my_demo_app_sadsadsa
+AWSCredentialsProvider = DefaultAWSCredentialsProviderChain
+```
+
+3. Create the `app.R` file:
+
+```r
+#!/usr/bin/Rscript
+library(logger)
+log_appender(appender_file('app.log'))
+library(AWR.Kinesis)
+library(methods)
+library(jsonlite)
+
+kinesis_consumer(
+
+    initialize = function() {
+        log_info('Hello')
+        library(rredis)
+        redisConnect(nodelay = FALSE)
+        log_info('Connected to Redis')
+    },
+
+    processRecords = function(records) {
+        log_info(paste('Received', nrow(records), 'records from Kinesis'))
+        for (record in records$data) {
+            symbol <- fromJSON(record)$s
+            log_info(paste('Found 1 transaction on', symbol))
+            redisIncr(paste('symbol', symbol, sep = ':'))
+        }
+    },
+
+    updater = list(
+        list(1/6, function() {
+            log_info('Checking overall counters')
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            log_info(paste(sum(as.numeric(symbols)), 'records processed so far'))
+    })),
+
+    shutdown = function()
+        log_info('Bye'),
+
+    checkpointing = 1,
+    logfile = 'app.log')
+```
+
+4. 💪 Allow writing checkpointing data to DynamoDB and CloudWatch in IAM
+
+5. Convert the above R script into an executable using the Terminal:
+
+```shell
+cd streamer
+chmod +x app.R
+```
+
+6. Run the app in the Terminal:
+
+```
+/usr/bin/java -cp /usr/local/lib/R/site-library/AWR/java/*:/usr/local/lib/R/site-library/AWR.Kinesis/java/*:./ \
+    com.amazonaws.services.kinesis.multilang.MultiLangDaemon \
+    ./app.properties
+```
+
+7. Check on `app.log`
+
 
 
 ## Feedback
