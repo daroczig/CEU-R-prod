@@ -32,6 +32,17 @@ Table of Contents
       * [Better handling of secrets and credentials](#better-handling-of-secrets-and-credentials)
       * [Job Scheduler exercises](#job-scheduler-exercises)
   * [Week 3: Stream processing with R](#week-3-stream-processing-with-r)
+      * [Recap](#recap-1)
+      * [Quiz](#quiz-1)
+      * [Background: Example use-case and why to use R to do stream processing?](#background-example-use-case-and-why-to-use-r-to-do-stream-processing)
+      * [Preparations](#preparations-1)
+      * [Configuring for standard ports](#-configuring-for-standard-ports)
+      * [Setting up a demo stream](#-setting-up-a-demo-stream)
+      * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
+      * [Parsing and structuring records read from the stream](#parsing-and-structuring-records-read-from-the-stream)
+      * [Stream processor daemon](#stream-processor-daemon)
+      * [Shiny app showing the progress](#shiny-app-showing-the-progress)
+      * [Dockerizing R scripts](#dockerizing-r-scripts)
   * [Contact](#contact)
 
 ## Schedule
@@ -55,6 +66,8 @@ To minimize the system administration and most of the engineering tasks for the 
 * lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
 
 ### Required output
+
+Make sure to clean-up your EC2 nodes, security groups, keys etc created in the past weeks, as left-over AWS resources [will contribute negative points to your final grade](#preparations-1)!
 
 * Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour and reads 250 messages from the "CEU-Binance" stream. Use this batch of data to
 
@@ -855,6 +868,11 @@ You can skip running all the below instructions prefixed with 💪 -- as the Ama
 
 Instead of doing a quiz this week ... you get all the 10% for rather providing some (anonymous) [feedback](#feedback) on this course at the end of the class today.
 
+
+### Background: Example use-case and why to use R to do stream processing? 
+
+https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
 ### Preparations
 
 1. Log in to the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
@@ -943,10 +961,6 @@ And we also need to let Jenkins also know about the custom path, so edit the `JE
 ```
 
 Then restart Jenkins, and good to go!
-
-### Background: Example use-case and why to use R to do stream processing? 
-
-https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
 
 ### 💪 Setting up a demo stream
 
@@ -1070,7 +1084,8 @@ Exercises:
 * visualize the distribution of symbol pairs
 
 <details><summary>A potential solution that you should not look at before thinking ...</summary>
-```
+
+```shell
 library(data.table)
 dt <- rbindlist(lapply(records$Records, function(record) {
   fromJSON(as.character(record$Data))
@@ -1105,7 +1120,7 @@ dt <- merge(dt, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = 
 dt[, value := as.numeric(quantity) * usd]
 dt[, sum(value)]
 ```
-</summary>
+</details>
 
 ### Actual stream processing instead of analyzing batch data
 
@@ -1326,51 +1341,52 @@ chmod +x app.R
 
 3. Run the below Shiny app
 
-```r
-## packages for plotting
-library(treemap)
-library(highcharter)
+    ```r
+    ## packages for plotting
+    library(treemap)
+    library(highcharter)
 
-## connect to Redis
-library(rredis)
-redisConnect()
+    ## connect to Redis
+    library(rredis)
+    redisConnect()
 
-library(shiny)
-library(data.table)
-ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
-server <- shinyServer(function(input, output, session) {
+    library(shiny)
+    library(data.table)
+    ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+    server <- shinyServer(function(input, output, session) {
 
-    symbols <- reactive({
-    
-        ## auto-update every 2 seconds
-        reactiveTimer(2000)()
+        symbols <- reactive({
         
-        ## get frequencies
-        symbols <- redisMGet(redisKeys('symbol:*'))
-        symbols <- data.table(
-          symbol = sub('^symbol:', '', names(symbols)),
-          N = as.numeric(symbols))
+            ## auto-update every 2 seconds
+            reactiveTimer(2000)()
+            
+            ## get frequencies
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            symbols <- data.table(
+                symbol = sub('^symbol:', '', names(symbols)),
+                N = as.numeric(symbols))
 
-        ## color top 3
-        symbols[, color := 1]
-        symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
-        
-        ## return
-        symbols
+            ## color top 3
+            symbols[, color := 1]
+            symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
+
+            ## return
+            symbols
+
+        })
+
+        output$treemap <- renderHighchart({
+            tm <- treemap(symbols(), index = c('symbol'),
+                          vSize = 'N', vColor = 'color',
+                          type = 'value', draw = FALSE)
+            N <- sum(symbols()$N)
+            hc_title(hctreemap(tm, animation = FALSE),
+            text = sprintf('Transactions (N=%s)', N))
+        })
+
     })
-
-    output$treemap <- renderHighchart({
-        tm <- treemap(symbols(), index = c('symbol'),
-                      vSize = 'N', vColor = 'color',
-                      type = 'value', draw = FALSE)
-        N <- sum(symbols()$N)
-        hc_title(hctreemap(tm, animation = FALSE),
-                 text = sprintf('Transactions (N=%s)', N))
-    })
-
-})
-shinyApp(ui = ui, server = server, options = list(port = 3838))
-```
+    shinyApp(ui = ui, server = server, options = list(port = 3838))
+    ```
 
 ### Dockerizing R scripts
 
