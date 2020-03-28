@@ -49,7 +49,7 @@ The goal of this assignment is to confirm that the students have a general under
 To minimize the system administration and most of the engineering tasks for the students, the below pre-configured tools are provided as free options, but students can decide to build their own environment (on the top of or independently from these) and feel free to use any other tools:
 
 * `CEU-Binance` stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
-* `de4-week2` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `botor`, `AWR.Kinesis` and the `binancer` package)
+* `de4-week3` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `botor`, `AWR.Kinesis` and the `binancer` package)
 * `gergely-week2` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and encrypt/decrypt access to the "all-the-keys" KMS key
 * `de4` KMS key that you can use to decrypt the below string to get a Slack access token for the `ceu-data-bot` user: `AQICAHhh7Ku/BWdSbCqos9k49Vnk1+WytvoesgX+1bOvLAlyegHa210D93pgytNnThR9qVVxAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKkH9le72xKmMsgjTQIBEIBT/7MbIV2sG6Hh+fb8BJQ9a6VNOZ1rhPAgvSET6IUdiki92fMZ6dDBOpmSSuaa3t8KIF9KtrlbQAYQNtPVHUvFl1GpyM0k8bD7jLSsUPeRjFNoI+Q=`
 * lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
@@ -545,7 +545,7 @@ Please fill in the form at https://goo.gl/forms/oKQ0zILuQljgBxyH3
 4. Go to the EC2 console at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
 5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneded keys.
 6. 💪 Check on the wasted money in the AWS Cost Explorer
-7. Create a new `t3.micro` instance using the `de4-week2` AMI and `t3.small` instance size using a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
+7. Create a new `t3.micro` instance using the `de4-week3` AMI and `t3.small` instance size using a new security group with a unique name and opening up the 22 (ssh), 8000 (alternate ssh), 8787 (rstudio) and 8080 (jenkins) ports
 8. Log in to RStudio using the new instance's public IP address and 8787 port, then the `ceu` username and `ceudata` password
 9. Check if the price of a Bitcoin is more than $4,000 (feel free to scroll up to get some hints from last week's R scripts)
 
