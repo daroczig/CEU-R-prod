@@ -85,7 +85,7 @@ Make sure to clean-up your EC2 nodes, security groups, keys etc created in the p
 
 ### Submission deadline
 
-Midnight (CET) on April 19, 2019
+Midnight (CET) on April 19, 2020
 
 ### Getting help
 
