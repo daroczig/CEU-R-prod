@@ -974,6 +974,8 @@ Jenkins:
 * http://your.ip.address:8000/jenkins
 * http://your.ip.address/jenkins
 
+If you cannot access RStudio Server on port 80, you might need to restart `nginx` as per above.
+
 ### 💪 Setting up a demo stream
 
 This section describes how to set up a Kinesis stream with 5 shards on the live Binance transactions read from its websocket -- running in a Docker container, then feeding the JSON lines to Kinesis via the Amazon Kinesis Agent.
