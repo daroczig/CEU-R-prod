@@ -962,6 +962,18 @@ And we also need to let Jenkins also know about the custom path, so edit the `JE
 
 Then restart Jenkins, and good to go!
 
+This way you can access the above services via the below URLs:
+
+RStudio Server:
+
+* http://your.ip.address:8080
+* http://your.ip.address/rstudio
+
+Jenkins:
+
+* http://your.ip.address:8000/jenkins
+* http://your.ip.address/jenkins
+
 ### 💪 Setting up a demo stream
 
 This section describes how to set up a Kinesis stream with 5 shards on the live Binance transactions read from its websocket -- running in a Docker container, then feeding the JSON lines to Kinesis via the Amazon Kinesis Agent.
