@@ -13,6 +13,8 @@ Here you can find the materials for the "[Data Engineering 5: Using R in Product
 
 ## Schedule
 
+2 x 3 x 100 mins on March 23 and 30:
+
 * 13:30 - 15:00 session 1
 * 15:00 - 15:30 break
 * 15:30 - 17:00 session 2
