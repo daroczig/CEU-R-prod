@@ -40,6 +40,15 @@ Please find in the `syllabus` folder of this repository.
 
 Will be updated from week to week.
 
+## Week 1: Using R in the Cloud
+
+**Goal**: learn how to run and schedule R jobs in the cloud.
+
+### Background: Example use-cases and why to use R in the cloud?
+
+* http://bit.ly/budapestdata-2018-dbs-in-a-startup (presented at the [Budapest Data Forum in 2018](https://budapestdata.hu/2018/hu/))
+* http://bit.ly/daroczig-rstudio-conf-2020 (presented at the [RStudio::conf in 2020](https://web.cvent.com/event/36ebe042-0113-44f1-8e36-b9bc5d0733bf))
+
 ## Contact
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
