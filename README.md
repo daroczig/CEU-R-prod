@@ -119,6 +119,27 @@ Will be updated from week to week.
     7. Click "Launch"
     8. Select your AWS key created above and launch
 
+2. Connect to the box
+
+    1. Specify the hostname or IP address
+
+    ![](https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/images/vm-putty-1.png)
+
+    2. Specify the key for authentication
+
+    ![](https://docs.aws.amazon.com/quickstarts/latest/vmlaunch/images/vm-putty-2.png)
+
+    3. Set the username to `ubuntu` on the Connection/Data tab
+    4. Save the Session profile
+    5. Click the "Open" button
+    6. Accept & cache server's host key
+
+Alternatively, you can connect via a standard SSH client on a Mac or Linux, something like:
+
+```sh
+chmod 0400 /path/to/your/pem
+ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
+```
 
 ## Contact
 
