@@ -141,6 +141,227 @@ chmod 0400 /path/to/your/pem
 ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 ```
 
+### Install RStudio Server on EC2
+
+1. Look at the docs: https://www.rstudio.com/products/rstudio/download-server
+2. Download Ubuntu `apt` package list
+
+    ```sh
+    sudo apt update
+    ```
+
+3. Install dependencies
+
+    ```sh
+    sudo apt install r-base gdebi-core
+    ```
+
+4. Try R
+
+    ```sh
+    R
+    ```
+
+    For example:
+
+    ```r
+    1 + 4
+    hist(mtcars$hp)
+    ```
+
+5. Install RStudio Server
+
+    ```sh
+    wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.4.1106-amd64.deb
+    sudo gdebi rstudio-server-1.4.1106-amd64.deb
+    ```
+
+6. Check process and open ports
+
+    ```sh
+    rstudio-server status
+    sudo rstudio-server status
+    sudo systemctl status rstudio-server
+    sudo ps aux| grep rstudio
+    sudo netstat -tapen | grep LIST
+    sudo netstat -tapen
+    ```
+
+7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
+
+### Connect to the RStudio Server
+
+1. Confirm that the service is up and running and the port is open
+
+    ```console
+    ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
+    tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
+    tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
+    tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
+    ```
+
+2. Try to connect to the host from a browser on port 8787, eg http://foobar.eu-west-1.compute.amazonaws.com:8787
+3. Realize it's not working
+4. Open up port 8787 in the security group
+
+    ![](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2017/10/12/r-update-1.gif)
+
+5. Authentication: http://docs.rstudio.com/ide/server-pro/authenticating-users.html
+6. Create a new user:
+
+        sudo adduser ceu
+
+7. Login & quick demo:
+
+    ```r
+    1+2
+    plot(mtcars)
+    install.packages('fortunes')
+    library(fortunes)
+    fortune()
+    fortune(200)
+    system('whoami')
+    ```
+
+8. Reload webpage (F5), realize we continue where we left the browser :)
+9. Demo the terminal:
+
+    ```console
+    $ whoami
+    ceu
+    $ sudo whoami
+    ceu is not in the sudoers file.  This incident will be reported.
+    ```
+
+8. Grant sudo access to the new user by going back to SSH with `root` access:
+
+    ```sh
+    sudo apt install -y mc
+    sudo mc
+    sudo mcedit /etc/sudoers
+    sudo adduser ceu admin
+    man adduser
+    man deluser
+    ```
+
+Note 1: might need to relogin / restart RStudio / reload R / reload page
+Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
+
+    ```sh
+    ceu ALL=(ALL) NOPASSWD:ALL
+    ```
+
+Although also note (3) the related security risks.
+
+9. Custom login page: http://docs.rstudio.com/ide/server-pro/authenticating-users.html#customizing-the-sign-in-page
+10. Custom port: http://docs.rstudio.com/ide/server-pro/access-and-security.html#network-port-and-address
+
+### Play with R for a bit
+
+1. Installing packages:
+
+    ```sh
+    ## don't do this at this point!
+    ## install.packages('ggplot2')
+    ```
+
+2. Use binary packages instead via apt & Launchpad PPA:
+
+    ```sh
+    sudo add-apt-repository ppa:marutter/rrutter
+    sudo add-apt-repository ppa:marutter/c2d4u
+
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get install r-cran-ggplot2
+    ```
+
+3. Ready to use it from R after restarting the session:
+
+    ```r
+    library(ggplot2)
+    ggplot(mtcars, aes(hp)) + geom_histogram()
+    ```
+
+4. Get some real-time data and visualize it:
+
+    1. Install the `devtools` R package and a few others (binary distribution) in the RStudio/Terminal:
+
+        ```sh
+        sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
+        ```
+
+    2. Switch back to the R console and install the `binancer`  R package from GitHub to interact with crypto exchanges (note the extra dependency to be installed from CRAN):
+
+        ```r
+        install.packages('snakecase')
+        devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
+        ```
+
+    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity -- resulting in an object like:
+
+        ```r
+        > str(klines)
+        Classes ‘data.table’ and 'data.frame':  180 obs. of  12 variables:
+         $ open_time                   : POSIXct, format: "2020-03-08 20:09:00" "2020-03-08 20:10:00" "2020-03-08 20:11:00" "2020-03-08 20:12:00" ...
+         $ open                        : num  8292 8298 8298 8299 8298 ...
+         $ high                        : num  8299 8299 8299 8299 8299 ...
+         $ low                         : num  8292 8297 8297 8298 8296 ...
+         $ close                       : num  8298 8298 8299 8298 8299 ...
+         $ volume                      : num  25.65 9.57 20.21 9.65 24.69 ...
+         $ close_time                  : POSIXct, format: "2020-03-08 20:09:59" "2020-03-08 20:10:59" "2020-03-08 20:11:59" "2020-03-08 20:12:59" ...
+         $ quote_asset_volume          : num  212759 79431 167677 80099 204883 ...
+         $ trades                      : int  371 202 274 186 352 271 374 202 143 306 ...
+         $ taker_buy_base_asset_volume : num  13.43 5.84 11.74 7.12 15.24 ...
+         $ taker_buy_quote_asset_volume: num  111430 48448 97416 59071 126493 ...
+         $ symbol                      : chr  "BTCUSDT" "BTCUSDT" "BTCUSDT" "BTCUSDT" ...
+         - attr(*, ".internal.selfref")=<externalptr>
+        ```
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(binancer)
+        klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+        str(klines)
+        summary(klines$close)
+        ```
+        </details>
+
+    4. Visualize the data, eg on a simple line chart:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(ggplot2)
+        ggplot(klines, aes(close_time, close)) + geom_line()
+        ```
+        </details>
+
+    5. Now create a candle chart, something like:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
+
+
+    6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
+
+    7. Some further useful functions:
+
+        - `binance_ticker_all_prices()`
+        - `binance_coins_prices()`
+        - `binance_credentials` and `binance_balances`
+
+    8. Create an R script that reports and/or plots on some cryptocurrencies, ideas:
+
+        - compute the (relative) change in prices of cryptocurrencies in the past 24 / 168 hours
+        - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
+        - write a bot buying and selling crypto on a virtual exchange
+
+
 ## Contact
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
