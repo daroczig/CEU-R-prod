@@ -4,6 +4,18 @@ Here you can find the materials for the "[Data Engineering 5: Using R in Product
 
 * [Table of Contents](#table-of-contents)
 * [Schedule](#schedule)
+
+      * [Background: Example use-cases and why to use R in the cloud?](#background-example-use-cases-and-why-to-use-r-in-the-cloud)
+      * [Welcome to AWS!](#welcome-to-aws)
+      * [Getting access to EC2 boxes](#getting-access-to-ec2-boxes)
+      * [Create and connect to an EC2 box](#create-and-connect-to-an-ec2-box)
+      * [Install RStudio Server on EC2](#install-rstudio-server-on-ec2)
+      * [Connect to the RStudio Server](#connect-to-the-rstudio-server)
+      * [Create a user for every member of the team](#create-a-user-for-every-member-of-the-team)
+      * [Play with R for a bit](#play-with-r-for-a-bit)
+      * [Prepare to schedule R commands](#prepare-to-schedule-r-commands)
+      * [Schedule R commands](#schedule-r-commands)
+
 * [Location](#location)
 * [Syllabus](#syllabus)
 * [Technical Prerequisites](#technical-prerequisites)
@@ -344,10 +356,41 @@ Although also note (3) the related security risks.
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
 
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(scales)
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_y_continuous(labels = dollar) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+        ```
+        </details>
 
     6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(data.table)
+        klines <- rbindlist(lapply(
+            c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
+            binance_klines,
+            interval = '15m', limit = 4*24))
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) +
+             facet_wrap(~symbol, scales = 'free', nrow = 2)
+        ```
+        </details>
 
     7. Some further useful functions:
 
@@ -361,6 +404,146 @@ Although also note (3) the related security risks.
         - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
         - write a bot buying and selling crypto on a virtual exchange
 
+#### Create a user for every member of the team
+
+We'll export the list of IAM users from AWS and create a system user for everyone.
+
+1. Attach a newly created IAM EC2 Role (let's call it `ceudataserver`) to the EC2 box and assign 'Read-only IAM access':
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+
+2. Install AWS CLI tool:
+
+    ```
+    sudo apt update
+    sudo apt install awscli
+    ```
+
+3. List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+
+   ```
+   aws iam list-users
+   ```
+
+4. Export the list of users from R:
+
+   ```
+   library(jsonlite)
+   users <- fromJSON(system('aws iam list-users', intern = TRUE))
+   str(users)
+   users[[1]]$UserName
+   ```
+
+5. Create a new system user on the box (for RStudio Server access) for every IAM user, set password and add to group:
+
+   ```
+   library(logger)
+   library(glue)
+   for (user in users[[1]]$UserName) {
+
+     ## remove invalid character
+     user <- sub('@.*', '', user)
+     user <- sub('.', '_', user, fixed = TRUE)
+
+     log_info('Creating {user}')
+     system(glue("sudo adduser --disabled-password --quiet --gecos '' {user}"))
+
+     log_info('Setting password for {user}')
+     system(glue("echo '{user}:secretpass' | sudo chpasswd")) # note the single quotes + placement of sudo
+
+     log_info('Adding {user} to sudo group')
+     system(glue('sudo adduser {user} sudo'))
+
+   }
+   ```
+
+Note, you may have to temporarily enable passwordless `sudo` for this user (if have not done already) :/
+
+```
+ceu ALL=(ALL) NOPASSWD:ALL
+```
+
+Check users:
+
+```
+readLines('/etc/passwd')
+```
+
+### Prepare to schedule R commands
+
+![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
+
+1. Install Jenkins from the RStudio/Terminal: https://pkg.jenkins.io/debian-stable/
+
+    ```sh
+    wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+    echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
+    sudo apt update
+    sudo apt install openjdk-8-jdk-headless jenkins ## installing Java as well
+    sudo netstat -tapen | grep java
+    ```
+
+2. Open up port 8080 in the related security group
+3. Access Jenkins from your browser and finish installation
+
+    1. Read the initial admin password from RStudio/Terminal via
+
+        ```sh
+        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```
+
+    2. Proceed with installing the suggested plugins
+    3. Create your first user (eg `ceu`)
+
+4. Optionally update the security backend to use real Unix users for shared access (if users already created):
+
+    ```sh
+    sudo adduser jenkins shadow
+    sudo systemctl restart jenkins
+    ```
+
+5. Test new user access in an incognito window to avoid closing yourself out :)
+
+### Schedule R commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Log in to Jenkins using your instance's public IP address and port 8080
+2. Use the `ceu` username and `ceudata` password
+3. Create a "New Item" (job):
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to look up the most recent BTC price
+
+        ```sh
+        R -e "library(binancer);binance_coins_prices()[symbol == 'BTC', usd]"
+        ```
+
+    6. Run the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/jenkins-errors.png)
+
+4. Debug & figure out what's the problem ...
+5. Install R packages system wide from RStudio/Terminal (more on this later):
+
+    ```sh
+    sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
+    ```
+
+6. Rerun the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
+
+### Homework
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
 ## Contact
 
