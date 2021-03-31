@@ -712,6 +712,58 @@ If you cannot access RStudio Server on port 80, you might need to restart `nginx
 
 Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of the EC2 node.
 
+### 💪 ScheduleR improvements
+
+1. Learn about little R: https://github.com/eddelbuettel/littler
+2. Set up e-mail notifications via eg mailjet.com
+
+    1. Sign up, confirm your e-mail address and domain
+    2. Take a note on the SMTP settings, eg
+
+        * SMTP server: in-v3.mailjet.com
+        * Port: 465
+        * SSL: Yes
+        * Username: ***
+        * Password: ***
+
+    3. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
+
+        1. Set up the default FROM e-mail address: jenkins@ceudata.net
+        2. Search for "Extended E-mail Notification" and configure
+
+           * SMTP Server
+           * Click "Advanced"
+           * Check "Use SMTP Authentication"
+           * Enter User Name from the above steps from SNS
+           * Enter Password from the above steps from SNS
+           * Check "Use SSL"
+           * SMTP port: 465
+
+    5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
+    6. Configure the job to send the whole e-mail body as the deault body template for all outgoing emails
+
+    ```shell
+    ${BUILD_LOG, maxLines=1000}
+    ```
+
+3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
+
+### Schedule R scripts
+
+1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    sprintf('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
+    ```
+
+2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
+
+    ```shell
+    Rscript /home/ceu/de4.R
+    ```
+
 
 ## Contact
 
