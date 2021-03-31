@@ -570,6 +570,19 @@ Also, in the below steps, you can skip running all the instructions prefixed wit
 
 Please fill in the form at https://goo.gl/forms/oKQ0zILuQljgBxyH3
 
+### Preparations
+
+0. All infra steps are optional today and feel free to use the shared RStudio and Jenkins server!
+1. Log in to the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
+2. Did you use 2FA / MFA?!
+3. Use the Ireland region
+4. Go to the EC2 console at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+5. Realize the mess we left there from last week! 😱 Fix it. Kill your old security groups as well. Remove unneeded keys.
+6. 💪 Check on the wasted money in the AWS Cost Explorer
+7. Create a new `t3.micro` instance using the `de5-week2` AMI, `t3.small` instance size, `de5-week2` IAM role and the `de5-week2` security group that latter is opening up the 22 (ssh), 8787 (rstudio) and 8080 (jenkins) ports
+8. Log in to RStudio using the new instance's public IP address and 8787 port, then your AWS username (without domain) and the password from last week (ping on Slack if cannot find it)
+9. Check if the price of a Bitcoin is more than $1,000,000 (feel free to scroll up to get some hints from last week's R scripts)
+
 
 ## Contact
 
