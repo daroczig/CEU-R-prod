@@ -761,7 +761,9 @@ Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of t
 2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
 
     ```shell
-    Rscript /home/ceu/de4.R
+    r /home/ceu/de4.R
+    ```
+
     ```
 
 
