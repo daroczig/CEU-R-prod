@@ -977,6 +977,14 @@ if (btc < 3800 | btc > 4000) {
     channel = '#ba-de4-2019-bots')
 }
 ```
+
+</details>
+
+
+### Background: Example use-case and why to use R to do stream processing?
+
+https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
 </details>
 
     ```
