@@ -583,6 +583,135 @@ Please fill in the form at https://goo.gl/forms/oKQ0zILuQljgBxyH3
 8. Log in to RStudio using the new instance's public IP address and 8787 port, then your AWS username (without domain) and the password from last week (ping on Slack if cannot find it)
 9. Check if the price of a Bitcoin is more than $1,000,000 (feel free to scroll up to get some hints from last week's R scripts)
 
+### 💪 Set up an easy to remember IP address
+
+Optionally you can associate a fixed IP address to your box:
+
+1. Allocate a new Elastic IP address at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Addresses:
+2. Name this resource by assigning a "Name" tag
+3. Associate this Elastic IP with your stopped box, then start it
+
+### 💪 Set up an easy to remember domain name
+
+Optionally you can associate a subdomain with your node, using the above created Elastic IP address:
+
+1. Go to Route 53: https://console.aws.amazon.com/route53/home
+2. Go to Hosted Zones and click on `ceudata.net`
+3. Create a new Record, where
+
+    - fill in the desired `Name` (subdomain), eg `gergely.ceudata.net`
+    - paste the public IP address or hostname of your server in the `Value` field
+    - click `Create`
+
+4. Now you will be able to access your box using this custon (sub)domain, no need to remember IP addresses.
+
+### 💪 Configuring for standard ports
+
+To avoid using ports like `8787` and `8080`, let's configure our services to listen on the standard 80 (HTTP) and potentially on the 443 (HTTPS) port as well, and serve RStudio on the `/rstudio`, and Jenkins on the `/jenkins` path.
+
+For this end, we will use Nginx as a reverse-proxy, so let's install it first:
+
+```shell
+sudo apt install -y nginx
+```
+
+First, we need to edit the Nginx config to enable websockets for Shiny apps etc in `/etc/nginx/nginx.conf`:
+
+```
+  map $http_upgrade $connection_upgrade {
+      default upgrade;
+      ''      close;
+    }
+```
+
+Then we need to edit the main site's configuration at `/etc/nginx/sites-enabled/default` to act as a proxy, which also do some transformations, eg rewriting the URL (removing the `/rstudio` path) before hitting RStudio Server:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+}
+```
+
+And restart Nginx:
+
+```shell
+sudo systemctl restart nginx
+```
+
+Find more information at https://support.rstudio.com/hc/en-us/articles/200552326-Running-RStudio-Server-with-a-Proxy.
+
+Let's see if the port is open on the machine:
+
+```shell
+sudo netstat -tapen|grep LIST
+```
+
+Let's see if we can access RStudio Server on the new path:
+
+```shell
+curl localhost/rstudio
+```
+
+Now let's see from the outside world ... and realize that we need to open up port 80!
+
+Now we need to tweak the config to support Jenkins as well, but the above Nginx rewrite hack will not work (see https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-troubleshooting/ for more details), so we will just make it a standard reverse-proxy, eg:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+    location ^~ /jenkins/ {
+        proxy_pass http://127.0.0.1:8080/jenkins/;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+And we also need to let Jenkins also know about the custom path, so edit the `JENKINS_ARGS` config in `/etc/default/jenkins` by adding:
+
+```shell
+--prefix=/jenkins
+```
+
+Then restart Jenkins, and good to go!
+
+This way you can access the above services via the below URLs:
+
+RStudio Server:
+
+* http://your.ip.address:8080
+* http://your.ip.address/rstudio
+
+Jenkins:
+
+* http://your.ip.address:8000/jenkins
+* http://your.ip.address/jenkins
+
+If you cannot access RStudio Server on port 80, you might need to restart `nginx` as per above.
+
+Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of the EC2 node.
+
 
 ## Contact
 
