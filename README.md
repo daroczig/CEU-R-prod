@@ -545,6 +545,27 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
+## Week 2
+
+### Recap
+
+What we convered last week:
+
+1. 2FA/MFA in AWS
+2. Creating EC2 nodes
+3. Connecting to EC2 nodes via SSH/Putty (note the difference between the PPK and PEM key formats)
+4. Updating security groups
+5. Installing RStudio Server
+6. The difference between R console and Shell
+7. The use of `sudo` and how to grant `root` (system administrator) privileges
+8. Adding new Linux users, setting password, adding to group
+9. Installing R packages system-wide VS in the user's home folder
+10. Installing, setting up and first steps with Jenkins
+
+Note the above detailed steps for the above!
+
+Also, in the below steps, you can skip running all the instructions prefixed with 💪 -- as the Amazon AMI has already configured so for your convenience, and these steps are just here as an FYI if you want to reproduce the same environment later (eg for a hobby project or work).
+
 ## Contact
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
