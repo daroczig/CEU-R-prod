@@ -566,6 +566,11 @@ Note the above detailed steps for the above!
 
 Also, in the below steps, you can skip running all the instructions prefixed with 💪 -- as the Amazon AMI has already configured so for your convenience, and these steps are just here as an FYI if you want to reproduce the same environment later (eg for a hobby project or work).
 
+### Docker Quiz
+
+Please fill in the form at https://goo.gl/forms/oKQ0zILuQljgBxyH3
+
+
 ## Contact
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
