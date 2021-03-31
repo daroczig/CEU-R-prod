@@ -764,6 +764,56 @@ Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of t
     r /home/ceu/de4.R
     ```
 
+### Intro to redis
+
+We need a persistent storage for our Jenkins jobs ... let's give a try to a key-value database:
+
+1. 💪 Install server
+
+   ```
+   sudo apt install redis-server
+   netstat -tapen | grep LIST
+   ```
+
+2. 💪 Install client
+
+    ```
+    sudo Rscript -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('rredis', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Interact from R
+
+    ```r
+    ## set up and initialize the connection to the local redis server
+    library(rredis)
+    redisConnect()
+
+    ## set/get values
+    redisSet('foo', 'bar')
+    redisGet('foo')
+
+    ## increment and decrease counters
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+
+    ## get multiple values at once
+    redisMGet(c('counter', 'counter2'))
+
+    ## list all keys
+    redisKeys()
+    ```
+
+For more examples and ideas, see the [`rredis` package vignette](https://cran.r-project.org/web/packages/rredis/vignettes/rredis.pdf) or try the interactive, genaral (not R-specific) [redis tutorial](https://try.redis.io).
+
+4. Exercises
+
+    - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+    - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+
     ```
 
 
