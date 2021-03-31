@@ -1149,6 +1149,308 @@ dt[, sum(value)]
 ```
 </details>
 
+### Actual stream processing instead of analyzing batch data
+
+Let's write an R function to increment counters on the number of transactions per symbols:
+
+1. Get sample raw data as per above (you might need to get a new shard iterator if expired):
+
+   ```r
+   records <- kinesis_get_records(shard_iterator$ShardIterator)$Record
+   ```
+
+2. Function to parse and process it
+
+    ```r
+    txprocessor <- function(record) {
+      symbol <- fromJSON(as.character(record$Data))$s
+      log_info(paste('Found 1 transaction on', symbol))
+      redisIncr(paste('symbol', symbol, sep = ':'))
+    }
+    ```
+
+3. Iterate on all records
+
+    ```r
+    library(logger)
+    library(rredis)
+    redisConnect()
+    for (record in records) {
+      txprocessor(record)
+    }
+    ```
+
+4. Check counters
+
+    ```r
+    symbols <- redisMGet(redisKeys('symbol:*'))
+    symbols
+
+    symbols <- data.frame(
+      symbol = sub('^symbol:', '', names(symbols)),
+      N = as.numeric(symbols))
+    symbols
+    ```
+
+5. Visualize
+
+    ```r
+    library(ggplot2)
+    ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity')
+    ```
+
+6. Rerun step (1) and (3) to do the data processing, then (4) and (5) for the updated data visualization.
+
+7. 🤦‍♂️
+
+8. Let's make use of the next shard iterator:
+
+    ```r
+    ## reset counters
+    redisDelete(redisKeys('symbol:*'))
+
+    ## get the first shard iterator
+    shard_iterator <- kinesis_get_shard_iterator('crypt', '0')$ShardIterator
+
+    while (TRUE) {
+
+      response <- kinesis_get_records(shard_iterator)
+
+      ## get the next iterator
+      shard_iterator <- response$NextShardIterator
+
+      ## extract records
+      records <- response$Record
+      for (record in records) {
+        txprocessor(record)
+      }
+
+      ## summarize
+      symbols <- redisMGet(redisKeys('symbol:*'))
+      symbols <- data.frame(
+        symbol = sub('^symbol:', '', names(symbols)),
+        N = as.numeric(symbols))
+
+      ## visualize
+      print(ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity') + ggtitle(sum(symbols$N)))
+    }
+    ```
+
+### Stream processor daemon
+
+0. So far, we used the `boto3` Python module from R via `botor` to interact with AWS, but this time we will integrate Java -- by calling the AWS Java SDK to interact with our Kinesis stream, then later on to run a Java daemon to manage our stream processing application.
+
+    1. 💪 First, let's install Java and the `rJava` R package:
+
+    ```shell
+    sudo apt install r-cran-rjava
+    ```
+
+    2. 💪 Then the R package wrapping the AWS Java SDK and the Kinesis client, then update to the most recent dev version right away:
+
+    ```shell
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('AWR.Kinesis', repos='https://cran.rstudio.com/'))"
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', devtools::install_github('daroczig/AWR.Kinesis', upgrade = FALSE))"
+    ```
+
+    3. 💪 Note, after installing Java, you might need to run `sudo R CMD javareconf` and/or restart R or the RStudio Server via `sudo rstudio-server restart` :/
+
+    ```shell
+    Error : .onLoad failed in loadNamespace() for 'rJava', details:
+      call: dyn.load(file, DLLpath = DLLpath, ...)
+      error: unable to load shared object '/usr/lib/R/site-library/rJava/libs/rJava.so':
+      libjvm.so: cannot open shared object file: No such file or directory
+    ```
+
+    4. And after all, a couple lines of R code to get some data from the stream via the Java SDK (just like we did above with the Python backend):
+
+    ```r
+    library(rJava)
+    library(AWR.Kinesis)
+    records <- kinesis_get_records('crypto', 'eu-west-1')
+    str(records)
+    records[1]
+
+    library(jsonlite)
+    fromJSON(records[1])
+    ```
+
+1. Create a new folder for the Kinesis consumer files: `streamer`
+
+2. Create an `app.properties` file within that subfolder
+
+```
+executableName = ./app.R
+regionName = eu-west-1
+streamName = crypto
+applicationName = my_demo_app_sadsadsa
+AWSCredentialsProvider = DefaultAWSCredentialsProviderChain
+```
+
+3. Create the `app.R` file:
+
+```r
+#!/usr/bin/Rscript
+library(logger)
+log_appender(appender_file('app.log'))
+library(AWR.Kinesis)
+library(methods)
+library(jsonlite)
+
+kinesis_consumer(
+
+    initialize = function() {
+        log_info('Hello')
+        library(rredis)
+        redisConnect(nodelay = FALSE)
+        log_info('Connected to Redis')
+    },
+
+    processRecords = function(records) {
+        log_info(paste('Received', nrow(records), 'records from Kinesis'))
+        for (record in records$data) {
+            symbol <- fromJSON(record)$s
+            log_info(paste('Found 1 transaction on', symbol))
+            redisIncr(paste('symbol', symbol, sep = ':'))
+        }
+    },
+
+    updater = list(
+        list(1/6, function() {
+            log_info('Checking overall counters')
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            log_info(paste(sum(as.numeric(symbols)), 'records processed so far'))
+    })),
+
+    shutdown = function()
+        log_info('Bye'),
+
+    checkpointing = 1,
+    logfile = 'app.log')
+```
+
+4. 💪 Allow writing checkpointing data to DynamoDB and CloudWatch in IAM
+
+5. Convert the above R script into an executable using the Terminal:
+
+```shell
+cd streamer
+chmod +x app.R
+```
+
+6. Run the app in the Terminal:
+
+```
+/usr/bin/java -cp /usr/local/lib/R/site-library/AWR/java/*:/usr/local/lib/R/site-library/AWR.Kinesis/java/*:./ \
+    com.amazonaws.services.kinesis.multilang.MultiLangDaemon \
+    ./app.properties
+```
+
+7. Check on `app.log`
+
+### Shiny app showing the progress
+
+1. Reset counters
+
+    ```r
+    library(rredis)
+    redisConnect()
+    keys <- redisKeys('symbol*')
+    redisDelete(keys)
+    ```
+
+2. 💪 Install the `treemap` package
+
+    ```
+    sudo apt install r-cran-httpuv r-cran-shiny r-cran-xtable r-cran-htmltools r-cran-igraph r-cran-lubridate r-cran-tidyr r-cran-quantmod r-cran-broom r-cran-zoo r-cran-htmlwidgets r-cran-tidyselect r-cran-rlist r-cran-rlang r-cran-xml
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages(c('treemap', 'highcharter'), repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Run the below Shiny app
+
+    ```r
+    ## packages for plotting
+    library(treemap)
+    library(highcharter)
+
+    ## connect to Redis
+    library(rredis)
+    redisConnect()
+
+    library(shiny)
+    library(data.table)
+    ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+    server <- shinyServer(function(input, output, session) {
+
+        symbols <- reactive({
+
+            ## auto-update every 2 seconds
+            reactiveTimer(2000)()
+
+            ## get frequencies
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            symbols <- data.table(
+                symbol = sub('^symbol:', '', names(symbols)),
+                N = as.numeric(symbols))
+
+            ## color top 3
+            symbols[, color := 1]
+            symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
+
+            ## return
+            symbols
+
+        })
+
+        output$treemap <- renderHighchart({
+            tm <- treemap(symbols(), index = c('symbol'),
+                          vSize = 'N', vColor = 'color',
+                          type = 'value', draw = FALSE)
+            N <- sum(symbols()$N)
+            hc_title(hctreemap(tm, animation = FALSE),
+            text = sprintf('Transactions (N=%s)', N))
+        })
+
+    })
+    shinyApp(ui = ui, server = server, options = list(port = 3838))
+    ```
+
+We will learn more about Shiny in the upcoming Data Visualization 4 class :)
+
+### Dockerizing R scripts
+
+Exercise: create a new GitHub repository with a `Dockerfile` installing `botor` (and its dependencies), `binancer` and `slackr` to be able to run the above jobs in a Docker container. Set up a DockerHub registry for the Docker image and start using in the Jenkins jobs.
+
+Hints:
+
+- create a new GitHub repo
+- create a new RStudio project using the git repo
+- set the default git user on the EC2 box
+
+    ```shell
+    git config --global user.email "you@example.com"
+    git config --global user.name "Your Name"
+    ```
+
+- create a Personal Access Token set up on GitHub for HTTPS auth on your EC2 box
+- example GitHub repo: https://github.com/daroczig/ceu-de3-docker-prep
+- example DockerHub repo: https://hub.docker.com/r/daroczig/ceu-de3-week5-prep
+- install Docker on EC2:
+
+    ```shell
+    sudo apt update
+    sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository \
+      "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get update
+    sudo apt-get install docker-ce
+    ```
+
+- example run:
+
+    ```shell
+    docker run --rm -ti daroczig/ceu-de3-week5-prep R -e "binancer::binance_klines('BTCUSDT', interval = '1m', limit = 1)[1, close]"
     ```
 
 
