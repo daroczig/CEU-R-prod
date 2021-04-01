@@ -52,7 +52,7 @@ Please find in the `syllabus` folder of this repository.
 
 Will be updated from week to week.
 
-## Week 1: Using R in the Cloud
+## Week 1
 
 **Goal**: learn how to run and schedule R jobs in the cloud.
 
@@ -540,6 +540,12 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 6. Rerun the job
 
     ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
+
+7. Optionally set up E-mail and Slack notification for the job success/error:
+
+    1. Scroll down in the job config to the "Post-build Actions" section
+    2. Add "Editable email notification", then fill in the "Project Recipient List" with an email address, and click "Advanced Settings" to define the triggers (e.g. send email on success or failure, and if you want to attach anything to the email).
+    3. Add "Slack notifications" and configure the triggers, all the other details (e.g. which Slack channel to report to and Slack username etc have been configured globally, so although you can override, but no need to).
 
 ### Homework
 
