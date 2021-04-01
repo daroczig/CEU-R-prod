@@ -4,6 +4,10 @@ Here you can find the materials for the "[Data Engineering 5: Using R in Product
 
 * [Table of Contents](#table-of-contents)
 * [Schedule](#schedule)
+* [Location](#location)
+* [Syllabus](#syllabus)
+* [Technical Prerequisites](#technical-prerequisites)
+* [Class Schedule](#class-schedule)
 
   * [Week 1](#week-1)
 
@@ -43,12 +47,7 @@ Here you can find the materials for the "[Data Engineering 5: Using R in Product
     * [Shiny app showing the progress](#shiny-app-showing-the-progress)
     * [Dockerizing R scripts](#dockerizing-r-scripts)
 
-
-* [Location](#location)
-* [Syllabus](#syllabus)
-* [Technical Prerequisites](#technical-prerequisites)
-* [Class Schedule](#class-schedule)
-
+* [Home Assignment](#home-assignment)
 * [Contact](#contact)
 
 ## Schedule
