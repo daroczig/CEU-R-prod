@@ -5,6 +5,8 @@ Here you can find the materials for the "[Data Engineering 5: Using R in Product
 * [Table of Contents](#table-of-contents)
 * [Schedule](#schedule)
 
+  * [Week 1](#week-1)
+
     * [Background: Example use-cases and why to use R in the cloud?](#background-example-use-cases-and-why-to-use-r-in-the-cloud)
     * [Welcome to AWS!](#welcome-to-aws)
     * [Getting access to EC2 boxes](#getting-access-to-ec2-boxes)
@@ -15,6 +17,32 @@ Here you can find the materials for the "[Data Engineering 5: Using R in Product
     * [Play with R for a bit](#play-with-r-for-a-bit)
     * [Prepare to schedule R commands](#prepare-to-schedule-r-commands)
     * [Schedule R commands](#schedule-r-commands)
+
+  * [Week 2](#week-2)
+
+    * [Preparations](#preparations)
+    * [Set up an easy to remember IP address](#-set-up-an-easy-to-remember-ip-address)
+    * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
+    * [ScheduleR improvements](#-scheduler-improvements)
+    * [Schedule R scripts](#schedule-r-scripts)
+    * [Intro to redis](#intro-to-redis)
+    * [Interacting with Slack](#interacting-with-slack)
+
+      * [Using Slack from Jenkins](#using-slack-from-jenkins)
+      * [Note on storing the Slack token](#note-on-storing-the-slack-token)
+      * [Using Slack from R](#using-slack-from-r)
+    * [Better handling of secrets and credentials](#better-handling-of-secrets-and-credentials)
+    * [Job Scheduler exercises](#job-scheduler-exercises)
+    * [Background: Example use-case and why to use R to do stream processing?](#background-example-use-case-and-why-to-use-r-to-do-stream-processing)
+    * [Preparations](#preparations-1)
+    * [Configuring for standard ports](#-configuring-for-standard-ports)
+    * [Setting up a demo stream](#-setting-up-a-demo-stream)
+    * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
+    * [Parsing and structuring records read from the stream](#parsing-and-structuring-records-read-from-the-stream)
+    * [Stream processor daemon](#stream-processor-daemon)
+    * [Shiny app showing the progress](#shiny-app-showing-the-progress)
+    * [Dockerizing R scripts](#dockerizing-r-scripts)
+
 
 * [Location](#location)
 * [Syllabus](#syllabus)
