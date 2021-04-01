@@ -873,6 +873,7 @@ library(rredis)
 redisConnect()
 
 store <- function(symbol) {
+  ## TODO use the checkmate pkg to assert the type of symbol
   log_info('Looking up and storing {symbol}')
   key <- paste('price', symbol, sep = ':')
   value <- binance_klines(paste0(symbol, 'USDT'), interval = '1m', limit = 1)$close
