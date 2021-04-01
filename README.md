@@ -1462,20 +1462,20 @@ The goal of this assignment is to confirm that the students have a general under
 To minimize the system administration and most of the engineering tasks for the students, the below pre-configured tools are provided as free options, but students can decide to build their own environment (on the top of or independently from these) and feel free to use any other tools:
 
 * `crypto` stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
-* `de5-week2` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use the “ceu” username and “ceudata” password if asked for all services) along with the most often used R packages (including the ones we used for stream processing, eg `botor`, `AWR.Kinesis` and the `binancer` package)
-* `de5-week2` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and encrypt/decrypt access to the "all-the-keys" KMS key
+* `de5-week2` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use your AWS username and the password shared on Slack previously) along with the most often used R packages (including the ones we used for stream processing, eg `botor`, `AWR.Kinesis` and the `binancer` package)
+* `de5-week2` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and the `slack` token in the Parameter Store
 * lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
 
 ### Required output
 
-Make sure to clean-up your EC2 nodes, security groups, keys etc created in the past weeks, as left-over AWS resources [will contribute negative points to your final grade](#preparations-1)!
+Make sure to clean-up your EC2 nodes, security groups, keys etc created in the past weeks, as left-over AWS resources [will contribute negative points to your final grade](#preparations)!
 
-* Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour and reads 250 messages from the "crypto" stream. Use this batch of data to
+* Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour and reads 250 messages from the `crypto` stream. Use this batch of data to
 
-    * Draw a barplot on the overall number of units per symbol in the "#bots-final-project" Slack channel based on the number of transactions returned from the Kinesis stream
-    * Get the current symbol prices from the Binance API, and compute the overall price of the 250 transactions in USD and print to the console
+    * Draw a barplot on the overall number of units per symbol in the `#bots-final-project` Slack channel based on the number of transactions returned from the Kinesis stream
+    * Get the current symbol prices from the Binance API, and compute the overall price of the 250 transactions in USD and print to the console in Jenkins
 
-* Suggested project (for grade up to "A"): Create a stream processing application using the `AWR.Kinesis` R package's daemon + Redis (similar to what we did on the 3rd week) to record the overall amount of coins exchanged on Binance (per symbol) in the most recent micro-batch (in other words, whatever records the Java daemon reports, sum up amount by symbol and store in Redis). No need to clear the cache ... so if a symbol was not included in a batch, don't update those keys in Redis. Create a Jenkins job that reads from this Redis cache and prints the overall value (in USD) of the transactions -- based on the coin prices reported by the Binance API at the time of request. Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
+* Suggested project (for grade up to "A"): Create a stream processing application using the `AWR.Kinesis` R package's daemon + Redis (similar to what we did on the last week) to record the overall amount of coins exchanged on Binance (per symbol) in the most recent micro-batch (in other words, whatever records the Java daemon reports, sum up amount by symbol and store in Redis). No need to clear the cache ... so if a symbol was not included in a batch, don't update those keys in Redis. Create a Jenkins job that reads from this Redis cache and prints the overall value (in USD) of the transactions -- based on the coin prices reported by the Binance API at the time of request. Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
 
 ### Delivery method
 
@@ -1486,7 +1486,7 @@ Make sure to clean-up your EC2 nodes, security groups, keys etc created in the p
 
 ### Submission deadline
 
-Midnight (CET) on April xx, 2021
+Midnight (CET) on April 28, 2021
 
 ### Getting help
 
