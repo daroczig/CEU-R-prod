@@ -561,7 +561,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 5. Install R packages system wide from RStudio/Terminal (more on this later):
 
     ```sh
-    sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
     ```
 
 6. Rerun the job
