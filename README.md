@@ -8,7 +8,8 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
 * [Syllabus](#syllabus)
 * [Technical Prerequisites](#technical-prerequisites)
 * [Class Schedule](#class-schedule)
-* [Contact](#contact)
+* [Homeworks](#homeworks)
+* [Getting help](#getting-help)
 
 ## Schedule
 
@@ -69,11 +70,11 @@ Excerpts from https://daroczig.github.io/talks
 
 3. Let's use the `eu-west-1` Ireland region
 
-### Getting help
+## Homeworks
 
-Contact Gergely Daroczi and Mihaly Orsos on the `ceu-bizanalytics`
-Slack channel or open a GitHub ticket in this repo.
+Will be updated from week to week.
 
-## Contact
+## Getting help
 
-File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
+Contact Gergely Daroczi and Mihaly Orsos on the `ceu-bizanalytics` Slack channel
+or open a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues) in this repo.
