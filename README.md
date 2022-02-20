@@ -41,6 +41,34 @@ Will be updated from week to week.
 
 **Goal**: learn how to run and schedule R jobs in the cloud.
 
+### Background: Example use-cases and why to use R in the cloud?
+
+Excerpts from https://daroczig.github.io/talks
+
+* "A Decade of Using R in Production" (Real Data Science USA - R meetup)
+* "Getting Things Logged" (RStudio::conf 2020)
+* "Analytics databases in a startup environment: beyond MySQL and Spark" (Budapest Data Forum 2018)
+
+### Welcome to AWS!
+
+1. Use the central CEU AWS account: https://ceu.signin.aws.amazon.com/console
+2. Secure your access key(s), other credentials and any login information ...
+
+    <details><summary>... because a truly wise person learns from the mistakes of others!</summary>
+
+    > "When I woke up the next morning, I had four emails and a missed phone call from Amazon AWS - something about 140 servers running on my AWS account, mining Bitcoin"
+    -- [Hoffman said](https://www.theregister.co.uk/2015/01/06/dev_blunder_shows_github_crawling_with_keyslurping_bots)
+
+    > "Nevertheless, now I know that Bitcoin can be mined with SQL, which is priceless ;-)"
+    -- [Uri Shaked](https://medium.com/@urish/thank-you-google-how-to-mine-bitcoin-on-googles-bigquery-1c8e17b04e62)
+
+    So set up 2FA (go to IAM / Users / username / Security credentials / Assigned MFA device): https://console.aws.amazon.com/iam
+
+    PS probably you do not really need to store any access keys, but you may rely on roles (and the Key Management Service, and the Secrets Manager and so on)
+    </details>
+
+3. Let's use the `eu-west-1` Ireland region
+
 ### Getting help
 
 Contact Gergely Daroczi and Mihaly Orsos on the `ceu-bizanalytics`
