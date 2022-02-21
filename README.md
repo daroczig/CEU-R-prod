@@ -223,6 +223,94 @@ ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 
     ![](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2017/10/12/r-update-1.gif)
 
+5. Authentication: http://docs.rstudio.com/ide/server-pro/authenticating-users.html
+6. Create a new user:
+
+        sudo adduser ceu
+
+7. Login & quick demo:
+
+    ```r
+    1+2
+    plot(mtcars)
+    install.packages('fortunes')
+    library(fortunes)
+    fortune()
+    fortune(200)
+    system('whoami')
+    ```
+
+8. Reload webpage (F5), realize we continue where we left the browser :)
+9. Demo the terminal:
+
+    ```console
+    $ whoami
+    ceu
+    $ sudo whoami
+    ceu is not in the sudoers file.  This incident will be reported.
+    ```
+
+8. Grant sudo access to the new user by going back to SSH with `root` access:
+
+    ```sh
+    sudo apt install -y mc
+    sudo mc
+    sudo mcedit /etc/sudoers
+    sudo adduser ceu admin
+    man adduser
+    man deluser
+    ```
+
+Note 1: might need to relogin / restart RStudio / reload R / reload page
+Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
+
+    ```sh
+    ceu ALL=(ALL) NOPASSWD:ALL
+    ```
+
+Although also note (3) the related security risks.
+
+9. Custom login page: http://docs.rstudio.com/ide/server-pro/authenticating-users.html#customizing-the-sign-in-page
+10. Custom port: http://docs.rstudio.com/ide/server-pro/access-and-security.html#network-port-and-address
+
+### Play with R for a bit
+
+0. Update R:
+
+    ```sh
+    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+    sudo add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+
+    sudo apt-get update
+    sudo apt-get upgrade
+    ```
+
+    Now try R in the console, then restart R in RStudio (Session/Quit Session).
+
+1. Installing packages:
+
+    ```sh
+    ## don't do this at this point!
+    ## install.packages('ggplot2')
+    ```
+
+2. Use binary packages instead via apt & Launchpad PPA:
+
+    ```sh
+    sudo add-apt-repository ppa:c2d4u.team/c2d4u4.0+
+
+    sudo apt-get update
+    sudo apt-get upgrade
+    sudo apt-get install r-cran-ggplot2
+    ```
+
+3. Ready to use it from R after restarting the session:
+
+    ```r
+    library(ggplot2)
+    ggplot(mtcars, aes(hp)) + geom_histogram()
+    ```
+
 ## Homeworks
 
 Will be updated from week to week.
