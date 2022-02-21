@@ -70,6 +70,79 @@ Excerpts from https://daroczig.github.io/talks
 
 3. Let's use the `eu-west-1` Ireland region
 
+## Getting access to EC2 boxes
+
+**Note**: we follow the instructions on Windows in the Computer Lab, but please find below how to access the boxes from Mac or Linux as well when working with the instances remotely.
+
+1. Create (or import) an SSH key in AWS (EC2 / Key Pairs): https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#KeyPairs:sort=keyName
+2. Get an SSH client:
+
+    * Windows -- Download and install PuTTY: https://www.putty.org
+    * Mac -- Install PuTTY for Mac using homebrew or macports
+
+        ```sh
+        sudo brew install putty
+        sudo port install putty
+        ```
+
+    * Linux -- probably the OpenSSH client is already installed, but to use the same tools on all operating systems, please install and use PuTTY on Linux too, eg on Ubuntu:
+
+        ```sh
+        sudo apt install putty
+        ```
+
+3. ~~Convert the generated pem key to PuTTY format~~No need to do this anymore, AWS can provide the key as PPK now.
+
+    * GUI: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/putty.html#putty-private-key
+    * CLI:
+
+        ```sh
+        puttygen key.pem -O private -o key.ppk
+        ```
+
+4. Make sure the key is readable only by your Windows/Linux/Mac user, eg
+
+    ```sh
+    chmod 0400 key.ppk
+    ```
+
+### Create and connect to an EC2 box
+
+1. Create an EC2 instance
+
+    0. Optional: create an Elastic IP for your box
+    1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+    2. Click "Launch Instance"
+    3. Pick the `Ubuntu Server 20.04 LTS (HVM), SSD Volume Type` AMI
+    4. Pick `t3a.small` instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
+    5. Click "Review and Launch"
+    6. Pick a unique name for the security group after clicking "Edit Security Group"
+    7. Set some tags for resource tracking:
+        * Class: `DE3`
+        * Owner: `Gergely Daroczi`
+        * Name: `daroczig-de3-prep`
+    8. Click "Launch"
+    9. Select your AWS key created above and launch
+
+2. Connect to the box
+
+    1. Specify the hostname or IP address
+
+    ![](hhttps://docs.aws.amazon.com/AWSEC2/latest/UserGuide/images/putty-session-config.png)
+
+    2. Specify the "Private key file for authentication" in the Connection category's SSH/Auth pane
+    3. Set the username to `ubuntu` on the Connection/Data tab
+    4. Save the Session profile
+    5. Click the "Open" button
+    6. Accept & cache server's host key
+
+Alternatively, you can connect via a standard SSH client on a Mac or Linux, something like:
+
+```sh
+chmod 0400 /path/to/your/pem
+ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
+```
+
 ## Homeworks
 
 Will be updated from week to week.
