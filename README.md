@@ -219,6 +219,10 @@ ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 
 2. Try to connect to the host from a browser on port 8787, eg http://foobar.eu-west-1.compute.amazonaws.com:8787
 3. Realize it's not working
+4. Open up port 8787 in the security group
+
+    ![](https://d2908q01vomqb2.cloudfront.net/b6692ea5df920cad691c20319a6fffd7a4a766b8/2017/10/12/r-update-1.gif)
+
 ## Homeworks
 
 Will be updated from week to week.
