@@ -143,6 +143,62 @@ chmod 0400 /path/to/your/pem
 ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 ```
 
+### Install RStudio Server on EC2
+
+1. Look at the docs: https://www.rstudio.com/products/rstudio/download-server
+2. Download Ubuntu `apt` package list
+
+    ```sh
+    sudo apt update
+    ```
+
+3. Install dependencies
+
+    ```sh
+    sudo apt install r-base gdebi-core
+    ```
+
+4. Try R
+
+    ```sh
+    R
+    ```
+
+    For example:
+
+    ```r
+    1 + 4
+    hist(mtcars$hp)
+    ```
+
+    Exit:
+
+    ```r
+    q()
+    ```
+
+5. Install RStudio Server
+
+    ```sh
+    wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-2022.02.0-443-amd64.deb
+    sudo gdebi rstudio-server-2022.02.0-443-amd64.deb
+    ```
+
+6. Check process and open ports
+
+    ```sh
+    rstudio-server status
+    sudo rstudio-server status
+    sudo systemctl status rstudio-server
+    sudo ps aux| grep rstudio
+
+    sudo apt install net-tools
+    sudo netstat -tapen | grep LIST
+    sudo netstat -tapen
+    ```
+
+7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
+
 ## Homeworks
 
 Will be updated from week to week.
