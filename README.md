@@ -419,6 +419,52 @@ Although also note (3) the related security risks.
         - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
         - write a bot buying and selling crypto on a virtual exchange
 
+### Prepare to schedule R commands
+
+![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
+
+1. Install Jenkins from the RStudio/Terminal: https://pkg.jenkins.io/debian-stable/
+
+    ```sh
+    wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+    echo "deb https://pkg.jenkins.io/debian-stable binary/" | sudo tee -a /etc/apt/sources.list
+    sudo apt update
+    sudo apt install openjdk-8-jdk-headless jenkins
+    sudo netstat -tapen | grep java
+    ```
+
+2. Open up port 8080 in the related security group
+3. Access Jenkins from your browser and finish installation
+
+    1. Read the initial admin password from RStudio/Terminal via
+
+        ```sh
+        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```
+
+    2. Proceed with installing the suggested plugins
+    3. Create your first user (eg `ceu`)
+
+### Schedule R commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Log in to Jenkins using your instance's public IP address and port 8080
+2. Use the `ceu` username and `ceudata` password
+3. Create a "New Item" (job):
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to look up the most recent BTC price
+
+        ```sh
+        R -e "library(binancer);binance_coins_prices()[symbol == 'BTC', usd]"
+        ```
+
+    6. Run the job
+
 ## Homeworks
 
 Will be updated from week to week.
