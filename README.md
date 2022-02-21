@@ -200,6 +200,19 @@ ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 
 7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
 
+### Connect to the RStudio Server
+
+1. Confirm that the service is up and running and the port is open
+
+    ```console
+    ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
+    tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
+    tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
+    tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
+    ```
+
+2. Try to connect to the host from a browser on port 8787, eg http://foobar.eu-west-1.compute.amazonaws.com:8787
+3. Realize it's not working
 ## Homeworks
 
 Will be updated from week to week.
