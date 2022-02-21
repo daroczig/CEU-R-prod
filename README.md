@@ -311,6 +311,114 @@ Although also note (3) the related security risks.
     ggplot(mtcars, aes(hp)) + geom_histogram()
     ```
 
+4. Get some real-time data and visualize it:
+
+    1. Install the `devtools` R package and a few others (binary distribution) in the RStudio/Terminal:
+
+        ```sh
+        sudo apt-get install r-cran-devtools r-cran-data.table r-cran-httr r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
+        ```
+
+    2. Switch back to the R console and install the `binancer` R package from GitHub to interact with crypto exchanges (note the extra dependency to be installed from CRAN):
+
+        ```r
+        devtools::install_github('daroczig/binancer', upgrade_dependencies = FALSE)
+        ```
+
+    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity -- resulting in an object like:
+
+        ```r
+        > str(klines)
+        Classes ‘data.table’ and 'data.frame':  180 obs. of  12 variables:
+         $ open_time                   : POSIXct, format: "2020-03-08 20:09:00" "2020-03-08 20:10:00" "2020-03-08 20:11:00" "2020-03-08 20:12:00" ...
+         $ open                        : num  8292 8298 8298 8299 8298 ...
+         $ high                        : num  8299 8299 8299 8299 8299 ...
+         $ low                         : num  8292 8297 8297 8298 8296 ...
+         $ close                       : num  8298 8298 8299 8298 8299 ...
+         $ volume                      : num  25.65 9.57 20.21 9.65 24.69 ...
+         $ close_time                  : POSIXct, format: "2020-03-08 20:09:59" "2020-03-08 20:10:59" "2020-03-08 20:11:59" "2020-03-08 20:12:59" ...
+         $ quote_asset_volume          : num  212759 79431 167677 80099 204883 ...
+         $ trades                      : int  371 202 274 186 352 271 374 202 143 306 ...
+         $ taker_buy_base_asset_volume : num  13.43 5.84 11.74 7.12 15.24 ...
+         $ taker_buy_quote_asset_volume: num  111430 48448 97416 59071 126493 ...
+         $ symbol                      : chr  "BTCUSDT" "BTCUSDT" "BTCUSDT" "BTCUSDT" ...
+         - attr(*, ".internal.selfref")=<externalptr>
+        ```
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(binancer)
+        klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+        str(klines)
+        summary(klines$close)
+        ```
+        </details>
+
+    4. Visualize the data, eg on a simple line chart:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(ggplot2)
+        ggplot(klines, aes(close_time, close)) + geom_line()
+        ```
+        </details>
+
+    5. Now create a candle chart, something like:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(scales)
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_y_continuous(labels = dollar) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+        ```
+        </details>
+
+    6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(data.table)
+        klines <- rbindlist(lapply(
+            c('ETHBTC', 'ARKBTC', 'NEOBTC', 'IOTABTC'),
+            binance_klines,
+            interval = '15m', limit = 4*24))
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) +
+            facet_wrap(~symbol, scales = 'free', nrow = 2)
+        ```
+        </details>
+
+    7. Some further useful functions:
+
+        - `binance_ticker_all_prices()`
+        - `binance_coins_prices()`
+        - `binance_credentials` and `binance_balances`
+
+    8. Create an R script that reports and/or plots on some cryptocurrencies, ideas:
+
+        - compute the (relative) change in prices of cryptocurrencies in the past 24 / 168 hours
+        - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
+        - write a bot buying and selling crypto on a virtual exchange
+
 ## Homeworks
 
 Will be updated from week to week.
