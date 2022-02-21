@@ -181,6 +181,7 @@ ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 
     ```sh
     wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-2022.02.0-443-amd64.deb
+    sudo apt install gdebi-core
     sudo gdebi rstudio-server-2022.02.0-443-amd64.deb
     ```
 
