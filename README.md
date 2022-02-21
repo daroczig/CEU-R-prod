@@ -465,6 +465,27 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
     6. Run the job
 
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/jenkins-errors.png)
+
+4. Debug & figure out what's the problem ...
+5. Install R packages system wide from RStudio/Terminal (more on this later):
+
+    ```sh
+    sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
+    ```
+
+6. Rerun the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
+
+7. Optionally set up E-mail and Slack notification for the job success/error:
+
+    1. Scroll down in the job config to the "Post-build Actions" section
+    2. Add "Editable email notification", then fill in the "Project Recipient List" with an email address, and click "Advanced Settings" to define the triggers (e.g. send email on success or failure, and if you want to attach anything to the email).
+    3. Add "Slack notifications" and configure the triggers, all the other details (e.g. which Slack channel to report to and Slack username etc have been configured globally, so although you can override, but no need to).
+
+Please terminate the EC2 node if not using anymore!
+
 ## Homeworks
 
 Will be updated from week to week.
