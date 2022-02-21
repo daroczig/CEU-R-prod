@@ -152,6 +152,12 @@ ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
     sudo apt update
     ```
 
+    Optionally upgrade the system:
+
+    ```sh
+    sudo apt upgrade
+    ```
+
 3. Install dependencies
 
     ```sh
