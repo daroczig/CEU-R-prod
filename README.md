@@ -30,6 +30,8 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
     * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
     * [ScheduleR improvements](#-scheduler-improvements)
     * [Schedule R scripts](#schedule-r-scripts)
+    * [Intro to redis](#intro-to-redis)
+    * [Interacting with Slack](#interacting-with-slack)
 
 * [Homeworks](#homeworks)
 * [Getting help](#getting-help)
