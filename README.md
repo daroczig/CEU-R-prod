@@ -21,6 +21,16 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
     * [Prepare to schedule R commands](#prepare-to-schedule-r-commands)
     * [Schedule R commands](#schedule-r-commands)
 
+  * [Week 2](#week-2)
+
+    * [Amazon Machine Images](#amazon-machine-images)
+    * [Create a user for every member of the team](#create-a-user-for-every-member-of-the-team)
+    * [Update Jenkins for shared usage](#update-jenkins-for-shared-usage)
+    * [Set up an easy to remember IP address](#-set-up-an-easy-to-remember-ip-address)
+    * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
+    * [ScheduleR improvements](#-scheduler-improvements)
+    * [Schedule R scripts](#schedule-r-scripts)
+
 * [Homeworks](#homeworks)
 * [Getting help](#getting-help)
 
@@ -155,6 +165,8 @@ Alternatively, you can connect via a standard SSH client on a Mac or Linux, some
 chmod 0400 /path/to/your/pem
 ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
 ```
+
+As a last resort, use Amazon Connect from the EC2 dashboard.
 
 ### Install RStudio Server on EC2
 
@@ -484,7 +496,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 5. Install R packages system wide from RStudio/Terminal (more on this later):
 
     ```sh
-    sudo Rscript -e "library(devtools);with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade_dependencies = FALSE))"
     ```
 
 6. Rerun the job
@@ -497,13 +509,518 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
     2. Add "Editable email notification", then fill in the "Project Recipient List" with an email address, and click "Advanced Settings" to define the triggers (e.g. send email on success or failure, and if you want to attach anything to the email).
     3. Add "Slack notifications" and configure the triggers, all the other details (e.g. which Slack channel to report to and Slack username etc have been configured globally, so although you can override, but no need to).
 
-Please terminate the EC2 node if not using anymore!
+Please terminate your EC2 node if you are not using anymore!
+
+## Week 2
+
+What we convered last week:
+
+1. 2FA/MFA in AWS
+2. Creating EC2 nodes
+3. Connecting to EC2 nodes via SSH/Putty (note the difference between the PPK and PEM key formats)
+4. Updating security groups
+5. Installing RStudio Server
+6. The difference between R console and Shell
+7. The use of `sudo` and how to grant `root` (system administrator) privileges
+8. Adding new Linux users, setting password, adding to group
+9. Installing R packages system-wide VS in the user's home folder
+10. Installing, setting up and first steps with Jenkins
+
+Note that you do NOT need to do the instructions below marked with the :muscle: emoji -- those have been already done for you, and the related steps are only included below for documenting what has been done and demonstrated in the class.
+
+### 💪 Amazon Machine Images
+
+Instead of starting from scratch, let's create an Amazon Machine Image (AMI) from the EC2 node we used last week, so that we can use that as the basis of all the next steps:
+
+* Find the EC2 node in the EC2 console
+* Right click, then "Image and tempaltes" / "Create image"
+* Name the AMI and click "Create image"
+* It might take a few minutes to finish
+
+Then you can use the newly created `de3-week2` AMI to spin up a new instance for you.
+
+### 💪 Create a user for every member of the team
+
+We'll export the list of IAM users from AWS and create a system user for everyone.
+
+1. Attach a newly created IAM EC2 Role (let's call it `ceudataserver`) to the EC2 box and assign 'Read-only IAM access':
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+
+2. Install AWS CLI tool:
+
+    ```
+    sudo apt update
+    sudo apt install awscli
+    ```
+
+3. List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+
+   ```
+   aws iam list-users
+   ```
+
+4. Export the list of users from R:
+
+   ```
+   library(jsonlite)
+   users <- fromJSON(system('aws iam list-users', intern = TRUE))
+   str(users)
+   users[[1]]$UserName
+   ```
+
+5. Create a new system user on the box (for RStudio Server access) for every IAM user, set password and add to group:
+
+   ```
+   library(logger)
+   library(glue)
+   for (user in users[[1]]$UserName) {
+
+     ## remove invalid character
+     user <- sub('@.*', '', user)
+     user <- sub('.', '_', user, fixed = TRUE)
+
+     log_info('Creating {user}')
+     system(glue("sudo adduser --disabled-password --quiet --gecos '' {user}"))
+
+     log_info('Setting password for {user}')
+     system(glue("echo '{user}:secretpass' | sudo chpasswd")) # note the single quotes + placement of sudo
+
+     log_info('Adding {user} to sudo group')
+     system(glue('sudo adduser {user} sudo'))
+
+   }
+   ```
+
+Note, you may have to temporarily enable passwordless `sudo` for this user (if have not done already) :/
+
+```
+ceu ALL=(ALL) NOPASSWD:ALL
+```
+
+Check users:
+
+```
+readLines('/etc/passwd')
+```
+
+### 💪 Update Jenkins for shared usage
+
+Update the security backend to use real Unix users for shared access (if users already created):
+
+```sh
+sudo adduser jenkins shadow
+sudo systemctl restart jenkins
+```
+
+Then make sure to test new user access in an incognito window to avoid closing yourself out :)
+
+### 💪 Set up an easy to remember IP address
+
+Optionally you can associate a fixed IP address to your box:
+
+1. Allocate a new Elastic IP address at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Addresses:
+2. Name this resource by assigning a "Name" tag
+3. Associate this Elastic IP with your stopped box, then start it
+
+### 💪 Set up an easy to remember domain name
+
+Optionally you can associate a subdomain with your node, using the above created Elastic IP address:
+
+1. Go to Route 53: https://console.aws.amazon.com/route53/home
+2. Go to Hosted Zones and click on `ceudata.net`
+3. Create a new Record, where
+
+    - fill in the desired `Name` (subdomain), eg `gergely.ceudata.net`
+    - paste the public IP address or hostname of your server in the `Value` field
+    - click `Create`
+
+4. Now you will be able to access your box using this custon (sub)domain, no need to remember IP addresses.
+
+### 💪 Configuring for standard ports
+
+To avoid using ports like `8787` and `8080`, let's configure our services to listen on the standard 80 (HTTP) and potentially on the 443 (HTTPS) port as well, and serve RStudio on the `/rstudio`, and Jenkins on the `/jenkins` path.
+
+For this end, we will use Nginx as a reverse-proxy, so let's install it first:
+
+```shell
+sudo apt install -y nginx
+```
+
+First, we need to edit the Nginx config to enable websockets for Shiny apps etc in `/etc/nginx/nginx.conf`:
+
+```
+  map $http_upgrade $connection_upgrade {
+      default upgrade;
+      ''      close;
+    }
+```
+
+Then we need to edit the main site's configuration at `/etc/nginx/sites-enabled/default` to act as a proxy, which also do some transformations, eg rewriting the URL (removing the `/rstudio` path) before hitting RStudio Server:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+}
+```
+
+And restart Nginx:
+
+```shell
+sudo systemctl restart nginx
+```
+
+Find more information at https://support.rstudio.com/hc/en-us/articles/200552326-Running-RStudio-Server-with-a-Proxy.
+
+Let's see if the port is open on the machine:
+
+```shell
+sudo netstat -tapen|grep LIST
+```
+
+Let's see if we can access RStudio Server on the new path:
+
+```shell
+curl localhost/rstudio
+```
+
+Now let's see from the outside world ... and realize that we need to open up port 80!
+
+Now we need to tweak the config to support Jenkins as well, but the above Nginx rewrite hack will not work (see https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-troubleshooting/ for more details), so we will just make it a standard reverse-proxy, eg:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+    location ^~ /jenkins/ {
+        proxy_pass http://127.0.0.1:8080/jenkins/;
+        proxy_set_header X-Real-IP  $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header Host $host;
+    }
+}
+```
+
+And we also need to let Jenkins also know about the custom path, so edit the `JENKINS_ARGS` config in `/etc/default/jenkins` by adding:
+
+```shell
+--prefix=/jenkins
+```
+
+Then restart Jenkins, and good to go!
+
+This way you can access the above services via the below URLs:
+
+RStudio Server:
+
+* http://your.ip.address:8080
+* http://your.ip.address/rstudio
+
+Jenkins:
+
+* http://your.ip.address:8000/jenkins
+* http://your.ip.address/jenkins
+
+If you cannot access RStudio Server on port 80, you might need to restart `nginx` as per above.
+
+Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of the EC2 node.
+
+### 💪 ScheduleR improvements
+
+1. Learn about little R: https://github.com/eddelbuettel/littler
+2. Set up e-mail notifications via eg mailjet.com
+
+    1. Sign up, confirm your e-mail address and domain
+    2. Take a note on the SMTP settings, eg
+
+        * SMTP server: in-v3.mailjet.com
+        * Port: 465
+        * SSL: Yes
+        * Username: ***
+        * Password: ***
+
+    3. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
+
+        1. Set up the default FROM e-mail address at "System Admin e-mail address": jenkins@ceudata.net
+        2. Search for "Extended E-mail Notification" and configure
+
+           * SMTP Server
+           * Click "Advanced"
+           * Check "Use SMTP Authentication"
+           * Enter User Name from the above steps
+           * Enter Password from the above steps
+           * Check "Use SSL"
+           * SMTP port: 465
+
+    5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
+    6. Configure the job to send the whole e-mail body as the deault body template for all outgoing emails
+
+    ```shell
+    ${BUILD_LOG, maxLines=1000}
+    ```
+
+3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
+
+### Schedule R scripts
+
+1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    paste('The current Bitcoin price is', prices[symbol == 'BTC', usd])
+    ```
+
+2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
+
+    ```shell
+    r /home/ceu/de3.R
+    ```
+
+### Intro to redis
+
+We need a persistent storage for our Jenkins jobs ... let's give a try to a key-value database:
+
+1. 💪 Install server
+
+   ```
+   sudo apt install redis-server
+   netstat -tapen | grep LIST
+   ```
+
+2. 💪 Install client
+
+    ```
+    sudo Rscript -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('rredis', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Interact from R
+
+    ```r
+    ## set up and initialize the connection to the local redis server
+    library(rredis)
+    redisConnect()
+
+    ## set/get values
+    redisSet('foo', 'bar')
+    redisGet('foo')
+
+    ## increment and decrease counters
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+
+    ## get multiple values at once
+    redisMGet(c('counter', 'counter2'))
+
+    ## list all keys
+    redisKeys()
+    ```
+
+For more examples and ideas, see the [`rredis` package vignette](https://cran.r-project.org/web/packages/rredis/vignettes/rredis.pdf) or try the interactive, genaral (not R-specific) [redis tutorial](https://try.redis.io).
+
+4. Exercises
+
+    - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+    - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+
+<details><summary>Example solution ...</summary>
+
+```r
+library(binancer)
+library(data.table)
+prices <- binance_coins_prices()
+
+library(rredis)
+redisConnect()
+
+
+redisSet('username:price:BTC', prices[symbol == 'BTC', usd])
+redisSet('username:price:ETH', prices[symbol == 'ETH', usd])
+
+redisGet('username:price:BTC')
+redisGet('username:price:ETH')
+
+redisMGet(c('username:price:BTC', 'username:price:ETH'))
+```
+</details>
+
+<details><summary>Example solution using a helper function doing some logging ...</summary>
+
+```r
+library(binancer)
+library(logger)
+library(rredis)
+redisConnect()
+
+store <- function(s) {
+  ## TODO use the checkmate pkg to assert the type of symbol
+  log_info('Looking up and storing {s}')
+  value <- binance_coins_prices()[symbol == s, usd]
+  key <- paste('username', 'price', symbol, sep = ':')
+  redisSet(key, value)
+  log_info('The price of {symbol} is {value}')
+}
+
+store('BTC')
+store('ETH')
+
+## list all keys with the "price" prefix and lookup the actual values
+redisMGet(redisKeys('username:price:*'))
+```
+</details>
+
+More on databases at the "Mastering R" class in the Spring semester ;)
+
+### Interacting with Slack
+
+1. Join the #ba-de3-2021-bots channel in the `ceu-bizanalytics` Slack
+2. 💪 A custom Slack app is already created at https://api.slack.com/apps/A9FBHCLPR, but feel free to create a new one and use the related app in the following steps
+3. Look up the app's bots in the sidebar
+4. Look up the Access Token
+
+#### Note on storing the Slack token
+
+1. Do not store the token in plain-text!
+2. Let's use Amazon's Key Management Service: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (slides 73-75)
+3. 💪 Instead of using the Java SDK referenced in the above talk, let's install `boto3` Python module and use via `reticulate`:
+
+    ```shell
+    sudo apt install python3-pip
+    sudo pip3 install boto3
+    sudo apt install r-cran-reticulate
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/botor', upgrade = FALSE))"
+    ```
+
+4. 💪 Create a KMS key in IAM: `alias/de3`
+5. Grant access to that KMS key by creating an EC2 IAM role at https://console.aws.amazon.com/iam/home?region=eu-west-1#/roles with the `AWSKeyManagementServicePowerUser` policy and explicit grant access to the key in the KMS console
+6. Attach the newly created IAM role
+7. Use this KMS key to encrypt the Slack token:
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    kms_encrypt('token', key = 'alias/de3')
+    ```
+
+8. Store the ciphertext and use `kms_decrypt` to decrypt later, see eg
+
+    ```r
+    kms_decrypt("AQICAHjz/f+54Mhrt8zgs+JlU7ulKzBlv4suUAfeIk17wzRbFAEX1Sryyx5Y664/cbO7+y2zAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDOEdnipTbVMsHia4dQIBEIBFLWi2SlOTR20c9OZwg7aXQVac9s7LtUiyOFSm2iDkd7axQvszE37ifGAtlu808YCNGIhwbS0ACLHLf6Cyv/PPsMut5zO1")
+    ```
+
+9. 💪 Alternatively, use the AWS Parameter Store or Secrets Manager, see eg https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/?region=eu-west-1&tab=Table and granting the `AmazonSSMReadOnlyAccess` policy to your IAM role or user.
+
+#### Using Slack from R
+
+4. 💪 Install the Slack R client
+
+    ```shell
+    sudo apt install r-cran-rlang r-cran-purrr r-cran-tibble r-cran-dplyr r-cran-httr r-cran-rlang
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    token <- ssm_get_parameter('slack')
+    library(slackr)
+    slackr_setup(username = 'jenkins', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
+    slackr_msg(text = 'Hi there!', channel = '#ba-de3-2021-bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    slackr_msg(text = msg, preformatted = FALSE, channel = '#ba-de3-2021-bots')
+    ```
+
+7. Or plot
+
+    ```r
+    library(ggplot2)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#ba-de3-2021-bots', width = 12)
+    ```
+
+### Job Scheduler exercises
+
+* Create a Jenkins job to alert if Bitcoin price is below $40K or higher than $45K
+* Create a Jenkins job to alert if Bitcoin price changed more than $200 in the past hour
+* Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day
+* Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
+
+<details><summary>Example solution for the first exercise ...</summary>
+
+```r
+## get data right from the Binance API
+library(binancer)
+btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
+
+## or from the local cache (updated every minute from Jenkins as per above)
+library(rredis)
+btc <- redisGet('price:BTC')
+
+## log whatever was retreived
+library(logger)
+log_info('The current price of a Bitcoin is ${btc}')
+
+## send alert
+if (btc < 40000 | btc > 45000) {
+  library(botor)
+  token <- ssm_get_parameter('slack')
+  library(slackr)
+  slackr_setup(username = 'jenkins', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
+  slackr_msg(
+    text = paste('uh ... oh... BTC price:', btc),
+    channel = '#ba-de3-2021-bots')
+}
+```
+
+</details>
+
 
 ## Homeworks
 
 ### Week 1
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
+
+### Week 2
+
+Read the [Gently down the stream](https://www.gentlydownthe.stream/) -- quiz next week!
 
 Will be updated from week to week.
 
