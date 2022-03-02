@@ -853,16 +853,21 @@ For more examples and ideas, see the [`rredis` package vignette](https://cran.r-
 <details><summary>Example solution ...</summary>
 
 ```r
+library(binancer)
+library(data.table)
+prices <- binance_coins_prices()
+
 library(rredis)
 redisConnect()
 
-redisSet('price:BTC', binance_klines('BTCUSDT', interval = '1m', limit = 1)$close)
-redisSet('price:ETH', binance_klines('ETHUSDT', interval = '1m', limit = 1)$close)
 
-redisGet('price:BTC')
-redisGet('price:ETH')
+redisSet('username:price:BTC', prices[symbol == 'BTC', usd])
+redisSet('username:price:ETH', prices[symbol == 'ETH', usd])
 
-redisMGet(c('price:BTC', 'price:ETH'))
+redisGet('username:price:BTC')
+redisGet('username:price:ETH')
+
+redisMGet(c('username:price:BTC', 'username:price:ETH'))
 ```
 </details>
 
@@ -874,21 +879,20 @@ library(logger)
 library(rredis)
 redisConnect()
 
-store <- function(symbol) {
+store <- function(s) {
   ## TODO use the checkmate pkg to assert the type of symbol
-  log_info('Looking up and storing {symbol}')
-  key <- paste('price', symbol, sep = ':')
-  value <- binance_klines(paste0(symbol, 'USDT'), interval = '1m', limit = 1)$close
+  log_info('Looking up and storing {s}')
+  value <- binance_coins_prices()[symbol == s, usd]
+  key <- paste('username', 'price', symbol, sep = ':')
   redisSet(key, value)
   log_info('The price of {symbol} is {value}')
-
 }
 
 store('BTC')
 store('ETH')
 
 ## list all keys with the "price" prefix and lookup the actual values
-redisMGet(redisKeys('price:*'))
+redisMGet(redisKeys('username:price:*'))
 ```
 </details>
 
@@ -928,7 +932,7 @@ More on databases at the "Mastering R" class in the Spring semester ;)
 8. Store the ciphertext and use `kms_decrypt` to decrypt later, see eg
 
     ```r
-    kms_decrypt("AQICAHhh7Ku/BWdSbCqos9k49Vnk1+WytvoesgX+1bOvLAlyegHa210D93pgytNnThR9qVVxAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKkH9le72xKmMsgjTQIBEIBT/7MbIV2sG6Hh+fb8BJQ9a6VNOZ1rhPAgvSET6IUdiki92fMZ6dDBOpmSSuaa3t8KIF9KtrlbQAYQNtPVHUvFl1GpyM0k8bD7jLSsUPeRjFNoI+Q=")
+    kms_decrypt("AQICAHjz/f+54Mhrt8zgs+JlU7ulKzBlv4suUAfeIk17wzRbFAEX1Sryyx5Y664/cbO7+y2zAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDOEdnipTbVMsHia4dQIBEIBFLWi2SlOTR20c9OZwg7aXQVac9s7LtUiyOFSm2iDkd7axQvszE37ifGAtlu808YCNGIhwbS0ACLHLf6Cyv/PPsMut5zO1")
     ```
 
 9. 💪 Alternatively, use the AWS Parameter Store or Secrets Manager, see eg https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/?region=eu-west-1&tab=Table and granting the `AmazonSSMReadOnlyAccess` policy to your IAM role or user.
