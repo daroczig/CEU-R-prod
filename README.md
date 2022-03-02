@@ -800,6 +800,213 @@ Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of t
     r /home/ceu/de3.R
     ```
 
+### Intro to redis
+
+We need a persistent storage for our Jenkins jobs ... let's give a try to a key-value database:
+
+1. 💪 Install server
+
+   ```
+   sudo apt install redis-server
+   netstat -tapen | grep LIST
+   ```
+
+2. 💪 Install client
+
+    ```
+    sudo Rscript -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('rredis', repos='https://cran.rstudio.com/'))"
+    ```
+
+3. Interact from R
+
+    ```r
+    ## set up and initialize the connection to the local redis server
+    library(rredis)
+    redisConnect()
+
+    ## set/get values
+    redisSet('foo', 'bar')
+    redisGet('foo')
+
+    ## increment and decrease counters
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+
+    ## get multiple values at once
+    redisMGet(c('counter', 'counter2'))
+
+    ## list all keys
+    redisKeys()
+    ```
+
+For more examples and ideas, see the [`rredis` package vignette](https://cran.r-project.org/web/packages/rredis/vignettes/rredis.pdf) or try the interactive, genaral (not R-specific) [redis tutorial](https://try.redis.io).
+
+4. Exercises
+
+    - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+    - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+
+<details><summary>Example solution ...</summary>
+
+```r
+library(rredis)
+redisConnect()
+
+redisSet('price:BTC', binance_klines('BTCUSDT', interval = '1m', limit = 1)$close)
+redisSet('price:ETH', binance_klines('ETHUSDT', interval = '1m', limit = 1)$close)
+
+redisGet('price:BTC')
+redisGet('price:ETH')
+
+redisMGet(c('price:BTC', 'price:ETH'))
+```
+</details>
+
+<details><summary>Example solution using a helper function doing some logging ...</summary>
+
+```r
+library(binancer)
+library(logger)
+library(rredis)
+redisConnect()
+
+store <- function(symbol) {
+  ## TODO use the checkmate pkg to assert the type of symbol
+  log_info('Looking up and storing {symbol}')
+  key <- paste('price', symbol, sep = ':')
+  value <- binance_klines(paste0(symbol, 'USDT'), interval = '1m', limit = 1)$close
+  redisSet(key, value)
+  log_info('The price of {symbol} is {value}')
+
+}
+
+store('BTC')
+store('ETH')
+
+## list all keys with the "price" prefix and lookup the actual values
+redisMGet(redisKeys('price:*'))
+```
+</details>
+
+More on databases at the "Mastering R" class in the Spring semester ;)
+
+### Interacting with Slack
+
+1. Join the #ba-de3-2021-bots channel in the `ceu-bizanalytics` Slack
+2. 💪 A custom Slack app is already created at https://api.slack.com/apps/A9FBHCLPR, but feel free to create a new one and use the related app in the following steps
+3. Look up the app's bots in the sidebar
+4. Look up the Access Token
+
+#### Note on storing the Slack token
+
+1. Do not store the token in plain-text!
+2. Let's use Amazon's Key Management Service: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (slides 73-75)
+3. 💪 Instead of using the Java SDK referenced in the above talk, let's install `boto3` Python module and use via `reticulate`:
+
+    ```shell
+    sudo apt install python3-pip
+    sudo pip3 install boto3
+    sudo apt install r-cran-reticulate
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/botor', upgrade = FALSE))"
+    ```
+
+4. 💪 Create a KMS key in IAM: `alias/de3`
+5. Grant access to that KMS key by creating an EC2 IAM role at https://console.aws.amazon.com/iam/home?region=eu-west-1#/roles with the `AWSKeyManagementServicePowerUser` policy and explicit grant access to the key in the KMS console
+6. Attach the newly created IAM role
+7. Use this KMS key to encrypt the Slack token:
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    kms_encrypt('token', key = 'alias/de3')
+    ```
+
+8. Store the ciphertext and use `kms_decrypt` to decrypt later, see eg
+
+    ```r
+    kms_decrypt("AQICAHhh7Ku/BWdSbCqos9k49Vnk1+WytvoesgX+1bOvLAlyegHa210D93pgytNnThR9qVVxAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKkH9le72xKmMsgjTQIBEIBT/7MbIV2sG6Hh+fb8BJQ9a6VNOZ1rhPAgvSET6IUdiki92fMZ6dDBOpmSSuaa3t8KIF9KtrlbQAYQNtPVHUvFl1GpyM0k8bD7jLSsUPeRjFNoI+Q=")
+    ```
+
+9. 💪 Alternatively, use the AWS Parameter Store or Secrets Manager, see eg https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/?region=eu-west-1&tab=Table and granting the `AmazonSSMReadOnlyAccess` policy to your IAM role or user.
+
+#### Using Slack from R
+
+4. 💪 Install the Slack R client
+
+    ```shell
+    sudo apt install r-cran-rlang r-cran-purrr r-cran-tibble r-cran-dplyr r-cran-httr r-cran-rlang
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('slackr', repos='https://cran.rstudio.com/'))"
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    token <- ssm_get_parameter('slack')
+    library(slackr)
+    slackr_setup(username = 'jenkins', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
+    slackr_msg(text = 'Hi there!', channel = '#ba-de3-2021-bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    slackr_msg(text = msg, preformatted = FALSE, channel = '#ba-de3-2021-bots')
+    ```
+
+7. Or plot
+
+    ```r
+    library(ggplot2)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#ba-de3-2021-bots', width = 12)
+    ```
+
+### Job Scheduler exercises
+
+* Create a Jenkins job to alert if Bitcoin price is below $40K or higher than $45K
+* Create a Jenkins job to alert if Bitcoin price changed more than $200 in the past hour
+* Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day
+* Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH
+
+<details><summary>Example solution for the first exercise ...</summary>
+
+```r
+## get data right from the Binance API
+library(binancer)
+btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
+
+## or from the local cache (updated every minute from Jenkins as per above)
+library(rredis)
+btc <- redisGet('price:BTC')
+
+## log whatever was retreived
+library(logger)
+log_info('The current price of a Bitcoin is ${btc}')
+
+## send alert
+if (btc < 40000 | btc > 45000) {
+  library(botor)
+  token <- ssm_get_parameter('slack')
+  library(slackr)
+  slackr_setup(username = 'jenkins', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
+  slackr_msg(
+    text = paste('uh ... oh... BTC price:', btc),
+    channel = '#ba-de3-2021-bots')
+}
+```
+
+</details>
+
 
 ## Homeworks
 
