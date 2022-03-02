@@ -764,7 +764,7 @@ Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of t
 
     3. Configure Jenkins at http://SERVERNAME.ceudata.net:8080/configure
 
-        1. Set up the default FROM e-mail address: jenkins@ceudata.net
+        1. Set up the default FROM e-mail address at "System Admin e-mail address": jenkins@ceudata.net
         2. Search for "Extended E-mail Notification" and configure
 
            * SMTP Server
@@ -791,7 +791,7 @@ Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of t
     ```r
     library(binancer)
     prices <- binance_coins_prices()
-    sprintf('The current Bitcoin price is: %s', prices[symbol == 'BTC', usd])
+    paste('The current Bitcoin price is', prices[symbol == 'BTC', usd])
     ```
 
 2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead
