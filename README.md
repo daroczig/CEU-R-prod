@@ -1018,6 +1018,10 @@ if (btc < 40000 | btc > 45000) {
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
+### Week 2
+
+Read the [Gently down the stream](https://www.gentlydownthe.stream/) -- quiz next week!
+
 Will be updated from week to week.
 
 ## Getting help
