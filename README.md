@@ -953,7 +953,7 @@ More on databases at the "Mastering R" class in the Spring semester ;)
     ```r
     library(botor)
     botor(region = 'eu-west-1')
-    token <- ssm_get_parameter('slack')
+    token <- kms_decrypt('AQICAHjz/f+54Mhrt8zgs+JlU7ulKzBlv4suUAfeIk17wzRbFAEX1Sryyx5Y664/cbO7+y2zAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDOEdnipTbVMsHia4dQIBEIBFLWi2SlOTR20c9OZwg7aXQVac9s7LtUiyOFSm2iDkd7axQvszE37ifGAtlu808YCNGIhwbS0ACLHLf6Cyv/PPsMut5zO1')
     library(slackr)
     slackr_setup(username = 'jenkins', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
     slackr_msg(text = 'Hi there!', channel = '#ba-de3-2021-bots')
@@ -1002,7 +1002,7 @@ log_info('The current price of a Bitcoin is ${btc}')
 ## send alert
 if (btc < 40000 | btc > 45000) {
   library(botor)
-  token <- ssm_get_parameter('slack')
+  token <- kms_decrypt('AQICAHjz/f+54Mhrt8zgs+JlU7ulKzBlv4suUAfeIk17wzRbFAEX1Sryyx5Y664/cbO7+y2zAAAAiTCBhgYJKoZIhvcNAQcGoHkwdwIBADByBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDOEdnipTbVMsHia4dQIBEIBFLWi2SlOTR20c9OZwg7aXQVac9s7LtUiyOFSm2iDkd7axQvszE37ifGAtlu808YCNGIhwbS0ACLHLf6Cyv/PPsMut5zO1')
   library(slackr)
   slackr_setup(username = 'jenkins', bot_user_oauth_token = token, icon_emoji = ':jenkins-rage:')
   slackr_msg(
