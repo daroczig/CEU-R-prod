@@ -1135,6 +1135,27 @@ This section describes how to set up a Kinesis stream with ~~5~~on-demand shards
 3. Check the current price of a Bitcoin and post it to Slack using your name.
 4. Create a Jenkins job running (3) every 10 minutes.
 
+<details><summary>Example solution for posting the price of a Bitcoin on Slack ...</summary>
+
+```r
+library(binancer)
+prices <- binance_coins_prices()
+
+library(scales)
+msg <- paste(':money_with_wings: The current Bitcoin price is', prices[symbol == 'BTC', dollar(usd)])
+
+library(botor)
+botor(region = 'eu-west-1')
+## better way to get the Slack token
+token <- ssm_get_parameter('slack')
+
+library(slackr)
+slackr_setup(username = 'MYNAME', token = token, icon_emoji = ':jenkins-rage:')
+slackr_msg(text = msg, preformatted = FALSE, channel = '#ba-de3-2021-bots')
+```
+
+</details>
+
 
 ## Homeworks
 
