@@ -1025,6 +1025,8 @@ What we convered last week:
 6. Redis
 7. Slack
 
+Quiz: https://forms.gle/UyTet2MHyEbNErQN7 (10 mins)
+
 
 ## Homeworks
 
