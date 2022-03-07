@@ -1013,6 +1013,18 @@ if (btc < 40000 | btc > 45000) {
 
 </details>
 
+## Week 3
+
+What we convered last week:
+
+1. Amazon Machine Images
+2. Shared RStudio Server and Jenkins
+3. Using Elastic IPs and domains names for the services
+4. Jenkins notifications
+5. Installing RStudio Server
+6. Redis
+7. Slack
+
 
 ## Homeworks
 
