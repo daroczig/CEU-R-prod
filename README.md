@@ -1156,6 +1156,39 @@ slackr_msg(text = msg, preformatted = FALSE, channel = '#ba-de3-2021-bots')
 
 </details>
 
+### A simple stream consumer app in R
+
+As the `botor` package was already installed, we can rely on the power of `boto3` to interact with the Kinesis stream. The IAM role attached to the node already has the `AmazonKinesisFullAccess` policy attached, so we have permissions to read from the stream.
+
+First we need to create a shard iterator, then using that, we can read the actual records from the shard:
+
+```r
+library(botor)
+botor(region = 'eu-west-1')
+shard_iterator <- kinesis_get_shard_iterator('crypto', '0')
+records <- kinesis_get_records(shard_iterator$ShardIterator)
+str(records)
+```
+
+Let's parse these records:
+
+```r
+records$Records[[1]]
+records$Records[[1]]$Data
+
+library(jsonlite)
+fromJSON(as.character(records$Records[[1]]$Data))
+```
+
+### Parsing and structuring records read from the stream
+
+Exercises:
+
+* parse the loaded 25 records into a `data.table` object with proper column types. Get some help on the data format from the [Binance API docs](https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md#trade-streams)!
+* count the overall number of coins exchanged
+* count the overall value of transactions in USD (hint: `binance_ticker_all_prices()` and `binance_coins_prices()`)
+* visualize the distribution of symbol pairs
+
 
 ## Homeworks
 
