@@ -1027,6 +1027,10 @@ What we convered last week:
 
 Quiz: https://forms.gle/UyTet2MHyEbNErQN7 (10 mins)
 
+Note, that this week we will NOT use the shared RStudio and Jenkins server -- to practice for the final project, you need to spin up your EC2 node and finish most of the below tasks (except for the sections marked with the 💪 icon).
+
+But first, an introduction to stream processing with AWS Kinesis and R: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
 
 ## Homeworks
 
