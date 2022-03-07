@@ -1128,6 +1128,13 @@ This section describes how to set up a Kinesis stream with ~~5~~on-demand shards
 
 13. Set up an alert in Cloudwatch if streaming stops
 
+### Get your EC2 ready for stream processing
+
+1. Create a new `t3a.small` instance using the `de3-week3` AMI, `de3` IAM role (with Kinesis, DynamoDB, Parameter Store access) and the `de3` security group (opening up the following ports: 22, 8787 and 8080).
+2. Log in to RStudio Server using the new instance's public IP address and the 8787 port, then your AWS username (without domain) and the password from last week (ping on Slack if cannot find it).
+3. Check the current price of a Bitcoin and post it to Slack using your name.
+4. Create a Jenkins job running (3) every 10 minutes.
+
 
 ## Homeworks
 
