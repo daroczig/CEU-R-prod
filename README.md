@@ -33,6 +33,15 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
     * [Intro to redis](#intro-to-redis)
     * [Interacting with Slack](#interacting-with-slack)
 
+  * [Week 3](#week-3)
+
+    * [Setting up a demo stream](#-setting-up-a-demo-stream)
+    * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
+    * [Parsing and structuring records read from the stream](#parsing-and-structuring-records-read-from-the-stream)
+    * [Stream processor daemon](#stream-processor-daemon)
+    * [Shiny app showing the progress](#shiny-app-showing-the-progress)
+    * [Dockerizing R scripts](#dockerizing-r-scripts)
+
 * [Homeworks](#homeworks)
 * [Getting help](#getting-help)
 
