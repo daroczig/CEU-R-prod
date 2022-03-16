@@ -1545,8 +1545,6 @@ Hints:
     docker run --rm -ti daroczig/ceu-de3-week5-prep R -e "binancer::binance_klines('BTCUSDT', interval = '1m', limit = 1)[1, close]"
     ```
 
-
-
 ## Homeworks
 
 ### Week 1
@@ -1582,7 +1580,13 @@ Make sure to clean-up your EC2 nodes, security groups, keys etc created in the p
     * Draw a barplot on the overall number of coins per symbol in the `#bots-final-project` Slack channel
     * Get the current symbol prices from the Binance API, and compute the overall price of the 250 transactions in USD and print to the console in Jenkins
 
-* Suggested project (for grade up to "A"): Create a stream processing application using the `AWR.Kinesis` R package's daemon + Redis (similar to what we did on the last week) to record the overall amount of coins exchanged on Binance (per symbol) in the most recent micro-batch (in other words, whatever records the Java daemon reports, sum up amount by symbol and store in Redis). No need to clear the cache ... so if a symbol was not included in a batch, don't update those keys in Redis. Create a Jenkins job that reads from this Redis cache and prints the overall value (in USD) of the transactions -- based on the coin prices reported by the Binance API at the time of request. Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
+* Suggested project (for grade up to "A"): Create a stream processing application using the `AWR.Kinesis` R package's daemon + Redis. This is very similar to what we did on the last week, but instead of counting the number of transactions per symbol, it should be the cumulative sum of traded amounts (so you should always increase the value with the traded quantity):
+
+    * You should run your streaming app to process the Binance transactions, and update the values in Redis.
+    * No need to clear the cache in Redis. E.g. if a symbol was not included in a batch, don't update the related values in Redis.
+    * Create a Jenkins job that reads from Redis, and prints the overall value (in USD) of the transactions based on the coin prices reported by the Binance API at the time of the reporting.
+    * The streaming process needs to run while you are working on the HO, to get new values into Redis.
+    * Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
 
 ### Delivery method
 
