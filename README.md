@@ -40,6 +40,10 @@ Please find in the `syllabus` folder of this repository.
 
 Will be updated from week to week.
 
+## Week 1
+
+**Goal**: learn how to run and schedule R jobs in the cloud.
+
 ## Homeworks
 
 Will be updated from week to week.
