@@ -589,6 +589,37 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
     7. Run the job
     8. Look at the workspace that can be accessed from the sidebar menu of the job.
 
+### Make API endpoints
+
+
+1. Install plumber: [rplumber.io](https://www.rplumber.io)
+
+    ```sh
+    sudo apt install -y r-cran-plumber
+    ```
+
+2. Create an API endpoint to show the min, max and mean price of a BTC in the past hour!
+
+    Create `/home/ceu/plumber.R` with the below content:
+
+    ```r
+    library(binancer)
+
+    #* BTC stats
+    #* @get /btc
+    function() {
+      klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60L)
+      klines[, .(min = min(close), mean = mean(close), max = max(close))]
+    }
+    ```
+
+    Start the plumber application:
+
+    ```r
+    library(plumber)
+    pr("plumber.R") %>% pr_run(port=8000)
+    ```
+
 ## Homeworks
 
 Will be updated from week to week.
