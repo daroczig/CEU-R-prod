@@ -447,6 +447,24 @@ Although also note (3) the related security risks.
         - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
         - write a bot buying and selling crypto on a virtual exchange
 
+### Prepare to schedule R commands
+
+![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
+
+1. Install Jenkins from the RStudio/Terminal: https://www.jenkins.io/doc/book/installing/linux/#debianubuntu
+
+    ```sh
+    curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee \
+      /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+    echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+      https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+      /etc/apt/sources.list.d/jenkins.list > /dev/null
+    sudo apt update
+    sudo apt install -y openjdk-11-jre-headless
+    sudo apt install -y jenkins
+    sudo netstat -tapen | grep java
+    ```
+
 ## Homeworks
 
 Will be updated from week to week.
