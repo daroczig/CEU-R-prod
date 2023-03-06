@@ -477,6 +477,35 @@ Although also note (3) the related security risks.
     2. Proceed with installing the suggested plugins
     3. Create your first user (eg `ceu`)
 
+### Schedule R commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Log in to Jenkins using your instance's public IP address and port 8080
+2. Use the `ceu` username and `ceudata` password (note this user is a virtual one, not the same as the user in shell)
+3. Create a "New Item" (job):
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to look up the most recent BTC price
+
+        ```sh
+        R -e "library(binancer);binance_coins_prices()[symbol == 'BTC', usd]"
+        ```
+
+    6. Run the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/jenkins-errors.png)
+
+4. Debug & figure out what's the problem ...
+5. Install R packages system wide from RStudio/Terminal (more on this later):
+
+    ```sh
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade = FALSE))"
+    ```
+
 ## Homeworks
 
 Will be updated from week to week.
