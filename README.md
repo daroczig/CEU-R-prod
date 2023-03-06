@@ -213,6 +213,38 @@ As a last resort, use "EC2 Instance Connect" from the EC2 dashboard by clicking 
     sudo gdebi rstudio-server-2022.12.0-353-amd64.deb
     ```
 
+6. Check process and open ports
+
+    ```sh
+    rstudio-server status
+    sudo rstudio-server status
+    sudo systemctl status rstudio-server
+    sudo ps aux | grep rstudio
+
+    sudo apt -y install net-tools
+    sudo netstat -tapen | grep LIST
+    sudo netstat -tapen
+    ```
+
+7. Look at the docs: http://docs.rstudio.com/ide/server-pro/
+
+### Connect to the RStudio Server
+
+1. Confirm that the service is up and running and the port is open
+
+    ```console
+    ubuntu@ip-172-31-12-150:~$ sudo netstat -tapen | grep LIST
+    tcp        0      0 0.0.0.0:8787            0.0.0.0:*               LISTEN      0          49065       23587/rserver
+    tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      0          15671       1305/sshd
+    tcp6       0      0 :::22                   :::*                    LISTEN      0          15673       1305/sshd
+    ```
+
+2. Try to connect to the host from a browser on port 8787, eg http://foobar.eu-west-1.compute.amazonaws.com:8787
+3. Realize it's not working
+4. Open up port 8787 in the security group, by selecting your security group and click "Edit inbound rules":
+
+    ![](https://user-images.githubusercontent.com/495736/222724348-869d0703-05f2-4ef3-bd80-574362e73265.png)
+
 ## Homeworks
 
 Will be updated from week to week.
