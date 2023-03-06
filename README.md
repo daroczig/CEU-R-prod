@@ -465,6 +465,18 @@ Although also note (3) the related security risks.
     sudo netstat -tapen | grep java
     ```
 
+2. Open up port 8080 in the related security group
+3. Access Jenkins from your browser and finish installation
+
+    1. Read the initial admin password from RStudio/Terminal via
+
+        ```sh
+        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```
+
+    2. Proceed with installing the suggested plugins
+    3. Create your first user (eg `ceu`)
+
 ## Homeworks
 
 Will be updated from week to week.
