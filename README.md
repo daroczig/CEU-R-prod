@@ -553,6 +553,42 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
     A better solution will be later to commit our R script into a git repo, and make it part of the job to update from the repo.
 
+3. Create an R script that generates a candlestick chart on the BTC prices from the past hour, saves as `btc.png` in the workspace, and update every 5 minutes!
+
+    ```r
+    library(binancer)
+    library(ggplot2)
+    library(scales)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60)
+    g <- ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_y_continuous(labels = dollar) +
+            scale_color_manual(values = c('#1a9850', '#d73027'))
+    ggsave('btc.png', plot = g)
+    ```
+
+    1. Enter the name of the job: `Update BTC candlestick chart`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to look up the most recent BTC price
+
+        ```sh
+        Rscript /home/ceu/plot.R
+        ```
+
+    6. Enable the "Build periodically" trigger:
+
+        ```
+        H/* * * * *
+        ```
+
+    7. Run the job
+    8. Look at the workspace that can be accessed from the sidebar menu of the job.
+
 ## Homeworks
 
 Will be updated from week to week.
