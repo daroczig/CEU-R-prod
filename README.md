@@ -44,6 +44,14 @@ Will be updated from week to week.
 
 **Goal**: learn how to run and schedule R jobs in the cloud.
 
+### Background: Example use-cases and why to use R in the cloud?
+
+Excerpts from https://daroczig.github.io/talks
+
+* "A Decade of Using R in Production" (Real Data Science USA - R meetup)
+* "Getting Things Logged" (RStudio::conf 2020)
+* "Analytics databases in a startup environment: beyond MySQL and Spark" (Budapest Data Forum 2018)
+
 ## Homeworks
 
 Will be updated from week to week.
