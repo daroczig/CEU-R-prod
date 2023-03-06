@@ -373,6 +373,28 @@ Although also note (3) the related security risks.
          - attr(*, ".internal.selfref")=<externalptr>
         ```
 
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(binancer)
+        klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+        str(klines)
+        summary(klines$close)
+        ```
+        </details>
+
+    4. Visualize the data, eg on a simple line chart:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
+
+    5. Now create a candle chart, something like:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
+
+    6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
+
 ## Homeworks
 
 Will be updated from week to week.
