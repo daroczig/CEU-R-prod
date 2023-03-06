@@ -620,6 +620,43 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
     pr("plumber.R") %>% pr_run(port=8000)
     ```
 
+3. Add a new API endpoint to generate the candlestick chart with dynamic symbol (default to BTC), interval and limit! Note that you might need a new `@serializer`, function arguments, and type conversions as well.
+
+    ```r
+    library(binancer)
+    library(ggplot2)
+    library(scales)
+
+    #* Generate plot
+    #* @param symbol coin pair
+    #* @param interval:str enum
+    #* @param limit integer
+    #* @get /klines
+    #* @serializer png
+    function(symbol = 'BTCUSDT', interval = '1m', limit = 60L) {
+      klines <- binance_klines(symbol, interval = interval, limit = as.integer(limit)) # NOTE int conversion
+      library(scales)
+      p <- ggplot(klines, aes(open_time)) +
+        geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+        geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+        theme_bw() + theme('legend.position' = 'none') + xlab('') +
+        ggtitle(paste('Last Updated:', Sys.time())) +
+        scale_y_continuous(labels = dollar) +
+        scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+      print(p)
+    }
+    ```
+
+Next week:
+
+* Create an Amazon Machine Image for production use, including a shared Jenkins and RStudio server.
+* Productionalize Jenkins with email and Slack notifications.
+* Deploy Plumber as a cloud service.
+* Get to work a bit with databases.
+* Intro to stream processing.
+
+Please terminate your EC2 node if you are not using anymore!
+
 ## Homeworks
 
 Will be updated from week to week.
