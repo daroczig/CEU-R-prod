@@ -245,6 +245,11 @@ As a last resort, use "EC2 Instance Connect" from the EC2 dashboard by clicking 
 
     ![](https://user-images.githubusercontent.com/495736/222724348-869d0703-05f2-4ef3-bd80-574362e73265.png)
 
+5. Authentication: http://docs.rstudio.com/ide/server-pro/authenticating-users.html
+6. Create a new user:
+
+        sudo adduser ceu
+
 ## Homeworks
 
 Will be updated from week to week.
