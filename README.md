@@ -250,6 +250,48 @@ As a last resort, use "EC2 Instance Connect" from the EC2 dashboard by clicking 
 
         sudo adduser ceu
 
+7. Login & quick demo:
+
+    ```r
+    1+2
+    plot(mtcars)
+    install.packages('fortunes')
+    library(fortunes)
+    fortune()
+    fortune(200)
+    system('whoami')
+    ```
+
+8. Reload webpage (F5), realize we continue where we left the browser :)
+9. Demo the terminal:
+
+    ```console
+    $ whoami
+    ceu
+    $ sudo whoami
+    ceu is not in the sudoers file.  This incident will be reported.
+    ```
+
+8. Grant sudo access to the new user by going back to SSH with `root` access:
+
+    ```sh
+    sudo apt install -y mc
+    sudo mc
+    sudo mcedit /etc/sudoers
+    sudo adduser ceu admin
+    man adduser
+    man deluser
+    ```
+
+Note 1: might need to relogin / restart RStudio / reload R / reload page .. to force a new shell login so that the updated group setting is applied
+Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
+
+    ```sh
+    ceu ALL=(ALL) NOPASSWD:ALL
+    ```
+
+Although also note (3) the related security risks.
+
 ## Homeworks
 
 Will be updated from week to week.
