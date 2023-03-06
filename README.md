@@ -332,6 +332,47 @@ Although also note (3) the related security risks.
 
     Optionally [enable `bspm`](https://github.com/eddelbuettel/r2u#step-5-use-bspm-optional) to enable binary package installations via the traditional `install.packages` R function.
 
+3. Ready to use it from R after restarting the session:
+
+    ```r
+    library(ggplot2)
+    ggplot(mtcars, aes(hp)) + geom_histogram()
+    ```
+
+4. Get some real-time data and visualize it:
+
+    1. Install the `devtools` R package and a few others (binary distribution) in the RStudio/Terminal:
+
+        ```sh
+        sudo apt-get install -y r-cran-devtools r-cran-data.table r-cran-httr r-cran-jsonlite r-cran-data.table r-cran-stringi r-cran-stringr r-cran-glue
+        ```
+
+    2. Switch back to the R console and install the `binancer` R package from GitHub to interact with crypto exchanges (note the extra dependency to be installed from CRAN, no need to update any already installed package):
+
+        ```r
+        devtools::install_github('daroczig/binancer', upgrade = FALSE)
+        ```
+
+    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity -- resulting in an object like:
+
+        ```r
+        > str(klines)
+        Classes ‘data.table’ and 'data.frame':  180 obs. of  12 variables:
+         $ open_time                   : POSIXct, format: "2020-03-08 20:09:00" "2020-03-08 20:10:00" "2020-03-08 20:11:00" "2020-03-08 20:12:00" ...
+         $ open                        : num  8292 8298 8298 8299 8298 ...
+         $ high                        : num  8299 8299 8299 8299 8299 ...
+         $ low                         : num  8292 8297 8297 8298 8296 ...
+         $ close                       : num  8298 8298 8299 8298 8299 ...
+         $ volume                      : num  25.65 9.57 20.21 9.65 24.69 ...
+         $ close_time                  : POSIXct, format: "2020-03-08 20:09:59" "2020-03-08 20:10:59" "2020-03-08 20:11:59" "2020-03-08 20:12:59" ...
+         $ quote_asset_volume          : num  212759 79431 167677 80099 204883 ...
+         $ trades                      : int  371 202 274 186 352 271 374 202 143 306 ...
+         $ taker_buy_base_asset_volume : num  13.43 5.84 11.74 7.12 15.24 ...
+         $ taker_buy_quote_asset_volume: num  111430 48448 97416 59071 126493 ...
+         $ symbol                      : chr  "BTCUSDT" "BTCUSDT" "BTCUSDT" "BTCUSDT" ...
+         - attr(*, ".internal.selfref")=<externalptr>
+        ```
+
 ## Homeworks
 
 Will be updated from week to week.
