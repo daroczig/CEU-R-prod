@@ -506,6 +506,53 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
     sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade = FALSE))"
     ```
 
+6. Rerun the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
+
+7. Optionally set up E-mail and Slack notification for the job success/error:
+
+    1. Scroll down in the job config to the "Post-build Actions" section
+    2. Add "Editable email notification", then fill in the "Project Recipient List" with an email address, and click "Advanced Settings" to define the triggers (e.g. send email on success or failure, and if you want to attach anything to the email).
+    3. Add "Slack notifications" and configure the triggers, all the other details (e.g. which Slack channel to report to and Slack username etc have been configured globally, so although you can override, but no need to).
+
+### Schedule R scripts
+
+1. Create an R script with the below content and save on the server, eg as `/home/ceu/bitcoin-price.R`:
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    paste('The current Bitcoin price is', prices[symbol == 'BTC', usd])
+    ```
+
+2. Follow the steps from the [Schedule R commands](#schedule-r-commands) section to create a new Jenkins job, but instead of calling `R -e "..."` in shell step, reference the above R script using `Rscript` instead:
+
+    ```shell
+    Rscript /home/ceu/de3.R
+    ```
+
+    Alternatively, you could also install little R for this purpose:
+
+    ```shell
+    sudo apt install -y r-cran-littler
+    r /home/ceu/de3.R
+    ```
+
+    Note the permission error, so let's add the `jenkins` user to the `ceu` group:
+
+    ```shell
+    sudo adduser jenkins ceu
+    ```
+
+    Then restart Jenkins from the RStudio Server terminal:
+
+    ```shell
+    sudo systemctl restart jenkins
+    ```
+
+    A better solution will be later to commit our R script into a git repo, and make it part of the job to update from the repo.
+
 ## Homeworks
 
 Will be updated from week to week.
