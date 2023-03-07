@@ -657,9 +657,12 @@ Next week:
 
 Please terminate your EC2 node if you are not using anymore!
 
+
 ## Homeworks
 
-Will be updated from week to week.
+### Week 1
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
 ## Getting help
 
