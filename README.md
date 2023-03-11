@@ -569,6 +569,8 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
 3. Create an R script that generates a candlestick chart on the BTC prices from the past hour, saves as `btc.png` in the workspace, and update every 5 minutes!
 
+    <details><summary>Example solution for the above ...</summary>
+
     ```r
     library(binancer)
     library(ggplot2)
@@ -583,6 +585,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
             scale_color_manual(values = c('#1a9850', '#d73027'))
     ggsave('btc.png', plot = g)
     ```
+    </details>
 
     1. Enter the name of the job: `Update BTC candlestick chart`
     2. Pick "Freestyle project"
@@ -636,6 +639,8 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
 3. Add a new API endpoint to generate the candlestick chart with dynamic symbol (default to BTC), interval and limit! Note that you might need a new `@serializer`, function arguments, and type conversions as well.
 
+    <details><summary>Example solution for the above ...</summary>
+
     ```r
     library(binancer)
     library(ggplot2)
@@ -660,6 +665,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
       print(p)
     }
     ```
+    </details>
 
 Next week:
 
@@ -669,7 +675,8 @@ Next week:
 * Get to work a bit with databases.
 * Intro to stream processing.
 
-Please terminate your EC2 node if you are not using anymore!
+Please terminate your EC2 node if you are not using it anymore!
+
 
 
 ## Homeworks
