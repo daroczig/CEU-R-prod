@@ -22,6 +22,8 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
       * [Schedule R scripts](#schedule-r-scripts)
       * [Make API endpoints](#make-api-endpoints)
 
+   * [Week 2](#week)
+      * [Recap](#recap)
 * [Homeworks](#homeworks)
 * [Getting help](#getting-help)
 
@@ -677,6 +679,29 @@ Next week:
 
 Please terminate your EC2 node if you are not using it anymore!
 
+## Week 2
+
+Quiz: let's revisit when all students are around.
+
+Interesting updates from the R/infra community from the past week: [webR](https://www.tidyverse.org/blog/2023/03/webr-0-1-0/#using-webr-in-your-own-projects).
+
+### Recap
+
+What we convered last week:
+
+1. 2FA/MFA in AWS
+2. Creating EC2 nodes
+3. Connecting to EC2 nodes via SSH/Putty (note the difference between the PPK and PEM key formats)
+4. Updating security groups
+5. Installing RStudio Server
+6. The difference between R console and Shell
+7. The use of `sudo` and how to grant `root` (system administrator) privileges
+8. Adding new Linux users, setting password, adding to group
+9. Installing R packages system-wide VS in the user's home folder
+10. Installing, setting up and first steps with Jenkins
+11. Setting up an R-based API
+
+Note that you do NOT need to do the instructions below marked with the :muscle: emoji -- those have been already done for you, and the related steps are only included below for documenting what has been done and demonstrated in the class.
 
 
 ## Homeworks
