@@ -1131,9 +1131,9 @@ store <- function(s) {
   ## TODO use the checkmate pkg to assert the type of symbol
   log_info('Looking up and storing {s}')
   value <- binance_coins_prices()[symbol == s, usd]
-  key <- paste('username', 'price', symbol, sep = ':')
+  key <- paste('username', 'price', s, sep = ':')
   redisSet(key, value)
-  log_info('The price of {symbol} is {value}')
+  log_info('The price of {s} is {value}')
 }
 
 store('BTC')
