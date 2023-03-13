@@ -1384,6 +1384,49 @@ Why API? Why R-based API? Examples
     </details>
 
 2. Try to DRY (don't repeat yourself!) this up as much as possible. Attend the "Mastering R" class to learn more :)
+3. Bundle all the scripts into a single Docker image:
+
+    a. 💪 Install Docker:
+
+        ```shell
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+          https://download.docker.com/linux/ubuntu \
+          $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce
+        ```
+    b. Create a new file named `Dockerfile` (File/New file/Text file to avoid auto-adding the `R` file extension) with the below content to add the required files and set the default working directory to the same folder:
+
+        ```
+        FROM rstudio/plumber
+
+        RUN apt-get update && apt-get install -y pandoc && apt-get clean && rm -rf /var/lib/apt/lists/
+        RUN install2.r ggplot2
+        RUN installGithub.r daroczig/binancer
+        ADD report.Rmd /app/report.Rmd
+        ADD plumber.R /app/plumber.R
+        EXPOSE 8000
+        WORKDIR /app
+        ```
+
+        Note the the step installing the required R paackages!
+
+    c. Build the Docker image:
+
+        ```sh
+        sudo docker build -t btc-report-api .
+        ```
+
+    d. Run a container based on the above image:
+
+        ```sh
+        sudo docker run -p 8000:8000 -ti btc-report-api plumber.R
+        ```
+
+    e. Test by visiting the `8000` port or the Nginx proxy at http://de3.ceudata.net/8000, e.g. Swagger docs at http://de3.ceudata.net/8000/__docs__/#/default/get_report or an endpoint directly at http://de3.ceudata.net/8000/report.
+
 
 ## Homeworks
 
