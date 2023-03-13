@@ -24,6 +24,22 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
 
    * [Week 2](#week-2)
       * [Recap](#recap)
+      * [Amazon Machine Images](#-amazon-machine-images)
+      * [Create a user for every member of the team](#-create-a-user-for-every-member-of-the-team)
+      * [Update Jenkins for shared usage](#-update-Jenkins-for-shared-usage)
+      * [Set up an easy to remember IP address](#-set-up-an-easy-to-remember-ip-address)
+      * [Set up an easy to remember domain name](#-set-up-an-easy-to-remember-domain-name)
+      * [Configuring for standard ports](#-configuring-for-standard-ports)
+      * [ScheduleR improvements](#-scheduler-improvements)
+      * [Intro to redis](#intro-to-redis)
+      * [Interacting with Slack](#interacting-with-slack)
+         * [Note on storing the Slack token](#note-on-storing-the-slack-token)
+         * [Using Slack from R](#using-slack-from-r)
+      * [Job Scheduler exercises](#job-scheduler-exercises)
+      * [R API containers](#r-api-containers)
+      * [Docker registry](#docker-registry)
+      * [Docker service](#docker-service)
+
 * [Homeworks](#homeworks)
 * [Getting help](#getting-help)
 
