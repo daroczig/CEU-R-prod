@@ -41,6 +41,17 @@ Here you can find the materials for the "[Data Engineering 3: Using R in Product
       * [Docker service](#docker-service)
 
 * [Homeworks](#homeworks)
+* [Home assignment](#home-assignment)
+
+* [Extra: Stream processing using R and AWS](#extra--stream-processing-using-r-and-aws)
+
+      * [Setting up a demo stream](#-setting-up-a-demo-stream)
+      * [A simple stream consumer app in R](#a-simple-stream-consumer-app-in-r)
+      * [Parsing and structuring records read from the stream](#parsing-and-structuring-records-read-from-the-stream)
+      * [Actual stream processing instead of analyzing batch data][#actual-stream-processing-instead-of-analyzing-batch-data]
+      * [Stream processor daemon](#stream-processor-daemon)
+      * [Shiny app showing the progress](#shiny-app-showing-the-progress)
+
 * [Getting help](#getting-help)
 
 ## Schedule
@@ -1290,7 +1301,6 @@ Why API? Why R-based API? Examples
 * adtech
 * healthtech
 
-
 1. Write an R script that provides 3 API endpoints (look up examples from past week!):
 
     * `/stats` reports on the min/mean/max BTC price from the past 3 hours
@@ -1491,7 +1501,6 @@ Now let's make the above created and tested Docker image available outside of th
     e. Create a load balancer listening on port 80 (would need to create an SSL cert for HTTPS), and specify `/stats` as the healthcheck path, with a 10 seconds grace period
     f. Test the deployed service behind the load balancer, e.g. https://btc-api-1417435399.eu-west-1.elb.amazonaws.com/report
 
-
 ## Homeworks
 
 ### Week 1
@@ -1541,6 +1550,452 @@ Make sure to clean-up your EC2 nodes, security groups, keys etc created in the p
 ### Submission deadline
 
 Midnight (CET) on April 2, 2023.
+
+## Extra: Stream processing using R and AWS
+
+An introduction to stream processing with AWS Kinesis and R: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (presented at the Big Data Day Los Angeles 2016, EARL 2016 London and useR! 2017 Brussels)
+
+This section describes how to set up a Kinesis stream with a few on-demand shards on the live Binance transactions read from its websocket -- running in a Docker container, then feeding the JSON lines to Kinesis via the Amazon Kinesis Agent.
+
+### 💪 Setting up a demo stream
+
+1. Start a `t3a.micro` instance running "Amazon Linux 2 AMI" (where it's easier to install the Kinesis Agent compared to using eg Ubuntu) with a known key. Make sure to **set a name** and enable termination protection (in the instance details)! Use SSH, Putty or eg the browser-based SSH connection. Note that the default username is `ec2-user` instead of `ubuntu`.
+
+2. Install Docker (note that we are not on Ubuntu today, but using Red Hat's `yum` package manager):
+
+    ```
+    sudo yum install docker
+    sudo service docker start
+    sudo service docker status
+    ```
+
+3. Let's use a small Python app relying on the Binance API to fetch live transactions and store in a local file:
+
+    * sources: https://github.com/daroczig/ceu-de3-docker-binance-streamer
+    * docker: https://cloud.docker.com/repository/registry-1.docker.io/daroczig/ceu-de3-docker-binance-streamer
+
+    Usage:
+
+    ```
+    screen -RRd streamer
+    sudo docker run -ti --rm --log-opt max-size=50m daroczig/ceu-de3-docker-binance-streamer >> /tmp/transactions.json
+    ## "C-a c" to create a new screen, then you can switch with C-a "
+    ls -latr /tmp
+    tail -f /tmp/transactions.json
+    ```
+
+4. Install the Kinesis Agent:
+
+    As per https://docs.aws.amazon.com/firehose/latest/dev/writing-with-agents.html#download-install:
+
+    ```
+    sudo yum install -y aws-kinesis-agent
+    ```
+
+5. Create a new Kinesis Stream (called `crypto`) at https://eu-west-1.console.aws.amazon.com/kinesis. Don't forget to tag it (Class, Owner)!
+
+6. Configure the Kinesis Agent:
+
+    ```
+    sudo yum install mc
+    sudo mcedit /etc/aws-kinesis/agent.json
+    ```
+
+    Running the above commands, edit the config file to update the Kinesis endpoint, the name of the stream on the local file path:
+
+    ```
+    {
+      "cloudwatch.emitMetrics": true,
+      "kinesis.endpoint": "https://kinesis.eu-west-1.amazonaws.com",
+      "firehose.endpoint": "",
+
+      "flows": [
+        {
+          "filePattern": "/tmp/transactions.json*",
+          "kinesisStream": "crypto",
+          "partitionKeyOption": "RANDOM"
+        }
+      ]
+    }
+    ```
+
+    Note that extra star at the end of the `filePattern` to handle potential issues when file is copy/truncated (logrotate).
+
+7. Restart the Agent:
+
+    ```
+    sudo service aws-kinesis-agent start
+    ```
+
+8. Check the status and logs:
+
+    ```
+    sudo service aws-kinesis-agent status
+    sudo journalctl -xe
+    ls -latr /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+    tail -f /var/log/aws-kinesis-agent/aws-kinesis-agent.log
+    ```
+
+9. Make sure that the IAM role (eg `kinesis-admin`) can write to Kinesis and Cloudwatch, eg by attaching the `AmazonKinesisFullAccess` policy, then restart the agent
+
+    ```
+    sudo service aws-kinesis-agent restart
+    ```
+
+10. Check the AWS console's monitor if all looks good there as well
+11. Note for the need of permissions to `cloudwatch:PutMetricData` (see example `cloudwatch-putmetrics` policy).
+12. Optionally set up a cronjob to truncate that the file from time to time:
+
+    ```sh
+    5 * * * * /usr/bin/truncate -s 0 /tmp/transactions.json
+    ```
+
+13. Set up an alert in Cloudwatch if streaming stops
+
+### A simple stream consumer app in R
+
+As the `botor` package was already installed, we can rely on the power of `boto3` to interact with the Kinesis stream. The IAM role attached to the node already has the `AmazonKinesisFullAccess` policy attached, so we have permissions to read from the stream.
+
+First we need to create a shard iterator, then using that, we can read the actual records from the shard:
+
+```r
+library(botor)
+botor(region = 'eu-west-1')
+shard_iterator <- kinesis_get_shard_iterator('crypto', '0')
+records <- kinesis_get_records(shard_iterator$ShardIterator)
+str(records)
+```
+
+Let's parse these records:
+
+```r
+records$Records[[1]]
+records$Records[[1]]$Data
+
+library(jsonlite)
+fromJSON(as.character(records$Records[[1]]$Data))
+```
+
+### Parsing and structuring records read from the stream
+
+Exercises:
+
+* parse the loaded 25 records into a `data.table` object with proper column types. Get some help on the data format from the [Binance API docs](https://github.com/binance/binance-spot-api-docs/blob/master/web-socket-streams.md#trade-streams)!
+* count the overall number of coins exchanged
+* count the overall value of transactions in USD (hint: `binance_ticker_all_prices()` and `binance_coins_prices()`)
+* visualize the distribution of symbol pairs
+
+<details><summary>A potential solution that you should not look at before thinking ...</summary>
+
+```shell
+library(data.table)
+dt <- rbindlist(lapply(records$Records, function(record) {
+  fromJSON(as.character(record$Data))
+}))
+
+str(dt)
+
+setnames(dt, 'a', 'seller_id')
+setnames(dt, 'b', 'buyer_id')
+setnames(dt, 'E', 'event_timestamp')
+## Unix timestamp / Epoch (number of seconds since Jan 1, 1970): https://www.epochconverter.com
+dt[, event_timestamp := as.POSIXct(event_timestamp / 1000, origin = '1970-01-01')]
+setnames(dt, 'q', 'quantity')
+setnames(dt, 'p', 'price')
+setnames(dt, 's', 'symbol')
+setnames(dt, 't', 'trade_id')
+setnames(dt, 'T', 'trade_timestamp')
+dt[, trade_timestamp := as.POSIXct(trade_timestamp / 1000, origin = '1970-01-01')]
+str(dt)
+
+for (id in grep('_id', names(dt), value = TRUE)) {
+  dt[, (id) := as.character(get(id))]
+}
+str(dt)
+
+for (v in c('quantity', 'price')) {
+  dt[, (v) := as.numeric(get(v))]
+}
+
+library(binancer)
+binance_coins_prices()
+
+dt[, .N, by = symbol]
+dt[symbol=='ETHUSDT']
+dt[, from := substr(symbol, 1, 3)]
+dt <- merge(dt, binance_coins_prices(), by.x = 'from', by.y = 'symbol', all.x = TRUE, all.y = FALSE)
+dt[, value := as.numeric(quantity) * usd]
+dt[, sum(value)]
+```
+</details>
+
+### Actual stream processing instead of analyzing batch data
+
+Let's write an R function to increment counters on the number of transactions per symbols:
+
+1. Get sample raw data as per above (you might need to get a new shard iterator if expired):
+
+   ```r
+   records <- kinesis_get_records(shard_iterator$ShardIterator)$Record
+   ```
+
+2. Function to parse and process it
+
+    ```r
+    txprocessor <- function(record) {
+      symbol <- fromJSON(as.character(record$Data))$s
+      log_info(paste('Found 1 transaction on', symbol))
+      redisIncr(paste('USERNAME', 'tx', symbol, sep = ':'))
+    }
+    ```
+
+3. Iterate on all records
+
+    ```r
+    library(logger)
+    library(rredis)
+    redisConnect()
+    for (record in records) {
+      txprocessor(record)
+    }
+    ```
+
+4. Check counters
+
+    ```r
+    symbols <- redisMGet(redisKeys('^USERNAME:tx:*'))
+    symbols
+
+    symbols <- data.frame(
+      symbol = sub('^USERNAME:tx:', '', names(symbols)),
+      N = as.numeric(symbols))
+    symbols
+    ```
+
+5. Visualize
+
+    ```r
+    library(ggplot2)
+    ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity')
+    ```
+
+6. Rerun step (1) and (3) to do the data processing, then (4) and (5) for the updated data visualization.
+
+7. 🤦
+
+8. Let's make use of the next shard iterator:
+
+    ```r
+    ## reset counters
+    redisDelete(redisKeys('USERNAME:tx:*'))
+
+    ## get the first shard iterator
+    shard_iterator <- kinesis_get_shard_iterator('crypto', '0')$ShardIterator
+
+    while (TRUE) {
+
+      response <- kinesis_get_records(shard_iterator)
+
+      ## get the next iterator
+      shard_iterator <- response$NextShardIterator
+
+      ## extract records
+      records <- response$Record
+      for (record in records) {
+        txprocessor(record)
+      }
+
+      ## summarize
+      symbols <- redisMGet(redisKeys('USERNAME:tx:*'))
+      symbols <- data.frame(
+        symbol = sub('^symbol:', '', names(symbols)),
+        N = as.numeric(symbols))
+
+      ## visualize
+      print(ggplot(symbols, aes(symbol, N)) + geom_bar(stat = 'identity') + ggtitle(sum(symbols$N)))
+    }
+    ```
+
+### Stream processor daemon
+
+0. So far, we used the `boto3` Python module from R via `botor` to interact with AWS, but this time we will integrate Java -- by calling the AWS Java SDK to interact with our Kinesis stream, then later on to run a Java daemon to manage our stream processing application.
+
+    1. 💪 First, let's install Java and the `rJava` R package:
+
+    ```shell
+    sudo apt install r-cran-rjava
+    ```
+
+    2. 💪 Then the R package wrapping the AWS Java SDK and the Kinesis client, then update to the most recent dev version right away:
+
+    ```shell
+    sudo apt install r-cran-awr.kinesis
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('AWR', repos = 'https://daroczig.gitlab.io/AWR'))"
+    sudo R -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', devtools::install_github('daroczig/AWR.Kinesis', upgrade = FALSE))"
+    ```
+
+    3. 💪 Note, after installing Java, you might need to run `sudo R CMD javareconf` and/or restart R or the RStudio Server via `sudo rstudio-server restart` :/
+
+    ```shell
+    Error : .onLoad failed in loadNamespace() for 'rJava', details:
+      call: dyn.load(file, DLLpath = DLLpath, ...)
+      error: unable to load shared object '/usr/lib/R/site-library/rJava/libs/rJava.so':
+      libjvm.so: cannot open shared object file: No such file or directory
+    ```
+
+    4. And after all, a couple lines of R code to get some data from the stream via the Java SDK (just like we did above with the Python backend):
+
+    ```r
+    library(rJava)
+    library(AWR.Kinesis)
+    records <- kinesis_get_records('crypto', 'eu-west-1')
+    str(records)
+    records[1]
+
+    library(jsonlite)
+    fromJSON(records[1])
+    ```
+
+1. Create a new folder for the Kinesis consumer files: `streamer`
+
+2. Create an `app.properties` file within that subfolder
+
+```
+executableName = ./app.R
+regionName = eu-west-1
+streamName = crypto
+applicationName = my_demo_app_sadsadsa
+AWSCredentialsProvider = DefaultAWSCredentialsProviderChain
+```
+
+3. Create the `app.R` file:
+
+```r
+#!/usr/bin/Rscript
+library(logger)
+log_appender(appender_file('app.log'))
+library(AWR.Kinesis)
+library(methods)
+library(jsonlite)
+
+kinesis_consumer(
+
+    initialize = function() {
+        log_info('Hello')
+        library(rredis)
+        redisConnect(nodelay = FALSE)
+        log_info('Connected to Redis')
+    },
+
+    processRecords = function(records) {
+        log_info(paste('Received', nrow(records), 'records from Kinesis'))
+        for (record in records$data) {
+            symbol <- fromJSON(record)$s
+            log_info(paste('Found 1 transaction on', symbol))
+            redisIncr(paste('symbol', symbol, sep = ':'))
+        }
+    },
+
+    updater = list(
+        list(1/6, function() {
+            log_info('Checking overall counters')
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            log_info(paste(sum(as.numeric(symbols)), 'records processed so far'))
+    })),
+
+    shutdown = function()
+        log_info('Bye'),
+
+    checkpointing = 1,
+    logfile = 'app.log')
+```
+
+4. 💪 Allow writing checkpointing data to DynamoDB and CloudWatch in IAM
+
+5. Convert the above R script into an executable using the Terminal:
+
+```shell
+cd streamer
+chmod +x app.R
+```
+
+6. Run the app in the Terminal:
+
+```
+/usr/bin/java -cp /usr/local/lib/R/site-library/AWR/java/*:/usr/local/lib/R/site-library/AWR.Kinesis/java/*:./ \
+    com.amazonaws.services.kinesis.multilang.MultiLangDaemon \
+    ./app.properties
+```
+
+7. Check on `app.log`
+
+### Shiny app showing the progress
+
+1. Reset counters
+
+    ```r
+    library(rredis)
+    redisConnect()
+    keys <- redisKeys('symbol*')
+    redisDelete(keys)
+    ```
+
+2. 💪 Install the `treemap` package
+
+    ```
+    sudo apt install r-cran-httpuv r-cran-shiny r-cran-xtable r-cran-htmltools r-cran-igraph r-cran-lubridate r-cran-tidyr r-cran-quantmod r-cran-broom r-cran-zoo r-cran-htmlwidgets r-cran-tidyselect r-cran-rlist r-cran-rlang r-cran-xml r-cran-treemap r-cran-highcharter
+    ```
+
+3. Run the below Shiny app
+
+    ```r
+    ## packages for plotting
+    library(treemap)
+    library(highcharter)
+
+    ## connect to Redis
+    library(rredis)
+    redisConnect()
+
+    library(shiny)
+    library(data.table)
+    ui     <- shinyUI(highchartOutput('treemap', height = '800px'))
+    server <- shinyServer(function(input, output, session) {
+
+        symbols <- reactive({
+
+            ## auto-update every 2 seconds
+            reactiveTimer(2000)()
+
+            ## get frequencies
+            symbols <- redisMGet(redisKeys('symbol:*'))
+            symbols <- data.table(
+                symbol = sub('^symbol:', '', names(symbols)),
+                N = as.numeric(symbols))
+
+            ## color top 3
+            symbols[, color := 1]
+            symbols[symbol %in% symbols[order(-N)][1:3, symbol], color := 2]
+
+            ## return
+            symbols
+
+        })
+
+        output$treemap <- renderHighchart({
+            tm <- treemap(symbols(), index = c('symbol'),
+                          vSize = 'N', vColor = 'color',
+                          type = 'value', draw = FALSE)
+            N <- sum(symbols()$N)
+            hc_title(hctreemap(tm, animation = FALSE),
+            text = sprintf('Transactions (N=%s)', N))
+        })
+
+    })
+    shinyApp(ui = ui, server = server, options = list(port = 3838))
+    ```
+
+We will learn more about Shiny in the upcoming Data Visualization 4 class :)
 
 ## Getting help
 
