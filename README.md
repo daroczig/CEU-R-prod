@@ -1192,6 +1192,50 @@ More on databases at the "Mastering R" class in the Spring semester ;)
     ssm_get_parameter('slack')
     ```
 
+#### Using Slack from R
+
+4. 💪 Install the Slack R client
+
+    ```shell
+    sudo apt install -y r-cran-slackr
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    token <- ssm_get_parameter('slack')
+    library(slackr)
+    slackr_setup(username = 'jenkins', token = token, icon_emoji = ':jenkins-rage:')
+    slackr_msg(text = 'Hi there!', channel = '#ba-de3-2022-bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    slackr_msg(text = msg, preformatted = FALSE, channel = '#ba-de3-2022-bots')
+    ```
+
+7. Or plot
+
+    ```r
+    library(ggplot2)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#ba-de3-2022-bots', width = 12)
+    ```
+
+### Job Scheduler exercises
+
+* Create a Jenkins job to alert if Bitcoin price is below $20K or higher than $22K.
+* Create a Jenkins job to alert if Bitcoin price changed more than $200 in the past hour.
+* Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day.
+* Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH.
+
 
 
 ## Homeworks
