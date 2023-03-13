@@ -683,6 +683,8 @@ Please terminate your EC2 node if you are not using it anymore!
 
 Quiz: let's revisit when all students are around.
 
+Quiz: https://forms.gle/d1nQov1rr1wCriTu7 (10 mins)
+
 Interesting updates from the R/infra community from the past week: [webR](https://www.tidyverse.org/blog/2023/03/webr-0-1-0/#using-webr-in-your-own-projects).
 
 ### Recap
