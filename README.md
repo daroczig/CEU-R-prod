@@ -1236,6 +1236,35 @@ More on databases at the "Mastering R" class in the Spring semester ;)
 * Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day.
 * Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH.
 
+<details><summary>Example solution for the first exercise ...</summary>
+
+```r
+## get data right from the Binance API
+library(binancer)
+btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
+
+## or from the local cache (updated every minute from Jenkins as per above)
+library(rredis)
+btc <- redisGet('price:BTC')
+
+## log whatever was retreived
+library(logger)
+log_info('The current price of a Bitcoin is ${btc}')
+
+## send alert
+if (btc < 20000 | btc > 22000) {
+  library(botor)
+  token <- ssm_get_parameter('slack')
+  library(slackr)
+  slackr_setup(username = 'jenkins', token = token, icon_emoji = ':jenkins-rage:')
+  slackr_msg(
+    text = paste('uh ... oh... BTC price:', btc),
+    channel = '#ba-de3-2022-bots')
+}
+```
+
+</details>
+
 
 
 ## Homeworks
