@@ -1267,6 +1267,19 @@ if (btc < 20000 | btc > 22000) {
 
 </details>
 
+### R API containers
+
+Why API? Why R-based API? Examples
+
+* adtech
+* healthtech
+
+
+1. Write an R script that provides 3 API endpoints (look up examples from past week!):
+
+    * `/stats` reports on the min/mean/max BTC price from the past 3 hours
+    * `/plot` generates a candlestick chart on the price of BTC from past 3 hours
+    * `/report` generates a HTML report including both the above
 
 
 ## Homeworks
