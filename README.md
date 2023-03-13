@@ -1245,7 +1245,8 @@ btc <- binance_klines('BTCUSDT', interval = '1m', limit = 1)$close
 
 ## or from the local cache (updated every minute from Jenkins as per above)
 library(rredis)
-btc <- redisGet('price:BTC')
+redisConnect()
+btc <- redisGet('username:price:BTC')
 
 ## log whatever was retreived
 library(logger)
@@ -1254,6 +1255,7 @@ log_info('The current price of a Bitcoin is ${btc}')
 ## send alert
 if (btc < 20000 | btc > 22000) {
   library(botor)
+  botor(region = 'eu-west-1')
   token <- ssm_get_parameter('slack')
   library(slackr)
   slackr_setup(username = 'jenkins', token = token, icon_emoji = ':jenkins-rage:')
