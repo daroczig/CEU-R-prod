@@ -727,6 +727,312 @@ Then you can use the newly created `de3` AMI to spin up a new instance for you:
 9. Click "Launch instance"
 10. Note and click on the instance id
 
+### 💪 Create a user for every member of the team
+
+We'll export the list of IAM users from AWS and create a system user for everyone.
+
+1. Attach a newly created IAM EC2 Role (let's call it `ceudataserver`) to the EC2 box and assign 'Read-only IAM access' (`IAMReadOnlyAccess`):
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+
+2. Install AWS CLI tool:
+
+    ```
+    sudo apt update
+    sudo apt install awscli
+    ```
+
+3. List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+
+   ```
+   aws iam list-users
+   ```
+
+4. Export the list of users from R:
+
+   ```
+   library(jsonlite)
+   users <- fromJSON(system('aws iam list-users', intern = TRUE))
+   str(users)
+   users[[1]]$UserName
+   ```
+
+5. Create a new system user on the box (for RStudio Server access) for every IAM user, set password and add to group:
+
+   ```
+   library(logger)
+   library(glue)
+   for (user in users[[1]]$UserName) {
+
+     ## remove invalid character
+     user <- sub('@.*', '', user)
+     user <- sub('.', '_', user, fixed = TRUE)
+
+     log_info('Creating {user}')
+     system(glue("sudo adduser --disabled-password --quiet --gecos '' {user}"))
+
+     log_info('Setting password for {user}')
+     system(glue("echo '{user}:secretpass' | sudo chpasswd")) # note the single quotes + placement of sudo
+
+     log_info('Adding {user} to sudo group')
+     system(glue('sudo adduser {user} sudo'))
+
+   }
+   ```
+
+Note, you may have to temporarily enable passwordless `sudo` for this user (if have not done already) :/
+
+```
+ceu ALL=(ALL) NOPASSWD:ALL
+```
+
+Check users:
+
+```
+readLines('/etc/passwd')
+```
+
+### 💪 Update Jenkins for shared usage
+
+Update the security backend to use real Unix users for shared access (if users already created):
+
+![](https://user-images.githubusercontent.com/495736/224517493-652ac34e-f44d-4ac9-8d04-d661dcfc4c4b.png)
+
+And allow `jenkins` to authenticate UNIX users and restart:
+
+```sh
+sudo adduser jenkins shadow
+sudo systemctl restart jenkins
+```
+
+Then make sure to test new user access in an incognito window to avoid closing yourself out :)
+
+### 💪 Set up an easy to remember IP address
+
+Optionally you can associate a fixed IP address to your box:
+
+1. Allocate a new Elastic IP address at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Addresses:
+2. Name this resource by assigning a "Name" tag
+3. Associate this Elastic IP with your stopped box, then start it
+
+### 💪 Set up an easy to remember domain name
+
+Optionally you can associate a subdomain with your node, using the above created Elastic IP address:
+
+1. Go to Route 53: https://console.aws.amazon.com/route53/home
+2. Go to Hosted Zones and click on `ceudata.net`
+3. Create a new Record, where
+
+    - fill in the desired `Name` (subdomain), eg `de3.ceudata.net`
+    - paste the public IP address or hostname of your server in the `Value` field
+    - click `Create`
+
+4. Now you will be able to access your box using this custon (sub)domain, no need to remember IP addresses.
+
+### 💪 Configuring for standard ports
+
+To avoid using ports like `8787` and `8080` (and get blocked by the firewall installed on the CEU WiFi), let's configure our services to listen on the standard 80 (HTTP) and potentially on the 443 (HTTPS) port as well, and serve RStudio on the `/rstudio`, and Jenkins on the `/jenkins` path.
+
+For this end, we will use Nginx as a reverse-proxy, so let's install it first:
+
+```shell
+sudo apt install -y nginx
+```
+
+First, we need to edit the Nginx config to enable websockets for Shiny apps etc in `/etc/nginx/nginx.conf` under the `http` section:
+
+```
+  map $http_upgrade $connection_upgrade {
+      default upgrade;
+      ''      close;
+    }
+```
+
+Then we need to edit the main site's configuration at `/etc/nginx/sites-enabled/default` to act as a proxy, which also do some transformations, eg rewriting the URL (removing the `/rstudio` path) before hitting RStudio Server:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+}
+```
+
+And restart Nginx:
+
+```shell
+sudo systemctl restart nginx
+```
+
+Find more information at https://support.rstudio.com/hc/en-us/articles/200552326-Running-RStudio-Server-with-a-Proxy.
+
+Let's see if the port is open on the machine:
+
+```shell
+sudo netstat -tapen|grep LIST
+```
+
+Let's see if we can access RStudio Server on the new path:
+
+```shell
+curl localhost/rstudio
+```
+
+Now let's see from the outside world ... and realize that we need to open up port 80!
+
+Now we need to tweak the config to support Jenkins as well, but the above Nginx rewrite hack will not work (see https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-troubleshooting/ for more details), so we will just make it a standard reverse-proxy, eg:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location / {
+
+    }
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+    location ^~ /jenkins/ {
+      proxy_pass http://127.0.0.1:8080/jenkins/;
+      proxy_set_header X-Real-IP  $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header Host $host;
+    }
+}
+```
+
+And we also need to let Jenkins also know about the custom path, so uncomment `Environment="JENKINS_PREFIX=/jenkins"` in `/lib/systemd/system/jenkins.service`, then reload the Systemd configs and restart Jenkins:
+
+```shell
+sudo systemctl daemon-reload
+sudo systemctl restart jenkins
+```
+
+See more details at the [Jenkins reverse proxy guide](https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-with-jenkins/reverse-proxy-configuration-nginx/).
+
+Optionally, replace the default, system-wide `index.html` for folks visiting the root domain without either the `rstudio` or `jenkins` path (note that instead of the editing the file, which might be overwritten with package updates, it would be better to create a new HTML file and refer that from the Nginx configuration, but we will keep it simple and dirty for now):
+
+```shell
+echo "Welcome to DE3! Are you looking for <code>/rstudio</code> or <code>/jenkins</code>?" | sudo tee /usr/share/nginx/html/index.html
+```
+
+Then restart Jenkins, and good to go!
+
+It might be useful to also proxy port 8000 for future use via updating the Nginx config to:
+
+```
+server {
+    listen 80;
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent;
+    location / {
+
+    }
+    location /rstudio/ {
+      rewrite ^/rstudio/(.*)$ /$1 break;
+      proxy_pass http://localhost:8787;
+      proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection $connection_upgrade;
+      proxy_read_timeout 20d;
+    }
+    location ^~ /jenkins/ {
+      proxy_pass http://127.0.0.1:8080/jenkins/;
+      proxy_set_header X-Real-IP  $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header Host $host;
+    }
+    location ^~ /8000/ {
+      rewrite ^/8000/(.*)$ /$1 break;
+      proxy_pass http://127.0.0.1:8000;
+      proxy_set_header X-Real-IP  $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header Host $host;
+    }
+}
+```
+
+
+This way you can access the above services via the below URLs:
+
+RStudio Server:
+
+* http://your.ip.address:8787
+* http://your.ip.address/rstudio
+
+Jenkins:
+
+* http://your.ip.address:8080/jenkins
+* http://your.ip.address/jenkins
+
+Port 8000:
+
+* http://your.ip.address:8000
+* http://your.ip.address/8000
+
+If you cannot access RStudio Server on port 80, you might need to restart `nginx` as per above.
+
+Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of the EC2 node.
+
+### 💪 ScheduleR improvements
+
+1. Use a git repository to store the R scripts and fetch the most recent version on job start:
+
+    1. Configure the Jenkins job to use "Git" in the "Source Code Management" section, and use e.g. https://gist.github.com/daroczig/e5d3ee3664549932bb7f23ce8e93e472 as the repo URL, and specify the branch (`main`).
+    2. Update the Execute task section to refer to the `btcprice.R` file of the repo instead of the hardcoded local path.
+    3. Make edits to the repo, e.g. update lookback to 3 hours and check a future job output.
+
+2. Set up e-mail notifications via eg https://app.mailjet.com/signin
+
+    1. Sign up, confirm your e-mail address and domain
+    2. Take a note on the SMTP settings, eg
+
+        * SMTP server: in-v3.mailjet.com
+        * Port: 465
+        * SSL: Yes
+        * Username: ***
+        * Password: ***
+
+    3. Configure Jenkins at http://de3.ceudata.net/jenkins/configure
+
+        1. Set up the default FROM e-mail address at "System Admin e-mail address": jenkins@ceudata.net
+        2. Search for "Extended E-mail Notification" and configure
+
+           * SMTP Server
+           * Click "Advanced"
+           * Check "Use SMTP Authentication"
+           * Enter User Name from the above steps
+           * Enter Password from the above steps
+           * Check "Use SSL"
+           * SMTP port: 465
+
+    5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read the manual and info popups, configure to get an e-mail on job failures and fixes
+    6. Configure the job to send the whole e-mail body as the deault body template for all outgoing emails
+
+    ```shell
+    ${BUILD_LOG, maxLines=1000}
+    ```
+
+3. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
+
 
 
 ## Homeworks
