@@ -1098,6 +1098,52 @@ For more examples and ideas, see the [`rredis` package vignette](https://rdrr.io
     - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
     - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
 
+<details><summary>Example solution ...</summary>
+
+```r
+library(binancer)
+library(data.table)
+prices <- binance_coins_prices()
+
+library(rredis)
+redisConnect()
+
+
+redisSet('username:price:BTC', prices[symbol == 'BTC', usd])
+redisSet('username:price:ETH', prices[symbol == 'ETH', usd])
+
+redisGet('username:price:BTC')
+redisGet('username:price:ETH')
+
+redisMGet(c('username:price:BTC', 'username:price:ETH'))
+```
+</details>
+
+<details><summary>Example solution using a helper function doing some logging ...</summary>
+
+```r
+library(binancer)
+library(logger)
+library(rredis)
+redisConnect()
+
+store <- function(s) {
+  ## TODO use the checkmate pkg to assert the type of symbol
+  log_info('Looking up and storing {s}')
+  value <- binance_coins_prices()[symbol == s, usd]
+  key <- paste('username', 'price', symbol, sep = ':')
+  redisSet(key, value)
+  log_info('The price of {symbol} is {value}')
+}
+
+store('BTC')
+store('ETH')
+
+## list all keys with the "price" prefix and lookup the actual values
+redisMGet(redisKeys('username:price:*'))
+```
+</details>
+
 
 
 ## Homeworks
