@@ -1529,7 +1529,7 @@ Make sure to clean-up your EC2 nodes, security groups, keys etc created in the p
 * Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour getting the past hour's 1-minute interval klines data on ETH prices (in USD). The job should be configured to pull the R script at the start of the job either from a private or public git repo or gist. Then
 
     * Find the min and max price of ETH in the past hour, and post these stats in the `#bots-final-project` Slack channel. Make sure to set your username for the message, and use a custom emoji as the icon.
-    * Find an R package that provides a function to draw candlestick charts, and use that to post a candlestick chart on the past hour's ETH price in the `#bots-final-project` Slack channel.
+    * Find an R package that provides a function to draw candlestick charts (e.g. `tidyquant::geom_candlestick`), and use that to post a candlestick chart on the past hour's ETH price in the `#bots-final-project` Slack channel.
 
 * Recommended project (for grade up to "A"): Deploy an R-based API in ECS (like we did on the last week) for analyzing recent Binance (or any other real-time) data. The API should include at least 4 endpoints using different serializers, and these endpoints should be other than the ones we covered in the class. At least one endpoint should have at least a few parameters. Build a Docker image, push it to ECR, and deploy as service in ECS. Document the steps required to set up ECR/ECS with screenshots, then delete all services after confirming that everything works correctly.
 
@@ -1995,11 +1995,11 @@ We will learn more about Shiny in the upcoming Data Visualization 4 class :)
 
 Create a stream processing application using the `AWR.Kinesis` R package's daemon + Redis. This is very similar to what we did on the last week, but instead of counting the number of transactions per symbol, it should be the cumulative sum of traded amounts (so you should always increase the value with the traded quantity):
 
-    * You should run your streaming app to process the Binance transactions, and update the values in Redis.
-    * No need to clear the cache in Redis. E.g. if a symbol was not included in a batch, don't update the related values in Redis.
-    * Create a Jenkins job that reads from Redis, and prints the overall value (in USD) of the transactions based on the coin prices reported by the Binance API at the time of the reporting.
-    * The streaming process needs to run while you are working on the HO, to get new values into Redis.
-    * Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
+* You should run your streaming app to process the Binance transactions, and update the values in Redis.
+* No need to clear the cache in Redis. E.g. if a symbol was not included in a batch, don't update the related values in Redis.
+* Create a Jenkins job that reads from Redis, and prints the overall value (in USD) of the transactions based on the coin prices reported by the Binance API at the time of the reporting.
+* The streaming process needs to run while you are working on the HO, to get new values into Redis.
+* Create at least two more additional charts that display a metric you find meaningful, and report in the "#bots-final-project" Slack channel.
 
 ## Getting help
 
