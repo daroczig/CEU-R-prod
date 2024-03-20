@@ -90,6 +90,86 @@ Excerpts from https://daroczig.github.io/talks
     8. Click "Launch instance"
     9. Note and click on the instance id
 
+2. Connect to the box
+
+    1. Specify the hostname or IP address
+
+    ![](hhttps://docs.aws.amazon.com/AWSEC2/latest/UserGuide/images/putty-session-config.png)
+
+    2. Specify the "Private key file for authentication" in the Connection category's SSH/Auth/Credentials pane
+    3. Set the username to `ubuntu` on the Connection/Data tab
+    4. Save the Session profile
+    5. Click the "Open" button
+    6. Accept & cache server's host key
+
+Alternatively, you can connect via a standard SSH client on a Mac or Linux, something like:
+
+```sh
+chmod 0400 /path/to/your/pem
+ssh -i /path/to/your/pem -p 8000 ubuntu@ip-address-of-your-machine
+```
+
+As a last resort, use "EC2 Instance Connect" from the EC2 dashboard by clicking "Connect" in the context menu of the instance (triggered by right click in the table).
+
+### Install RStudio Server on EC2
+
+1. Look at the docs: https://www.rstudio.com/products/rstudio/download-server
+2. First, we will upgrade the system to the most recent version of the already installed packages. Note, check on the concept of a package manager!
+
+    Download Ubuntu `apt` package list:
+
+    ```sh
+    sudo apt update
+    ```
+
+    Optionally upgrade the system:
+
+    ```sh
+    sudo apt upgrade
+    ```
+
+    And optionally also reboot so that kernel upgrades can take effect.
+
+3. Install R
+
+    ```sh
+    sudo apt install r-base
+    ```
+
+    To avoid manually answering "Yes" to the question to confirm installation, you can specify the `-y` flag:
+
+    ```sh
+    sudo apt install -y r-base
+    ```
+
+
+4. Try R
+
+    ```sh
+    R
+    ```
+
+    For example:
+
+    ```r
+    1 + 4
+    hist(mtcars$hp)
+    # duh, where is the plot?!
+    ```
+
+    Exit:
+
+    ```r
+    q()
+    ```
+
+    Look at the files:
+
+    ```sh
+    ls
+    ls -latr
+    ```
+
 
 ## Getting help
 
