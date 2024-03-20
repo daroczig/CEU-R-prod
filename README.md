@@ -73,6 +73,23 @@ Excerpts from https://daroczig.github.io/talks
 
 3. Let's use the `eu-west-1` Ireland region
 
+### Create and connect to an EC2 box
+
+1. Create an EC2 instance
+
+    0. Optional: create an Elastic IP for your box
+    1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+    2. Click "Launch Instance"
+    3. Provide a name for your server (e.g. `daroczig-de3-week1`) and some additional tags for resource tracking, including tagging downstream services, such as Instance and Volumes:
+        * Class: `DE3`
+        * Owner: `daroczig`
+    4. Pick the `Ubuntu Server 22.04 LTS (HVM), SSD Volume Type` AMI
+    5. Pick `t3a.small` (2 GiB of RAM should be enough for most tasks) instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
+    6. Select your AWS key created above and launch
+    7. Pick a unique name for the security group after clicking "Edit" on the "Network settings"
+    8. Click "Launch instance"
+    9. Note and click on the instance id
+
 
 ## Getting help
 
