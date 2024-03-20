@@ -258,6 +258,14 @@ Note 2: you might want to add `NOPASSWD` to the `sudoers` file:
 
 Although also note (3) the related security risks.
 
+9. Custom login page: http://docs.rstudio.com/ide/server-pro/authenticating-users.html#customizing-the-sign-in-page
+10. Custom port (e.g. 80): http://docs.rstudio.com/ide/server-pro/access-and-security.html#network-port-and-address
+
+    ```sh
+    echo "www-port=80" | sudo tee -a /etc/rstudio/rserver.conf
+    sudo rstudio-server restart
+
+
 
 ## Getting help
 
