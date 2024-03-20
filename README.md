@@ -383,7 +383,7 @@ Although also note (3) the related security risks.
         ```
         </details>
 
-    6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
+    6. Compare prices of 4 currencies (eg BTC, ETH, BNB and XRP) in the past 24 hours on 15 mins intervals:
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
 
@@ -404,6 +404,87 @@ Although also note (3) the related security risks.
             facet_wrap(~symbol, scales = 'free', nrow = 2)
         ```
         </details>
+
+
+
+    7. Some further useful functions:
+
+        - `binance_ticker_all_prices()`
+        - `binance_coins_prices()`
+        - `binance_credentials` and `binance_balances`
+
+    8. Create an R script that reports and/or plots on some cryptocurrencies, ideas:
+
+        - compute the (relative) change in prices of cryptocurrencies in the past 24 / 168 hours
+        - go back in time 1 / 12 / 24 months and "invest" $1K in BTC and see the value today
+        - write a bot buying and selling crypto on a virtual exchange
+
+### Prepare to schedule R commands
+
+![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
+
+1. Install Jenkins from the RStudio/Terminal: https://www.jenkins.io/doc/book/installing/linux/#debianubuntu
+
+    ```sh
+    sudo apt install -y fontconfig openjdk-17-jre
+
+    sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+      https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+    echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+      https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+      /etc/apt/sources.list.d/jenkins.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y jenkins
+
+    sudo netstat -tapen | grep java
+    ```
+
+2. Open up port 8080 in the related security group
+3. Access Jenkins from your browser and finish installation
+
+    1. Read the initial admin password from RStudio/Terminal via
+
+        ```sh
+        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```
+
+    2. Proceed with installing the suggested plugins
+    3. Create your first user (eg `ceu`)
+
+### Schedule R commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Log in to Jenkins using your instance's public IP address and port 8080
+2. Use the `ceu` username and `ceudata` password (note this user is a virtual one, not the same as the user in shell)
+3. Create a "New Item" (job):
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to look up the most recent BTC price
+
+        ```sh
+        R -e "library(binancer);binance_coins_prices()[symbol == 'BTC', usd]"
+        ```
+
+    6. Run the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/jenkins-errors.png)
+
+4. Debug & figure out what's the problem ...
+5. Install R packages system wide from RStudio/Terminal (more on this later):
+
+    Either start R in the terminal as the root user (via `sudo R`) and run the previous `devtools::install_github` command there, or with a one-liner:
+
+    ```sh
+    sudo Rscript -e "library(devtools);withr::with_libpaths(new = '/usr/local/lib/R/site-library', install_github('daroczig/binancer', upgrade = FALSE))"
+    ```
+
+6. Rerun the job
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
 
 
 ## Getting help
