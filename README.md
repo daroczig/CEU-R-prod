@@ -8,6 +8,17 @@ Here you can find the materials for the "[Data Engineering 3: Batch Jobs and API
 * [Syllabus](#syllabus)
 * [Technical Prerequisites](#technical-prerequisites)
 * [Class Schedule](#class-schedule)
+
+   * [Week 1](#week-1)
+      * [Background: Example use-cases and why to use R in the cloud?](#background-example-use-cases-and-why-to-use-r-in-the-cloud)
+      * [Welcome to AWS!](#welcome-to-aws)
+      * [Getting access to EC2 boxes](#getting-access-to-ec2-boxes)
+      * [Create and connect to an EC2 box](#create-and-connect-to-an-ec2-box)
+      * [Install RStudio Server on EC2](#install-rstudio-server-on-ec2)
+      * [Connect to the RStudio Server](#connect-to-the-rstudio-server)
+      * [Play with R for a bit](#play-with-r-for-a-bit)
+      * [Prepare to schedule R commands](#prepare-to-schedule-r-commands)
+
 * [Homeworks](#homeworks)
 * [Home assignment](#home-assignment)
 * [Getting help](#getting-help)
