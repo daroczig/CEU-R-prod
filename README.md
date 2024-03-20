@@ -357,6 +357,19 @@ Although also note (3) the related security risks.
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(ggplot2)
+        ggplot(klines, aes(close_time, close)) + geom_line()
+        ```
+        </details>
+
+    5. Now create a candle chart, something like:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
+
+
 
 ## Getting help
 
