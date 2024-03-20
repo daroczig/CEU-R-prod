@@ -369,6 +369,41 @@ Although also note (3) the related security risks.
 
         ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
 
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(scales)
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_y_continuous(labels = dollar) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+        ```
+        </details>
+
+    6. Compare prices of 4 currencies (eg ETH, ARK, NEO and IOTA) in the past 24 hours on 15 mins intervals:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(data.table)
+        klines <- rbindlist(lapply(
+            c('BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT'),
+            binance_klines,
+            interval = '15m', limit = 4*24))
+        ggplot(klines, aes(open_time)) +
+            geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+            geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+            theme_bw() + theme('legend.position' = 'none') + xlab('') +
+            ggtitle(paste('Last Updated:', Sys.time())) +
+            scale_color_manual(values = c('#1a9850', '#d73027')) +
+            facet_wrap(~symbol, scales = 'free', nrow = 2)
+        ```
+        </details>
 
 
 ## Getting help
