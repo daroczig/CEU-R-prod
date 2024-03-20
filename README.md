@@ -323,6 +323,40 @@ Although also note (3) the related security risks.
         devtools::install_github('daroczig/binancer', upgrade = FALSE)
         ```
 
+    3. First steps with live data: load the `binancer` package and then use the `binance_klines` function to get the last 3 hours of Bitcoin price changes (in USD) with 1-minute granularity -- resulting in an object like:
+
+        ```r
+        > str(klines)
+        Classes ‘data.table’ and 'data.frame':  180 obs. of  12 variables:
+         $ open_time                   : POSIXct, format: "2020-03-08 20:09:00" "2020-03-08 20:10:00" "2020-03-08 20:11:00" "2020-03-08 20:12:00" ...
+         $ open                        : num  8292 8298 8298 8299 8298 ...
+         $ high                        : num  8299 8299 8299 8299 8299 ...
+         $ low                         : num  8292 8297 8297 8298 8296 ...
+         $ close                       : num  8298 8298 8299 8298 8299 ...
+         $ volume                      : num  25.65 9.57 20.21 9.65 24.69 ...
+         $ close_time                  : POSIXct, format: "2020-03-08 20:09:59" "2020-03-08 20:10:59" "2020-03-08 20:11:59" "2020-03-08 20:12:59" ...
+         $ quote_asset_volume          : num  212759 79431 167677 80099 204883 ...
+         $ trades                      : int  371 202 274 186 352 271 374 202 143 306 ...
+         $ taker_buy_base_asset_volume : num  13.43 5.84 11.74 7.12 15.24 ...
+         $ taker_buy_quote_asset_volume: num  111430 48448 97416 59071 126493 ...
+         $ symbol                      : chr  "BTCUSDT" "BTCUSDT" "BTCUSDT" "BTCUSDT" ...
+         - attr(*, ".internal.selfref")=<externalptr>
+        ```
+
+        <details><summary>Click here for the code generating the above ...</summary>
+
+        ```r
+        library(binancer)
+        klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+        str(klines)
+        summary(klines$close)
+        ```
+        </details>
+
+    4. Visualize the data, eg on a simple line chart:
+
+        ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
+
 
 ## Getting help
 
