@@ -497,6 +497,11 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
     ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2018-2019/images/jenkins-success.png)
 
+## Homeworks
+
+### Week 1
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
 ## Getting help
 
