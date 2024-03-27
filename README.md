@@ -1106,6 +1106,56 @@ redisMGet(redisKeys('username:price:*'))
     kms_decrypt("AQICAHgzIk6iRoD8yYhFk//xayHj0G7uYfdCxrW6ncfAZob2MwHNrEj6Uxlfg1MmD+ImwvYTAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDNM5AhEiMBUacg2f2AIBEIBTgvo4Z9+/ayuYnKNFQpICgV9H06u7plFFT/cSk4KUslnj2i8Xn9bgmQWSep0USG3NK1jR+DweQpxvh18/OO+pSiIII+O1yiv5Ql5R4EozjhmGGBY=")
     ```
 
+9. 💪 Alternatively, use the AWS Parameter Store or Secrets Manager, see eg https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/?region=eu-west-1&tab=Table and granting the `AmazonSSMReadOnlyAccess` policy to your IAM role or user.
+
+    ```r
+    ssm_get_parameter('slack')
+    ```
+
+#### Using Slack from R
+
+4. 💪 Install the Slack R client
+
+    ```shell
+    sudo apt install -y r-cran-slackr
+    ```
+
+5. Init and send our first messages with `slackr`
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    token <- ssm_get_parameter('slack')
+    library(slackr)
+    slackr_setup(username = 'jenkins', token = token, icon_emoji = ':jenkins-rage:')
+    slackr_msg(text = 'Hi there!', channel = '#ba-de3-2022-bots')
+    ```
+
+6. A more complex message
+
+    ```r
+    library(binancer)
+    prices <- binance_coins_prices()
+    msg <- sprintf(':money_with_wings: The current Bitcoin price is: $%s', prices[symbol == 'BTC', usd])
+    slackr_msg(text = msg, preformatted = FALSE, channel = '#ba-de3-2022-bots')
+    ```
+
+7. Or plot
+
+    ```r
+    library(ggplot2)
+    klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60*3)
+    p <- ggplot(klines, aes(close_time, close)) + geom_line()
+    ggslackr(plot = p, channels = '#ba-de3-2022-bots', width = 12)
+    ```
+
+### Job Scheduler exercises
+
+* Create a Jenkins job to alert if Bitcoin price is below $60K or higher than $65K.
+* Create a Jenkins job to alert if Bitcoin price changed more than $200 in the past hour.
+* Create a Jenkins job to alert if Bitcoin price changed more than 5% in the past day.
+* Create a Jenkins job running hourly to generate a candlestick chart on the price of BTC and ETH.
+
 
 ## Homeworks
 
