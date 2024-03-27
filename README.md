@@ -1426,7 +1426,27 @@ Now let's make the above created and tested Docker image available outside of th
 
 6. Check the Docker repository at https://eu-west-1.console.aws.amazon.com/ecr/repositories/private/657609838022/de3-example-api?region=eu-west-1
 
+### Docker service
 
+1. Go to the Elastic Container Service (ECS) dashboard at https://eu-west-1.console.aws.amazon.com/ecs/home?region=eu-west-1#/
+2. Create a task definition for the Docker run:
+
+    1. Task name: `btc-api`
+    2. Container name: `api`
+    3. Image URI: `657609838022.dkr.ecr.eu-west-1.amazonaws.com/de3-example-api`
+    4. Container port: 8000
+    5. Command in the Docker configuration: `plumber.R`
+    6. Review Task size, but default values should fine for this simple task
+
+3. Create a new cluster, call it `BTC_API`, using Fargate. Don't forget to add the `Class` tag!
+4. Create a Service in the newly created Cluster at https://eu-west-1.console.aws.amazon.com/ecs/v2/clusters/btc-api/services?region=eu-west-1
+
+    1. Compute option can be "Launch type" for now
+    2. Specify the Task Family as `btc-api`
+    3. Provide the same as service name
+    4. Use the `de3` security group
+    5. Create a load balancer listening on port 80 (would need to create an SSL cert for HTTPS), and specify `/stats` as the healthcheck path, with a 10 seconds grace period
+    6. Test the deployed service behind the load balancer, e.g. https://btc-api-1417435399.eu-west-1.elb.amazonaws.com/report
 
 ## Homeworks
 
