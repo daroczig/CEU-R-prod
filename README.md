@@ -888,6 +888,31 @@ If you cannot access RStudio Server on port 80, you might need to restart `nginx
 
 Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of the EC2 node.
 
+### ScheduleR improvements
+
+1. Note that a `crypto.R` file has been placed in your home folder. We can make use of that in Jenkins to run every 5 minutes. Edit the "btc price" job in Jenkins, and fix the path of the file in the Build Steps, then enable the "Build periodically" trigger:
+
+    ```
+        H/5 * * * *
+    ```
+
+2. Find the generated plot! It's in the Workspace (left sidebar of the project). Note that the aspect ratio is not great, fix in in the R script as per below:
+
+    ```r
+    ggsave('btc.png', plot = g, width = 10, height = 5)
+    ```
+
+3. Let find a better way to track changes in the file, e.g.
+4. Use a git repository to store the R scripts and fetch the most recent version on job start:
+
+    1. Configure the Jenkins job to use "Git" in the "Source Code Management" section, and use e.g. https://gist.github.com/daroczig/e5d3ee3664549932bb7f23ce8e93e472 as the repo URL, and specify the branch (`main`).
+    2. Update the Execute task section to refer to the `btcprice.R` file of the repo instead of the hardcoded local path.
+        ```
+        Rscript btcprice.R
+        ```
+
+    3. Make edits to the repo, e.g. update lookback to 3 hours and check a future job output.
+
 
 ## Homeworks
 
