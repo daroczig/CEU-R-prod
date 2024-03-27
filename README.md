@@ -955,6 +955,72 @@ Next, set up SSL either with Nginx or placing an AWS Load Balancer in front of t
 7. Attach the plot to the email on Success.
 8. Look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
 
+### Intro to redis
+
+We need a persistent storage for our Jenkins jobs ... let's give a try to a key-value database:
+
+1. 💪 Install server
+
+   ```
+   sudo apt install redis-server
+   netstat -tapen | grep LIST
+   ```
+
+   Test using the CLI tool:
+
+   ```
+   redis-cli get foo
+   redis-cli set foo 42
+   redis-cli get foo
+   redis-cli del foo
+   ```
+
+2. 💪 Install an R client
+
+    Although we could use the `RcppRedis` available on CRAN, so thus also in our already added apt repo, but `rredis` provides some convenient helpers that we plan to use, so we are going to install that as well from a custom R package repository to also demonstrate how `drat` works:
+
+    ```
+    sudo apt install -y r-cran-rcppredis
+    sudo Rscript -e "withr::with_libpaths(new = '/usr/local/lib/R/site-library', install.packages('rredis', repos=c('https://ghrr.github.io/drat', 'https://cloud.r-project.org')))"
+    ```
+
+3. Interact from R
+
+    ```r
+    ## set up and initialize the connection to the local redis server
+    library(rredis)
+    redisConnect()
+
+    ## set/get values
+    redisSet('foo', 'bar')
+    redisGet('foo')
+
+    ## increment and decrease counters
+    redisIncr('counter')
+    redisIncr('counter')
+    redisIncr('counter')
+    redisGet('counter')
+    redisDecr('counter')
+    redisDecr('counter2')
+
+    ## get multiple values at once
+    redisMGet(c('counter', 'counter2'))
+
+    ## list all keys
+    redisKeys()
+
+    ## drop all keys
+    redisDelete(redisKeys())
+    ```
+
+For more examples and ideas, see the [`rredis` package vignette](https://rdrr.io/cran/rredis/f/inst/doc/rredis.pdf) or try the interactive, genaral (not R-specific) [redis tutorial](https://try.redis.io).
+
+4. Exercises
+
+    - Create a Jenkins job running every minute to cache the most recent Bitcoin and Ethereum prices in Redis
+    - Write an R script in RStudio that can read the Bitcoin and Ethereum prices from the Redis cache
+    - Make both scripts available in git (e.g. as a gist)
+
 
 ## Homeworks
 
