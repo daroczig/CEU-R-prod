@@ -1068,6 +1068,45 @@ redisMGet(redisKeys('username:price:*'))
 </details>
 
 
+### Interacting with Slack
+
+1. Join the #ba-de3-2023-bots channel in the `ceu-bizanalytics` Slack
+2. 💪 A custom Slack app is already created at https://ceu-bizanalytics.slack.com/services/B0101G5EDS4, but feel free to create a new one and use the related app in the following steps
+3. Look up the app's bots in the sidebar
+4. Look up the API Token
+
+#### Note on storing the Slack token
+
+1. Do not store the token in plain-text!
+2. Let's use Amazon's Key Management Service: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (slides 73-75)
+3. 💪 Instead of using the Java SDK referenced in the above talk, let's install `boto3` Python module and use via `reticulate`:
+
+    ```shell
+    sudo apt install -y python3-pip
+    sudo pip3 install boto3
+    sudo apt install -y r-cran-reticulate r-cran-botor
+    ```
+
+4. 💪 Create a key in the Key Management Service (KMS): `alias/de3`
+5. 💪 Grant access to that KMS key by creating an EC2 IAM role at https://console.aws.amazon.com/iam/home?region=eu-west-1#/roles with the `AWSKeyManagementServicePowerUser` policy and explicit grant access to the key in the KMS console
+6. Attach the newly created IAM role
+7. Use this KMS key to encrypt the Slack token:
+
+    ```r
+    library(botor)
+    botor(region = 'eu-west-1')
+    kms_encrypt('token', key = 'alias/de3')
+    ```
+
+    Note, if R asks you to install Miniconda, say NO, as Python3 and the required packages have already been installed system-wide.
+
+8. Store the ciphertext and use `kms_decrypt` to decrypt later, see eg
+
+    ```r
+    kms_decrypt("AQICAHgzIk6iRoD8yYhFk//xayHj0G7uYfdCxrW6ncfAZob2MwHNrEj6Uxlfg1MmD+ImwvYTAAAAmjCBlwYJKoZIhvcNAQcGoIGJMIGGAgEAMIGABgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDNM5AhEiMBUacg2f2AIBEIBTgvo4Z9+/ayuYnKNFQpICgV9H06u7plFFT/cSk4KUslnj2i8Xn9bgmQWSep0USG3NK1jR+DweQpxvh18/OO+pSiIII+O1yiv5Ql5R4EozjhmGGBY=")
+    ```
+
+
 ## Homeworks
 
 ### Week 1
