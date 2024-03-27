@@ -464,6 +464,11 @@ Although also note (3) the related security risks.
     2. Proceed with installing the suggested plugins
     3. Create your first user (eg `ceu`)
 
+Note that if loading Jenkins after getting a new IP takes a lot of time, it might be due to
+not be able to load the `theme.css` as trying to search for that on the previous IP (as per
+Jenkins URL setting). To overcome this, wait 2 mins for the `theme.css` timeout, login, disable
+the dark theme: https://github.com/jenkinsci/dark-theme-plugin/issues/458
+
 ### Schedule R commands
 
 Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
@@ -558,7 +563,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
             ggtitle(paste('Last Updated:', Sys.time())) +
             scale_y_continuous(labels = dollar) +
             scale_color_manual(values = c('#1a9850', '#d73027'))
-    ggsave('btc.png', plot = g)
+    ggsave('btc.png', plot = g, width = 10, height = 5)
     ```
     </details>
 
@@ -571,8 +576,29 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
         ```sh
         Rscript /home/ceu/plot.R
         ```
+    6. Run the job
+    7. Look at the workspace that can be accessed from the sidebar menu of the job.
+
+## Week 2
+
 
     6. Enable the "Build periodically" trigger:
+### Recap
+
+What we convered last week:
+
+1. 2FA/MFA in AWS
+2. Creating EC2 nodes
+3. Connecting to EC2 nodes via SSH/Putty (note the difference between the PPK and PEM key formats)
+4. Updating security groups
+5. Installing RStudio Server
+6. The difference between R console and Shell
+7. The use of `sudo` and how to grant `root` (system administrator) privileges
+8. Adding new Linux users, setting password, adding to group
+9. Installing R packages system-wide VS in the user's home folder
+10. Installing, setting up and first steps with Jenkins
+
+Note that you do NOT need to do the instructions below marked with the :muscle: emoji -- those have been already done for you, and the related steps are only included below for documenting what has been done and demonstrated in the class.
 
         ```
         H/* * * * *
