@@ -1454,6 +1454,45 @@ Now let's make the above created and tested Docker image available outside of th
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
+## Home assignment
+
+The goal of this assignment is to confirm that you have a general understanding on how to build data pipelines using Amazon Web Services and R, and can actually implement a stream processing application (either running in almost real-time or batched/scheduled way) or R-based API in practice.
+
+### Tech setup
+
+To minimize the system administration and some of the already-covered engineering tasks for the students, the below pre-configured tools are provided as free options, but students can decide to build their own environment (on the top of or independently from these) and feel free to use any other tools:
+
+* `crypto` stream in the Ireland region of the central CEU AWS account with the real-time order data from the Binance cryptocurrency exchange on Bitcoin (BTC), Ethereum (ETH), Litecoin (LTC), Neo (NEO), Binance Coin (BNB) and Tether (USDT) -- including the the attributes of each transaction as specified at https://github.com/binance-exchange/binance-official-api-docs/blob/master/web-socket-streams.md#trade-streams
+* `de3` Amazon Machine Image that you can use to spin up an EC2 node with RStudio Server, Shiny Server, Jenkins, Redis and Docker installed & pre-configured (use your AWS username and the password shared on Slack previously) along with the most often used R packages (including the ones we used for stream processing, eg `botor`, `AWR.Kinesis` and the `binancer` package)
+* `de3` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and the `slack` token in the Parameter Store
+* `de3` security group with open ports for RStudio Server and Jenkins
+* lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
+
+### Required output
+
+Make sure to clean-up your EC2 nodes, security groups, keys etc created in the past weeks, as left-over AWS resources will contribute negative points to your final grade! E.g. the EC2 node you created on the first week should be terminated.
+
+* Minimal project (for grade up to "B"): schedule a Jenkins job that runs every hour getting the past hour's 1-minute interval klines data on ETH prices (in USD). The job should be configured to pull the R script at the start of the job either from a private or public git repo or gist. Then
+
+    * Find the min and max price of ETH in the past hour, and post these stats in the `#bots-final-project` Slack channel. Make sure to set your username for the message, and use a custom emoji as the icon.
+    * Find an R package that provides a function to draw candlestick charts (e.g. `tidyquant::geom_candlestick`), and use that to post a candlestick chart on the past hour's ETH price in the `#bots-final-project` Slack channel.
+
+* Recommended project (for grade up to "A"): Deploy an R-based API in ECS (like we did on the last week) for analyzing recent Binance (or any other real-time) data. The API should include at least 4 endpoints using different serializers, and these endpoints should be other than the ones we covered in the class. At least one endpoint should have at least a few parameters. Build a Docker image, push it to ECR, and deploy as service in ECS. Document the steps required to set up ECR/ECS with screenshots, then delete all services after confirming that everything works correctly.
+
+Regarding feedback: by default, I add a super short feedback on Moodle as a comment to your submission (e.g. "good job" or "excellent" for grade A, or short details on why it was not A). If you want to received more feedback, please ping me on Slack to schedule a quick call. If you want early feedback (before grading), ping me on Slack at least a week before the submission deadline!
+
+### Delivery method
+
+* Create a PDF document that describes your solution and all the main steps involved with low level details: attach screenshots (including the URL nav bar and the date/time widget of your OS, so like full-screen and not area-picked screenshots) of your browser showing what you are doing in RStudio Server, Jenkins, or in the AWS dashboards, and make sure that the code you wrote is either visible on the screenshots, or included in the PDF.
+
+* STOP the EC2 Instance you worked on, but don’t terminate it, so I can start it and check how it works. Note that your instance will be terminated by me after the end of the class.
+* Include the `instance_id` on the first page of the PDF, along with your name or student id.
+* Upload the PDF to Moodle.
+
+### Submission deadline
+
+Midnight (CET) on April 21, 2024.
+
 ## Getting help
 
 Contact Gergely Daroczi on the `ceu-bizanalytics` Slack channel or
