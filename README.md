@@ -1400,18 +1400,32 @@ sudo docker run -p 8000:8000 -ti btc-report-api plumber.R
 
 5. Test by visiting the `8000` port or the Nginx proxy at http://de3.ceudata.net/8000, e.g. Swagger docs at http://de3.ceudata.net/8000/__docs__/#/default/get_report or an endpoint directly at http://de3.ceudata.net/8000/report.
 
+### Docker registry
+
+Now let's make the above created and tested Docker image available outside of the RStudio Server by uploading the Docker image to Elastic Container Registry (ECR):
+
+1. 💪 Create a new private repository at https://eu-west-1.console.aws.amazon.com/ecr/home?region=eu-west-1, call it `de3-example-api`
+2. 💪 Assign the `EC2InstanceProfileForImageBuilderECRContainerBuilds` policy to the `ceudataserver` IAM role so that we get RW access to the ECR repositories. Tighten this role up in prod!
+3. 💪 Let's login to ECR on the RStudio Server so that we can upload the Docker image:
 
     ```sh
-    sudo docker build -t btc-report-api .
+    aws ecr get-login-password --region eu-west-1 | sudo docker login --username AWS --password-stdin 657609838022.dkr.ecr.eu-west-1.amazonaws.com
     ```
 
-    4. Run a container based on the above image:
+4. 💪 Tag the already build Docker image for upload:
 
     ```sh
-    sudo docker run -p 8000:8000 -ti btc-report-api plumber.R
+    sudo docker tag btc-report-api:latest 657609838022.dkr.ecr.eu-west-1.amazonaws.com/de3-example-api:latest
     ```
 
-    5. Test by visiting the `8000` port or the Nginx proxy at http://de3.ceudata.net/8000, e.g. Swagger docs at http://de3.ceudata.net/8000/__docs__/#/default/get_report or an endpoint directly at http://de3.ceudata.net/8000/report.
+5. 💪 Push the Docker image:
+
+    ```sh
+    sudo docker push 657609838022.dkr.ecr.eu-west-1.amazonaws.com/de3-example-api:latest
+    ```
+
+6. Check the Docker repository at https://eu-west-1.console.aws.amazon.com/ecr/repositories/private/657609838022/de3-example-api?region=eu-west-1
+
 
 
 ## Homeworks
