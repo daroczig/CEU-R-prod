@@ -624,12 +624,6 @@ Then you can use the newly created `de3` AMI to spin up a new instance for you:
 9. Click "Launch instance"
 10. Note and click on the instance id
 
-        ```
-        H/* * * * *
-        ```
-
-    7. Run the job
-    8. Look at the workspace that can be accessed from the sidebar menu of the job.
 
 ## Homeworks
 
