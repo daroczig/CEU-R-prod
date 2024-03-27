@@ -581,8 +581,8 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 
 ## Week 2
 
+Quiz: https://forms.gle/ETsssYaXgHgRgHneA (10 mins)
 
-    6. Enable the "Build periodically" trigger:
 ### Recap
 
 What we convered last week:
