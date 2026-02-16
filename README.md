@@ -989,6 +989,21 @@ conflicts) and configure Caddy to proxy it:
    `https://<USERNAME>.de3.click/coder`.
 7. Install the Python extension or anything else you need :)
 
+### Why we did all this?
+
+In short, it was meant to be a hand-on session to demonstrate and get a feel for setting up cloud infrastructure manually. You might like it it and decide to learn/do more, or you might prefer not dealing with infrastruture ever again -- which is fine.
+
+Hosnestly, the actual programmin environment (e.g. Python or R) and the environment (e.g. Jenkins, Airflow, etc.) do not really matter that much -- the tools were chosen to have a defined number of moving pieces and make sure we understand how those play together.
+
+Today we used:
+
+- EC Instance Connect instead of SSH to connect to our virtual machine to overcome the firewall limitations,
+- `apt` package manager to install software,
+- RStudio Server as the main control interface for R, Python, and the terminal as well,
+- Jenkins to schedule R or Python commands to run on a regular basis,
+- Caddy as a reverse proxy to access the services via a human-friendly domain name and HTTPS.
+
+
 
 ## Getting help
 
