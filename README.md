@@ -932,6 +932,64 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
 6. Then find the Workspace of the Project, such as <https://daroczig.de3.click/jenkins/job/t/ws/btcprice.png>. Note that this image will be updated every run.
 
 
+### Install VS Code "Server"
+
+If you are not happy with RStudio Server, you can also install "VS Code in the
+browser" from <https://github.com/coder/code-server>:
+
+1. Check the source of their install script: <https://code-server.dev/install.sh>
+2. Test the install script:
+
+    ```
+    curl -fsSL https://code-server.dev/install.sh | sh -s -- --dry-run
+    ```
+3. Install the code-server package:
+
+    ```
+    curl -fsSL https://code-server.dev/install.sh | sh
+    ```
+4. Start the code-server service for a **given user** (an emphasis here to run this as a user):
+
+    ```
+    sudo systemctl restart code-server@<USERNAME>
+    ```
+
+Note that the service will be started for the given user, so there's no
+multi-user access like in RStudio Server, and it runs on port `8080` by default.
+
+Let's update the port number to something special (to avoid later port number
+conflicts) and configure Caddy to proxy it:
+
+1. Edit (e.g. using `nano`) the `~/.config/code-server/config.yaml` file to set
+   the port number to 8888
+2. Take a note of the password from the config file, as you will need it to
+   login to the service.
+3. Restart the code-server service:
+
+    ```
+    sudo systemctl restart code-server@<USERNAME>
+    ```
+
+4. Update the Caddy configuration to proxy the new port:
+
+    ```
+    handle /coder/* {
+        reverse_proxy 127.0.0.1:8888
+        uri strip_prefix /coder
+    }
+    ```
+
+5. Restart the Caddy service:
+
+    ```
+    sudo systemctl restart caddy
+    ```
+
+6. You can now access the code-server service via the browser at
+   `https://<USERNAME>.de3.click/coder`.
+7. Install the Python extension or anything else you need :)
+
+
 ## Getting help
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
