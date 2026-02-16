@@ -798,6 +798,59 @@ ggplot(klines, aes(open_time)) +
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
 
+
+### Install Jenkins to schedule R or Python commands
+
+![](https://wiki.jenkins-ci.org/download/attachments/2916393/fire-jenkins.svg)
+
+1. Install Jenkins from the RStudio/Terminal:
+   <https://www.jenkins.io/doc/book/installing/linux/#debianubuntu>
+
+    ```sh
+    sudo apt install -y fontconfig openjdk-21-jre
+
+    sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+      https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key
+    echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+      https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+      /etc/apt/sources.list.d/jenkins.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y jenkins
+
+    # check which port is open by java (jenkins)
+    sudo ss -tapen | grep java
+    ```
+
+2. Open up port `8080` in the related security group if you want direct access
+3. To make use of the Caddy proxy, we need to update the Jenkins configuration
+   to use the `/jenkins` path: uncomment `Environment="JENKINS_PREFIX=/jenkins"`
+   in `/lib/systemd/system/jenkins.service`, then reload the Systemd configs and
+   restart Jenkins:
+
+    ```shell
+    sudo systemctl daemon-reload
+    sudo systemctl restart jenkins
+    ```
+
+    You can find more details at the [Jenkins reverse proxy guide](https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-with-jenkins/reverse-proxy-configuration-nginx/) and [troubleshooting guide](https://www.jenkins.io/doc/book/system-administration/reverse-proxy-configuration-troubleshooting/).
+
+4. Access Jenkins from your browser and finish installation
+
+    1. Read the initial admin password from RStudio/Terminal via
+
+        ```sh
+        sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+        ```
+
+    2. Proceed with installing the suggested plugins
+    3. Create your first user (eg `ceu`)
+
+Note that if loading Jenkins after getting a new IP takes a lot of time, it might be due to
+not be able to load the `theme.css` as trying to search for that on the previous IP (as per
+Jenkins URL setting). To overcome this, wait 2 mins for the `theme.css` timeout, login, disable
+the dark theme plugin at the `/jenkins/manage/pluginManager/installed` path, and then restart Jenkins at the bottom of the page via `Restart` button. Find more details at <https://github.com/jenkinsci/dark-theme-plugin/issues/458>.
+
+### Schedule R or Python commands
 ## Getting help
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
