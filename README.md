@@ -649,11 +649,152 @@ BTC current price is $42,000, with a standard deviation of 100.
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
+```py
+from binance.client import Client
+client = Client()
+
+# https://python-binance.readthedocs.io/en/latest/binance.html#binance.client.Client.get_klines
+klines = client.get_klines(symbol='BTCUSDT', interval='1m', limit=60)
+
+# report on closing prices
+close = [float(d[4]) for d in klines]
+
+from statistics import stdev
+print(f"BTC current price is ${close[-1]}, with a standard deviation of {round(stdev(close), 2)}.")
+
+# create a line chart of the price history
+from datetime import datetime
+dates = [datetime.fromtimestamp(k[0] / 1000) for k in klines]
+
+import matplotlib.pyplot as plt
+plt.clf()
+plt.plot(dates, close, marker='o')
+plt.title('BTC Price History')
+plt.show()
+
+# save the plot to a file
+plt.savefig('btc_price_history.png')
+```
+
+To demo how it would be implemented in R, let's install some related packages:
+
+```sh
+sudo apt install --no-install-recommends \
+  r-cran-ggplot2 r-cran-glue r-cran-remotes \
+  r-cran-data.table r-cran-httr r-cran-digest r-cran-logger r-cran-jsonlite r-cran-snakecase
+```
+
+Then in an R package from GitHub:
+
+```r
+library(remotes)
+install_github("daroczig/binancer")
+```
+
+And the actual R code:
+
+```r
+library(binancer)
+klines <- binance_klines('BTCUSDT', interval = '1m', limit = 60)
+library(glue)
+print(glue("BTC current price is ${klines$close[60]}, with a standard deviation of {round(sd(klines$close), 2)}."))
+
+library(ggplot2)
+ggplot(klines, aes(close_time, close)) + geom_line()
+```
 
 Great! Now let's create a candlestick chart of the price history, something like:
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
 
+```python
+from binance.client import Client
+client = Client()
+klines = client.get_klines(symbol='BTCUSDT', interval='1m', limit=60)
+
+# reticulate::py_install("pandas")
+import pandas as pd
+df = pd.DataFrame(klines, columns=[
+    'timestamp', 'open', 'high', 'low', 'close', 'volume',
+    'close_time', 'quote_volume', 'trades', 'taker_buy_base',
+    'taker_buy_quote', 'ignore'
+])
+
+df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+df[['open', 'high', 'low', 'close', 'volume']] = df[['open', 'high', 'low', 'close', 'volume']].astype(float)
+
+# reticulate::py_install("mplfinance")
+import mplfinance as mpf
+
+df_plot = df.set_index('timestamp')
+df_plot = df_plot[['open', 'high', 'low', 'close', 'volume']]
+
+mpf.plot(df_plot, type='candle', style='charles',
+         title='BTC Price History',
+         ylabel='Price (USD)')
+```
+
+Or via `matplotlib`:
+
+```python
+from matplotlib.patches import Rectangle
+
+fig, ax = plt.subplots(figsize=(12, 6))
+
+for i, row in df.iterrows():
+    color = 'green' if row['close'] >= row['open'] else 'red'
+
+    # candle lines for high/low
+    ax.plot([i, i], [row['low'], row['high']], color=color, linewidth=1)
+
+    # candle body for open/close
+    height = abs(row['close'] - row['open'])
+    bottom = min(row['open'], row['close'])
+    rect = Rectangle((i - 0.3, bottom), 0.6, height, facecolor=color, edgecolor=color, alpha=0.8)
+    ax.add_patch(rect)
+
+ax.set_title('BTC Price History')
+plt.show()
+```
+
+Same in R:
+
+```r
+ggplot(klines, aes(open_time)) +
+    geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+    geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+    theme_bw() + theme('legend.position' = 'none') + xlab('') +
+```
+
+Or a bit more polished version:
+
+```r
+library(scales)
+ggplot(klines, aes(open_time)) +
+    geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+    geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+    theme_bw() + theme('legend.position' = 'none') + xlab('') +
+    ggtitle(paste('Last Updated:', Sys.time())) +
+    scale_y_continuous(labels = dollar) +
+    scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+```
+
+For the record, doing the same for 4 symbols would be also as simple as:
+
+```r
+library(data.table)
+klines <- rbindlist(lapply(
+    c('BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'XRPUSDT'),
+    binance_klines,
+    interval = '15m', limit = 4*24))
+ggplot(klines, aes(open_time)) +
+    geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+    geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+    theme_bw() + theme('legend.position' = 'none') + xlab('') +
+    ggtitle(paste('Last Updated:', Sys.time())) +
+    scale_color_manual(values = c('#1a9850', '#d73027')) +
+    facet_wrap(~symbol, scales = 'free', nrow = 2)
+```
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
 
