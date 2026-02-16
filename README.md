@@ -649,6 +649,14 @@ BTC current price is $42,000, with a standard deviation of 100.
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-1.png)
 
+
+Great! Now let's create a candlestick chart of the price history, something like:
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
+
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-3.png)
+
 ## Getting help
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
