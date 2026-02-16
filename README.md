@@ -851,6 +851,87 @@ Jenkins URL setting). To overcome this, wait 2 mins for the `theme.css` timeout,
 the dark theme plugin at the `/jenkins/manage/pluginManager/installed` path, and then restart Jenkins at the bottom of the page via `Restart` button. Find more details at <https://github.com/jenkinsci/dark-theme-plugin/issues/458>.
 
 ### Schedule R or Python commands
+
+Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
+
+1. Create a "New Item" (job) in Jenkins:
+
+    1. Enter the name of the job: `get current Bitcoin price`
+    2. Pick "Freestyle project"
+    3. Click "OK"
+    4. Add a new "Execute shell" build step
+    5. Enter the below command to use the previously written Python script to look up the most recent BTC price
+
+        ```sh
+        python3 /home/<USERNAME>/<FILENAME>.py
+        ```
+
+    6. Run the job
+
+        ![](https://i.ibb.co/MyJ2Ww9d/image.png)
+
+2. Debug & figure out what's the problem: it's a permission error, so let's add
+   the `jenkins` user to the `<USERNAME>` group:
+
+    ```shell
+    sudo adduser jenkins <USERNAME>
+    ```
+
+    Then restart Jenkins from the RStudio Server terminal:
+
+    ```shell
+    sudo systemctl restart jenkins
+    ```
+
+    A better solution will be later to commit our Python or R script into a git
+    repo, and make it part of the job to update from the repo .. or even better,
+    use Docker to run the job in a container.
+
+3. Yay, another error:
+
+    ![](https://i.ibb.co/p6KCp3QN/image.png)
+
+    This is due to not finding the virtual environment, so let's add that to our build step:
+
+    ```shell
+    . /home/<USERNAME>/de3/bin/activate
+    ```
+
+    Note the leading dot `.` in the command, which is a special character in the
+    shell -- a shorthand for `source` command to set environment variables. As
+    Jenkins by default runs the commands in `sh` (and not e.g. Bourne shell
+    `bash`), we need to use the `.` shorthand.
+
+4. It runs at last:
+
+    ![](https://i.ibb.co/KnyNr44/image.png)
+
+5. Now let's update our code to generate a line plot and store in the workspace:
+
+    ```python
+    from binance.client import Client
+
+    client = Client()
+    klines = client.get_klines(symbol='BTCUSDT', interval='1m', limit=60)
+    close = [float(d[4]) for d in klines]
+
+    from statistics import stdev
+    print(f"BTC current price is ${close[-1]}, with a standard deviation of {round(stdev(close), 2)}.")
+
+    # create a line chart of the price history
+    from datetime import datetime
+    dates = [datetime.fromtimestamp(k[0] / 1000) for k in klines]
+
+    import matplotlib.pyplot as plt
+    plt.clf()
+    plt.plot(dates, close, marker='o')
+    plt.title('BTC Price History')
+    plt.savefig("btcprice.png")
+    ```
+
+6. Then find the Workspace of the Project, such as <https://daroczig.de3.click/jenkins/job/t/ws/btcprice.png>. Note that this image will be updated every run.
+
+
 ## Getting help
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
