@@ -1005,6 +1005,13 @@ Today we used:
 
 
 
+## Homeworks
+
+### Week 1
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
+
+
 ## Getting help
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
