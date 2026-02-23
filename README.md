@@ -1529,3 +1529,39 @@ ${BUILD_LOG, maxLines=1000}
 ```
 
 Optionally, look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
+
+### Set up MS Teams notifications
+
+But who uses emails anymore? Let's set up MS Teams notifications instead!
+
+1. Join the #bots-bots-bots channel in the DE3 course's MS Teams
+2. Click on "Manage channel" in the triple-dot context menu of the channel, then
+   click "Edit" of the "Connectors" tab, and add an incoming webhook with your
+   username and optional logo, store the URL for later use
+3. Install the `apprise` Python package in your virtual environment so that you can test it interactively:
+
+    ```r
+    reticulate::py_install("apprise")
+    ```
+
+4. Don't forget to add the package name to your `requirements.txt` file as well
+   if you plan to use it in a Jenkins job as a Docker container.
+5. Example script saying hello to the channel:
+
+    ```python
+    import apprise
+    poster = apprise.Apprise()
+    poster.add('https://ceuedu.webhook.office.com/webhookb2/...')
+    poster.notify(
+        title='Hello from Python!',
+        body='Such a warm hello.',
+    )
+    ```
+
+    Find more details in the `apprise` docs:
+
+    - https://appriseit.com/library/quick-start/
+    - https://appriseit.com/library/attachments/
+    - https://appriseit.com/services/msteams/
+
+6. Update your Python script to send a message to the channel when the Bitcoin price is above $50,000 💸
