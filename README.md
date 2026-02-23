@@ -1460,6 +1460,14 @@ python btcprice.py
 
 3. Create a Dockerfile to build the image:
 
+    ```dockerfile
+    FROM python:3.11-slim
+    RUN pip install matplotlib pandas python-binance
+    WORKDIR /app
+    ADD my_local_file.py /app/btcreport.py
+    CMD ["python3", "btcreport.py"]
+    ```
+
 4. Build the image:
 
     ```shell
