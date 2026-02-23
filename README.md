@@ -894,7 +894,7 @@ Let's schedule a Jenkins job to check on the Bitcoin prices every hour!
     This is due to not finding the virtual environment, so let's add that to our build step:
 
     ```shell
-    . /home/<USERNAME>/de3/bin/activate
+    . /home/<USERNAME>/.virtualenvs/de3/bin/activate
     ```
 
     Note the leading dot `.` in the command, which is a special character in the
@@ -1005,9 +1005,9 @@ Today we used:
 
 
 
-## Homeworks
+## Week 2
 
-### Week 1
+Quiz: https://forms.office.com/e/wRAxGqirdV (5 mins to convince me -- using your own words -- that you understand the concepts)
 
 Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
 
