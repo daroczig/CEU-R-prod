@@ -1691,3 +1691,59 @@ a key-value database:
             # trim old entries
             r.zremrangebyscore('alerts', "-inf", time.time() - 3600)
             ```
+#### Storing the secret webhook URL
+
+1. Do NOT store the webhook URL in plain-text (e.g. in your R or Python script)!
+2. Let's use Amazon's Key Management Service: https://github.com/daroczig/CEU-R-prod/raw/2017-2018/AWR.Kinesis/AWR.Kinesis-talk.pdf (slides 73-75)
+3. Install the `boto3` Python module from R to experiment with it interactively:
+
+    ```r
+    reticulate::py_install("boto3")
+    ```
+
+4. 💪 Create a key in the Key Management Service (KMS): `alias/de3`
+5. 💪 Grant access to that KMS key by creating an EC2 IAM role at
+   https://console.aws.amazon.com/iam/home?region=eu-west-1#/roles with the
+   `AWSKeyManagementServicePowerUser` policy and explicit grant access to the
+   key in the KMS console
+6. 💪 Attach the newly created IAM role if not yet done
+7. Test how KMS encryption works:
+
+    ```r
+    from boto3 import client
+    kms = client('kms', region_name="eu-west-1")
+    encrypted = kms.encrypt(KeyId="alias/de3", Plaintext="Foo")
+
+    import base64
+    base64.b64encode(encrypted["CiphertextBlob"]).decode('utf-8')
+    ```
+
+    Now you can post that base64-encoded ciphertext anywhere, as there's no way
+    to decrypt it without having access to the KMS key.
+
+8. Store the ciphertext and use `kms.decrypt` to decrypt later, see eg
+
+    ```r
+    secret = kms.decrypt(CiphertextBlob=base64.b64decode('AQICAHgzIk6iRoD8yYhFk//xayHj0G7uYfdCxrW6ncfAZob2MwF9MDMxdkLzSi1zOCr0BijiAAAAbzBtBgkqhkiG9w0BBwagYDBeAgEAMFkGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQM2J6fxSA6NeNtA7lEAgEQgCzWhyZY2bYqnVWLmbbAgYd4nKmUHQ4dM1MwecLgusbDXryXYNp5bEFQ+NlQzQ=='))
+    secret
+    secret["Plaintext"].decode('utf-8')
+    ```
+
+9. 💪 Alternatively, use the AWS Parameter Store or Secrets Manager, see eg
+   https://eu-west-1.console.aws.amazon.com/systems-manager/parameters/?region=eu-west-1&tab=Table
+   and grant the `AmazonSSMReadOnlyAccess` policy to your IAM role or user.
+
+10. Then query the parameter store from Python:
+
+    ```python
+    ssm = client('ssm', region_name="eu-west-1")
+    parameter = ssm.get_parameter(Name='/teams/daroczig', WithDecryption=True)
+    webhook_url = parameter["Parameter"]["Value"]
+    ```
+
+11. Store your own webhook in the Parameter Store and use it in your Python script.
+
+Note, if you are running the script inside a Docker container, and you face
+errors when trying to access AWS services, you might need to use the AWS CLI to
+adjust access to the metadata server, see e.g.
+<https://stackoverflow.com/questions/71884350/using-imds-v2-with-token-inside-docker-on-ec2-or-ecs/71884476#71884476>.
