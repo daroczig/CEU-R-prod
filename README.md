@@ -1312,3 +1312,32 @@ Check users:
 ```
 readLines('/etc/passwd')
 ```
+
+### 💪 Update Jenkins for shared usage
+
+1. Install the "PAM Authentication Plugin" in Jenkins.
+2. Enable Jenkins to use PAM authentication by adding to the `shadow` group, then restart Jenkins:
+
+    ```sh
+    sudo adduser jenkins shadow
+    sudo systemctl restart jenkins
+    ```
+
+3. Update the security backend to use real Unix users for shared access (if users already created):
+
+![](https://user-images.githubusercontent.com/495736/224517493-652ac34e-f44d-4ac9-8d04-d661dcfc4c4b.png)
+
+Then make sure to test new user access in an incognito window to avoid closing yourself out :)
+
+### Warmup exercises
+
+Replicate the below plot either in R or Python! Feel free to use your notes from
+last week, or scroll up in this `README.md` file for the actual code, and how to
+install the required R or Python packages.
+
+**Please do NOT try to hammer the server with AI recommendations on how to fix
+things when things go wrong -- you are operating on a cloud server, not your
+local machine, and you could do serious harm to this high-value production
+server (and the billing account associated with the AWS account)!** 😊
+
+![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
