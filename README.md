@@ -1456,3 +1456,31 @@ python btcprice.py
     ```
 
 2. Make sure you have the Python script and the `requirements.txt` file locally
+   (on the RStudio Server instance).
+
+3. Create a Dockerfile to build the image:
+
+4. Build the image:
+
+    ```shell
+    sudo docker build -t btcprice .
+    ```
+
+5. Run the container:
+
+    ```shell
+    sudo docker run --rm -ti btcprice
+    ```
+
+    Where are the images stored?
+6. Update the Python script to write to a special folder, e.g. `/outputs`, and
+   attach it from outside of the container.
+
+    ```shell
+    sudo docker run --rm -ti -v /home/<USERNAME>/outputs:/outputs btcprice
+    ```
+
+7. Update the Jenkins job to run the container and attach the output folder.
+
+8. Optionally start using the Docker Jenkins plugin instead of issuing the
+   `docker run` command(s) in the `Execute shell` build step.
