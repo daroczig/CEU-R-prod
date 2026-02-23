@@ -1025,6 +1025,35 @@ Quiz: https://forms.office.com/e/wRAxGqirdV (5 mins to convince me -- using your
 12. Scheduling basic commands on Jenkins
 13. Installing VS Code "Server"
 
-## Getting help
+
+Note that you do NOT need to do the instructions below marked with the 💪 emoji -- those have been already done for you, and the related steps are only included below for documenting what has been done and demonstrated in the class.
+
+### Amazon Machine Images
+
+💪 Instead of starting from scratch, let's create an Amazon Machine Image (AMI) from the EC2 node we used last week, so that we can use that as the basis of all the next steps:
+
+* Find the EC2 node in the EC2 console
+* Right click, then "Image and templates" / "Create image"
+* Name the AMI and click "Create image"
+* It might take a few minutes to finish
+
+Then you can use the newly created `de3-week2` AMI to spin up a new instance for you:
+
+1. Go the the Instances overview at https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Instances:sort=instanceId
+2. Click "Launch Instance"
+3. Provide a name for your server (e.g. `daroczig-de3-week2`) and some additional tags for resource tracking, including tagging downstream services, such as Instance and Volumes:
+
+    * Class: `DE3`
+    * Owner: `daroczig`
+    * subdomain: `daroczig` -- **NOTE** that this is important for the next step! The startup script will register this subdomain under the `count-down-timer.eu.org` domain name so that you can access RStudio Server, Jenkins, etc from your browser without fighting with firewall rules.
+
+4. Pick the `de3-week2` AMI
+5. Pick `t3a.medium` (4 GiB of RAM should be enough for most tasks) instance type (see more [instance types](https://aws.amazon.com/ec2/instance-types))
+6. Select your AWS key created above and launch
+7. Select the `de3` security group (granting access to ports 22, 443, 8000, 8080, and 8787)
+8. Click "Advanced details" and select `ceudataserver` IAM instance profile, which grants permissions to read EC2 tags and update Route53 records and a few other services that are required in some later steps.
+10. Note and click on the instance id
+
+### 💪 Startup script to register subdomain and configure Caddy
 
 File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
