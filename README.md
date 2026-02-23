@@ -1056,4 +1056,161 @@ Then you can use the newly created `de3-week2` AMI to spin up a new instance for
 
 ### 💪 Startup script to register subdomain and configure Caddy
 
-File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
+We need a script that:
+
+1. Reads the subdomain from the EC2 tags
+2. Looks up the hosted zone ID for the domain name
+3. Updates the Route53 record to point to the EC2 instance's public IP address
+4. Configures Caddy to proxy the requests to the EC2 instance's ports
+
+Note that this script requires the AWS CLI to be installed and configured with
+the appropriate permissions. The AWS CLI was installed via:
+
+```sh
+sudo snap install aws-cli --classic
+```
+
+And the required permissions were granted via the `ceudataserver` IAM instance profile,
+including read-only access to EC2 tags and write permissions on Route53 records.
+
+```sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+DOMAIN_NAME="count-down-timer.eu.org"
+
+# look up info on the EC2 instance using the EC2 metadata endpoint
+META=http://169.254.169.254/latest
+TOKEN=$(curl -s -X PUT "$META/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+get_metadata () {
+  curl -s -H "X-aws-ec2-metadata-token: $TOKEN" \
+    "$META/meta-data/$1"
+}
+INSTANCE_ID=$(get_metadata instance-id)
+REGION=$(get_metadata placement/region)
+
+# hit a bump querying the tag from the metadata server, so let's use the AWS CLI instead
+SUBDOMAIN=$(aws ec2 describe-tags \
+  --region "$REGION" \
+  --filters "Name=resource-id,Values=$INSTANCE_ID" "Name=key,Values=subdomain" \
+  --query "Tags[0].Value" \
+  --output text)
+if [ "$SUBDOMAIN" == "None" ] || [ -z "$SUBDOMAIN" ]; then
+  echo "ERROR: 'subdomain' tag not found on instance $INSTANCE_ID"
+  exit 1
+fi
+DOMAIN="${SUBDOMAIN}.${DOMAIN_NAME}"
+
+# update Route53 record
+HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name \
+  --dns-name "${DOMAIN_NAME}" \
+  --query "HostedZones[0].Id" \
+  --output text | cut -d'/' -f3)
+echo "Hosted Zone ID: $HOSTED_ZONE_ID"
+PUBLIC_IP=$(get_metadata public-ipv4)
+echo "Public IP: $PUBLIC_IP"
+cat > /tmp/route53-change.json <<EOF
+{
+  "Changes": [{
+    "Action": "UPSERT",
+    "ResourceRecordSet": {
+      "Name": "$DOMAIN",
+      "Type": "A",
+      "TTL": 300,
+      "ResourceRecords": [{"Value": "$PUBLIC_IP"}]
+    }
+  }]
+}
+EOF
+echo "Updating Route53 record..."
+aws route53 change-resource-record-sets \
+  --hosted-zone-id "$HOSTED_ZONE_ID" \
+  --change-batch file:///tmp/route53-change.json
+rm /tmp/route53-change.json
+
+# configure caddy
+mkdir -p /etc/caddy
+cat <<EOF >/etc/caddy/Caddyfile
+$DOMAIN {
+    redir /rstudio /rstudio/ permanent
+    handle_path /rstudio/* {
+        reverse_proxy localhost:8787 {
+            transport http {
+                read_timeout 20d
+            }
+            header_down Location ([^:]+://[^:]+(:[0-9]+)?/)  ./
+        }
+    }
+
+    handle /jenkins/* {
+        reverse_proxy 127.0.0.1:8080
+    }
+
+    handle_path /8000/* {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    handle / {
+        respond "Welcome to DE3! Are you looking for /rstudio or /jenkins?" 200
+    }
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/access.log
+        format json
+    }
+}
+EOF
+```
+
+We need to make that script executable:
+
+```sh
+sudo chmod +x /usr/local/bin/update-caddy-domain.sh
+```
+
+Create a systemd service at `/etc/systemd/system/caddy-setup.service`
+to run the script at startup before Caddy starts:
+
+```sh
+[Unit]
+Description=Update Route53 and Caddy config before Caddy starts
+Before=caddy.service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-caddy-domain.sh
+RemainAfterExit=yes
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and test the service:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable caddy-setup.service
+sudo systemctl start caddy-setup.service
+```
+
+Profit 💸
+
+In case profit does not happen .. a few hints for debugging after booting the instance:
+
+```shell
+# check the service status and
+systemctl status caddy-setup.service
+journalctl -u caddy-setup.service -n 100 -f
+
+# try to run the script manually
+/usr/local/bin/update-caddy-domain.sh
+```
+
+### 💪 Create a user for every member of the team
