@@ -1401,3 +1401,20 @@ Example solution in Python:
     # plt.show()
     plt.savefig('btc_price_history_candlestick-chart.png')
     ```
+
+Now create a Jenkins job to run the Python script every minute!
+
+1. Create a new job:
+
+    - Name: `get current Bitcoin price`
+    - Type: `Freestyle project`
+    - Click `OK`
+
+2. Define a schedule: `* * * * *`
+
+3. Add a new `Execute shell` build step:
+
+    ```sh
+    . /home/<USERNAME>/.virtualenvs/de3/bin/activate
+    python /home/<USERNAME>/<SCRIPT_NAME>.py
+    ```
