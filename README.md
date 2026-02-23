@@ -1214,3 +1214,101 @@ journalctl -u caddy-setup.service -n 100 -f
 ```
 
 ### 💪 Create a user for every member of the team
+
+We'll export the list of IAM users from AWS and create a system user for everyone.
+
+1. Attach a newly created IAM EC2 Role (let's call it `ceudataserver`) to the EC2 box and assign 'Read-only IAM access' (`IAMReadOnlyAccess`):
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-type.png)
+
+    ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/master/images/ec2-new-role-rights.png)
+
+2. Install AWS CLI tool (note that using the snap package manager as it was removed from the apt repos):
+
+    ```
+    sudo snap install aws-cli --classic
+    ```
+
+3. List all the IAM users: https://docs.aws.amazon.com/cli/latest/reference/iam/list-users.html
+
+   ```
+   aws iam list-users
+   ```
+
+4. Install R packages from JSON parsing and logging (in the next steps) from the apt repo instead of CRAN sources as per https://github.com/eddelbuettel/r2u
+
+    ```sh
+    wget -q -O- https://eddelbuettel.github.io/r2u/assets/dirk_eddelbuettel_key.asc | sudo tee -a /etc/apt/trusted.gpg.d/cranapt_key.asc
+    sudo add-apt-repository "deb [arch=amd64] https://r2u.stat.illinois.edu/ubuntu noble main"
+    sudo apt update
+
+    sudo apt install --no-install-recommends r-cran-jsonlite r-cran-logger r-cran-glue
+    ```
+
+    Note that all dependencies (let it be an R package or system/Ubuntu package) have been automatically resolved and installed.
+
+    Don't forget to click on the brush icon to clean up your terminal output if needed.
+
+    Optionally [enable `bspm`](https://github.com/eddelbuettel/r2u#step-5-use-bspm-optional) to enable binary package installations via the traditional `install.packages` R function.
+
+5. Export the list of users from R:
+
+    ```r
+    library(jsonlite)
+    users <- fromJSON(system('aws iam list-users', intern = TRUE))
+    str(users)
+    users[[1]]$UserName
+    ```
+
+    Or Python:
+
+    ```python
+    import boto3
+
+    iam = boto3.client('iam')
+    response = iam.list_users()
+    users = response['Users']
+
+    users[0]
+    users[0]["UserName"]
+    ```
+
+6. Create a new system user on the box (for RStudio Server access) for every IAM user, set password and add to group:
+
+    ```r
+    library(logger)
+    library(glue)
+    for (user in users[[1]]$UserName) {
+
+        ## remove invalid character
+        user <- sub('@.*', '', user)
+        user <- sub('.', '_', user, fixed = TRUE)
+
+        log_info('Creating {user}')
+        system(glue("sudo adduser --disabled-password --quiet --gecos '' {user}"))
+
+        log_info('Setting password for {user}')
+        system(glue("echo '{user}:secretpass' | sudo chpasswd")) # note the single quotes + placement of sudo
+
+        log_info('Adding {user} to sudo group')
+        system(glue('sudo adduser {user} sudo'))
+
+        log_info('Adding {user} to jenkins group')
+        system(glue('sudo adduser {user} jenkins'))
+
+    }
+    ```
+
+Note, you may have to temporarily enable passwordless `sudo` for this user (if have not done already) :/
+
+```
+ceu ALL=(ALL) NOPASSWD:ALL
+```
+
+Check users:
+
+```
+readLines('/etc/passwd')
+```
