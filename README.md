@@ -1341,3 +1341,63 @@ local machine, and you could do serious harm to this high-value production
 server (and the billing account associated with the AWS account)!** 😊
 
 ![](https://raw.githubusercontent.com/daroczig/CEU-R-prod/2019-2020/images/binancer-plot-2.png)
+
+Example solution in Python:
+
+1. Install the required Python packages (in the R console):
+
+    ```r
+    reticulate::py_install(c('pandas', 'matplotlib', "python-binance"))
+    ```
+
+2. Create a Python script to replicate the plot:
+
+    ```python
+    from binance.client import Client
+    client = Client()
+
+    # https://python-binance.readthedocs.io/en/latest/binance.html#binance.client.Client.get_klines
+    klines = client.get_klines(symbol='BTCUSDT', interval='1m', limit=60)
+
+    # report on closing prices
+    close = [float(d[4]) for d in klines]
+
+    from statistics import stdev
+    print(f"BTC current price is ${close[-1]}, with a standard deviation of {round(stdev(close), 2)}.")
+
+    # create a line chart of the price history
+    from datetime import datetime
+    dates = [datetime.fromtimestamp(k[0] / 1000) for k in klines]
+
+    import matplotlib.pyplot as plt
+    plt.clf()
+    plt.plot(dates, close, marker='o')
+    plt.title('BTC Price History')
+    #plt.show()
+    plt.savefig('btc_price_history_linechart.png')
+
+
+    import pandas as pd
+    df = pd.DataFrame(klines, columns=[
+        'timestamp', 'open', 'high', 'low', 'close', 'volume',
+        'close_time', 'quote_volume', 'trades', 'taker_buy_base',
+        'taker_buy_quote', 'ignore'
+    ])
+    df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
+    df[['open', 'high', 'low', 'close', 'volume']] = df[['open', 'high', 'low', 'close', 'volume']].astype(float)
+
+    from matplotlib.patches import Rectangle
+    fig, ax = plt.subplots(figsize=(12, 6))
+    for i, row in df.iterrows():
+        color = 'green' if row['close'] >= row['open'] else 'red'
+        # candle lines for high/low
+        ax.plot([i, i], [row['low'], row['high']], color=color, linewidth=1)
+        # candle body for open/close
+        height = abs(row['close'] - row['open'])
+        bottom = min(row['open'], row['close'])
+        rect = Rectangle((i - 0.3, bottom), 0.6, height, facecolor=color, edgecolor=color, alpha=0.8)
+        ax.add_patch(rect)
+    ax.set_title('BTC Price History')
+    # plt.show()
+    plt.savefig('btc_price_history_candlestick-chart.png')
+    ```
