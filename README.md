@@ -1565,3 +1565,129 @@ But who uses emails anymore? Let's set up MS Teams notifications instead!
     - https://appriseit.com/services/msteams/
 
 6. Update your Python script to send a message to the channel when the Bitcoin price is above $50,000 💸
+
+```python
+from apprise import Apprise, NotifyType
+from binance.client import Client
+
+poster = Apprise()
+poster.add('https://ceuedu.webhook.office.com/webhookb2/...')
+client = Client()
+klines = client.get_klines(symbol='BTCUSDT', interval='1m', limit=1)
+price = klines[0][4]
+
+if price > 50_000:
+    poster.notify(
+        title='Bitcoin price change alert',
+        body=f'The current price of a BTC is ${price}',
+        notify_type=NotifyType.WARNING,
+    )
+```
+
+What's the problem with the current approach?
+
+- Hardcoded webhook URL (security risk)
+- Spamming the channel
+
+Let's solve the latter first!
+
+### Intro to redis/valkey
+
+We need a central place that acts as a persistent storage for our Jenkins jobs,
+e.g. to mark if we have sent a recent alert in MS Teams ... let's give a try to
+a key-value database:
+
+1. 💪 Install ~~Redis~~Valkey server
+
+   ```
+   sudo apt install valkey
+   ss -tapen | grep LIST
+   ```
+
+   Test using the `valkey-cli` tool:
+
+   ```
+   get foo
+   set foo 42
+   get foo
+   del foo
+   set foo 42 ex 5
+   get foo
+   get foo
+   exit
+   ```
+
+2. Install a Python client by running the following in the R console:
+
+    ```r
+    reticulate::py_install("valkey")
+    ```
+
+3. Get familiar with using Valkey from Python by testing it in the Python console:
+
+    ```python
+    from valkey import Valkey
+    from time import sleep
+
+    # no need to specify the host/port and authentication as running locally
+    r = Valkey()
+    r.set('foo', 'bar')
+    r.get('foo')
+    r.delete('foo')
+
+    r.set('foo', 2, ex=2)
+    r.get('foo')
+    sleep(2)
+    r.get('foo')
+    ```
+
+4. Update the Python script alerting in MS Teams to silence alerts for 5 minutes after the last alert was sent.
+
+    ```python
+    if price > 50_000 and r.get('last_alert_time') is None:
+        poster.notify(
+            title='Bitcoin price change alert',
+            body=f'The current price of a BTC is ${price}',
+            notify_type=NotifyType.WARNING,
+        )
+        r.set('last_alert_time', time.time(), ex=300)
+    ```
+
+5. Exercises: Update the Python script to
+
+    - Try to read the alert threshold from the Valkey database instead of sticking with a hardcoded value. Update the hardcoded value to be used as a default value if the key is not found.
+
+        ```python
+        alert_threshold = r.get('alert_threshold') or 50_000
+        ```
+
+        Note that you should check for type mismatches, e.g.:
+
+        ```python
+        try:
+            alert_threshold = float(r.get('alert_threshold'))
+        except ValueError:
+            alert_threshold = 50_000
+        ```
+
+    - Count the number of alerts sent in the last hour:
+
+        - Naive approach: set one key per alert with TTL and count the keys.
+
+            ```python
+            r.set(f'alert:{time.time_ns()}', '1', ex=3600)
+            # count the still existing keys
+            sum(1 for _ in r.scan_iter("alert:*"))
+            ```
+        - Sorted set approach: set one key with the timestamp as the score and
+          count the keys in the range of the last hour.
+
+            ```python
+            import time
+
+            r.zadd('alerts', {str(time.time_ns()): time.time()})
+            # count the keys in the range of the last hour
+            r.zcount('alerts', time.time() - 3600, time.time())
+            # trim old entries
+            r.zremrangebyscore('alerts', "-inf", time.time() - 3600)
+            ```
