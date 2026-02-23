@@ -1440,3 +1440,19 @@ Example command to run the script:
 . /home/<USERNAME>/.virtualenvs/de3/bin/activate
 python btcprice.py
 ```
+
+### Create a Docker image for the script
+
+1. 💪 Install Docker:
+
+    ```shell
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+      https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install -y docker-ce
+    ```
+
+2. Make sure you have the Python script and the `requirements.txt` file locally
