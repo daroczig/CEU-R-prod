@@ -1492,3 +1492,40 @@ python btcprice.py
 
 8. Optionally start using the Docker Jenkins plugin instead of issuing the
    `docker run` command(s) in the `Execute shell` build step.
+
+### Scheduler improvements
+
+Let's set up e-mail notifications via eg https://app.mailjet.com/signin
+
+1. 💪 Sign up, confirm your e-mail address and domain
+2. 💪 Take a note on the SMTP settings, eg
+
+    * SMTP server: in-v3.mailjet.com
+    * Port: 465
+    * SSL: Yes
+    * Username: ***
+    * Password: ***
+
+3. 💪 Configure Jenkins at http://de3.ceudata.net/jenkins/configure
+
+    1. Set up the default FROM e-mail address at "System Admin e-mail address": jenkins@ceudata.net
+    2. Search for "Extended E-mail Notification" and configure
+
+        * SMTP Server
+        * Click "Advanced"
+        * Check "Use SMTP Authentication"
+        * Enter User Name from the above steps
+        * Enter Password from the above steps
+        * Check "Use SSL"
+        * SMTP port: 465
+
+5. Set up "Post-build Actions" in Jenkins: Editable Email Notification - read
+   the manual and info popups, configure to get an e-mail on job failures and
+   fixes
+6. Configure the job to send the whole e-mail body as the deault body template for all outgoing emails
+
+```shell
+${BUILD_LOG, maxLines=1000}
+```
+
+Optionally, look at other Jenkins plugins, eg the Slack Notifier: https://plugins.jenkins.io/slack
