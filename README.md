@@ -1941,7 +1941,7 @@ Try to DRY (don't repeat yourself!) this up as much as possible.
 4. Start the FastAPI application in the Terminal:
 
     ```python
-    source .virtualenv/de/bin/activate
+    source .virtualenvs/de3/bin/activate
     uvicorn api:app --reload
     ```
 
