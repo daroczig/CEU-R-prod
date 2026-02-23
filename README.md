@@ -1945,4 +1945,251 @@ Try to DRY (don't repeat yourself!) this up as much as possible.
     uvicorn api:app --reload
     ```
 
-5. Test the API endpoint from your browser by hitting your domain name's `/8000/hello` endpoint
+5. Test the API endpoint from your browser by hitting your domain name's `/8000/hello` endpoint5. Test the API endpoint from your browser by hitting your domain name's `/8000/hello` endpoint
+
+6. Write an Python script that replicates the 3 API endpoints implemented above in R:
+
+    * `/stats` reports on the min/mean/max BTC price from the past 3 hours
+    * `/plot` generates a candlestick chart on the price of BTC from past 3 hours
+    * `/report` generates a HTML report including both the above
+
+    <details><summary>Example solution for the above in Python ...</summary>
+
+    Install dependencies:
+
+    ```sh
+    pip install fastapi uvicorn python-binance pandas matplotlib
+    ```
+
+    Create `api.py` (FastAPI app with `/stats`, `/plot`, `/report`):
+
+    ```python
+    from io import BytesIO
+    import base64
+    from binance.client import Client
+    import pandas as pd
+    from fastapi import FastAPI
+    from fastapi.responses import HTMLResponse, Response
+    from pydantic import BaseModel, Field
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import Rectangle
+
+    app = FastAPI(
+        title="BTC Price API",
+        description="Min/mean/max BTC price and candlestick chart for the past 3 hours.",
+    )
+
+    # Past 3 hours = 180 x 1-minute candles
+    LIMIT = 60 * 3
+
+
+    class StatsResponse(BaseModel):
+        """Summary stats for BTC close price over the last 3 hours."""
+
+        min: float = Field(..., description="Minimum close price (USD)")
+        mean: float = Field(..., description="Mean close price (USD)")
+        max: float = Field(..., description="Maximum close price (USD)")
+
+
+    def klines() -> pd.DataFrame:
+        """Fetch BTCUSDT 1m klines from Binance for the past 3 hours."""
+        client = Client()
+        raw = client.get_klines(symbol="BTCUSDT", interval="1m", limit=LIMIT)
+        df = pd.DataFrame(
+            raw,
+            columns=[
+                "timestamp", "open", "high", "low", "close", "volume",
+                "close_time", "quote_volume", "trades", "taker_buy_base",
+                "taker_buy_quote", "ignore",
+            ],
+        )
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        for col in ["open", "high", "low", "close", "volume"]:
+            df[col] = df[col].astype(float)
+        return df
+
+
+    @app.get("/stats", response_model=StatsResponse)
+    def stats() -> StatsResponse:
+        """Return min, mean, and max BTC close price from the past 3 hours."""
+        df = klines()
+        return StatsResponse(
+            min=float(df["close"].min()),
+            mean=float(df["close"].mean()),
+            max=float(df["close"].max()),
+        )
+
+
+    def plot_png() -> bytes:
+        """Render candlestick chart as PNG bytes."""
+        df = klines()
+        fig, ax = plt.subplots(figsize=(12, 6))
+        for i, row in df.iterrows():
+            color = "green" if row["close"] >= row["open"] else "red"
+            ax.plot([i, i], [row["low"], row["high"]], color=color, linewidth=1)
+            h = abs(row["close"] - row["open"])
+            bot = min(row["open"], row["close"])
+            ax.add_patch(
+                Rectangle((i - 0.3, bot), 0.6, h, facecolor=color, edgecolor=color, alpha=0.8)
+            )
+        ax.set_title("BTC Price (past 3h)")
+        ax.set_ylabel("Price (USD)")
+        ax.set_xlabel("Time")
+        ax.set_xticks(range(0, len(df), 30))
+        ax.set_xticklabels(df["timestamp"].iloc[::30].dt.strftime("%H:%M"), rotation=45)
+        buf = BytesIO()
+        fig.savefig(buf, format="png", dpi=100, bbox_inches="tight")
+        plt.close(fig)
+        buf.seek(0)
+        return buf.getvalue()
+
+
+    @app.get("/plot")
+    def plot() -> Response:
+        """Return a candlestick chart (PNG) of BTC price for the past 3 hours."""
+        return Response(content=plot_png(), media_type="image/png")
+
+
+    @app.get("/report", response_class=HTMLResponse)
+    def report() -> HTMLResponse:
+        """Return an HTML report with stats and embedded candlestick chart."""
+        s = stats()
+        b64 = base64.b64encode(plot_png()).decode()
+        html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="utf-8"><title>BTC Report</title></head>
+        <body>
+        <h1>BTC price report (past 3 hours)</h1>
+        <h2>Stats</h2>
+        <table>
+          <tr><th>min</th><th>mean</th><th>max</th></tr>
+          <tr><td>{s.min:.2f}</td><td>{s.mean:.2f}</td><td>{s.max:.2f}</td></tr>
+        </table>
+        <h2>Plot</h2>
+        <img src="data:image/png;base64,{b64}" alt="BTC candlestick" />
+        </body>
+        </html>
+        """
+        return HTMLResponse(html)
+    ```
+
+    Run the API:
+
+    ```sh
+    uvicorn api:app --host 0.0.0.0 --port 8000
+    ```
+
+    When behind Caddy at `/8000/`, use `--root-path` so `/docs` can load the OpenAPI spec:
+
+    ```sh
+    uvicorn api:app --host 0.0.0.0 --port 8000 --root-path /8000
+    ```
+
+    Test: `/stats`, `/plot`, `/report` (and `/docs` for Swagger).
+
+    </details>
+
+   <details><summary>Example solution for the above in R ...</summary>
+
+    💪 Update the `markdown` package:
+
+    ```shell
+    sudo apt install -y r-cran-markdown
+    ```
+
+    Create an R markdown for the reporting:
+
+    `````md
+    ---
+    title: "report"
+    output: html_document
+    date: "`r Sys.Date()`"
+    ---
+
+    ```{r setup, include=FALSE}
+    knitr::opts_chunk$set(echo = FALSE, warning=FALSE)
+    library(binancer)
+    library(ggplot2)
+    library(scales)
+    library(knitr)
+
+    klines <- function() {
+      binance_klines('BTCUSDT', interval = '1m', limit = 60L)
+    }
+    ```
+
+    Bitcoin stats:
+
+    ```{r stats}
+    kable(klines()[, .(min = min(close), mean = mean(close), max = max(close))])
+    ```
+
+    On a nice plot:
+
+    ```{r plot}
+    ggplot(klines(), aes(open_time, )) +
+      geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+      geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+      theme_bw() + theme('legend.position' = 'none') + xlab('') +
+      ggtitle(paste('Last Updated:', Sys.time())) +
+      scale_y_continuous(labels = dollar) +
+      scale_color_manual(values = c('#1a9850', '#d73027'))
+    ```
+    `````
+
+    And the plumber file:
+
+    ```r
+    library(binancer)
+    library(ggplot2)
+    library(scales)
+    library(rmarkdown)
+    library(plumber)
+
+    #' Gets BTC data from the past hour
+    #' @return data.table
+    klines <- function() {
+        binance_klines('BTCUSDT', interval = '1m', limit = 60L)
+    }
+
+    #* BTC stats
+    #* @get /stats
+    function() {
+      klines()[, .(min = min(close), mean = mean(close), max = max(close))]
+    }
+
+    #* Generate plot
+    #* @get /plot
+    #* @serializer png
+    function() {
+      p <- ggplot(klines(), aes(open_time, )) +
+        geom_linerange(aes(ymin = open, ymax = close, color = close < open), size = 2) +
+        geom_errorbar(aes(ymin = low, ymax = high), size = 0.25) +
+        theme_bw() + theme('legend.position' = 'none') + xlab('') +
+        ggtitle(paste('Last Updated:', Sys.time())) +
+        scale_y_continuous(labels = dollar) +
+        scale_color_manual(values = c('#1a9850', '#d73027')) # RdYlGn
+      print(p)
+    }
+
+    #* Generate HTML
+    #* @get /report
+    #* @serializer html
+    function(res) {
+       filename <- tempfile(fileext = '.html')
+       on.exit(unlink(filename))
+       render('report.Rmd', output_file = filename)
+       include_file(filename, res)
+    }
+    ```
+
+    Run via:
+
+    ```r
+    library(plumber)
+    pr('plumber.R') %>% pr_run(port = 8000)
+    ```
+    </details>
