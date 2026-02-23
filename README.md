@@ -1418,3 +1418,25 @@ Now create a Jenkins job to run the Python script every minute!
     . /home/<USERNAME>/.virtualenvs/de3/bin/activate
     python /home/<USERNAME>/<SCRIPT_NAME>.py
     ```
+
+### Move the script to a git repository
+
+1. Create a new gist on GitHub (to demo a super simple git repository).
+2. Add the script to the repository along with a `requirements.txt` file for the
+   Python dependencies.
+3. Configure the Jenkins job to use the git repository as the source code
+   management. Find the git repository URL in the "Clone via HTTPS" button,
+   which returns the gist's URL with a `.git` suffix. Also note that the default
+   `master` branch name will not work, as Github defaults to the more modern
+   `main` branch name, so udpate that in the Jenkins job configuration.
+4. Update the `Execute shell` build step to refer to the script in the git
+   repository instead of the hardcoded local path.
+
+Example solution: https://gist.github.com/daroczig/9e4004bbb6532edb6da384260da201c2
+
+Example command to run the script:
+
+```sh
+. /home/<USERNAME>/.virtualenvs/de3/bin/activate
+python btcprice.py
+```
