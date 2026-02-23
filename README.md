@@ -2193,3 +2193,207 @@ Try to DRY (don't repeat yourself!) this up as much as possible.
     pr('plumber.R') %>% pr_run(port = 8000)
     ```
     </details>
+
+### API containers
+
+Why API? Why R-based API? Why Python-based API? See previously mentioned examples in the slide decks, e.g.
+
+* adtech
+* healthtech
+
+Why containers? How to run in production in other ways?!
+
+Let's bundle all the scripts into a single Docker image:
+
+1. 💪 Install Docker:
+
+```shell
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+    https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get install -y docker-ce
+```
+
+2. Create a new file named `Dockerfile` (File/New file/Text file to avoid
+   auto-adding the `R` or `py` file extension) with the below content to add the
+   required files and set the default working directory to the same folder:
+
+    - Python image:
+
+        ```
+        FROM python:3.11-slim
+
+        RUN pip install fastapi uvicorn pandas matplotlib python-binance
+        ADD api.py /app/api.py
+        EXPOSE 8000
+        WORKDIR /app
+        CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+        ```
+
+    - R image:
+
+        ```
+        FROM rstudio/plumber
+
+        RUN apt-get update && apt-get install -y pandoc && apt-get clean && rm -rf /var/lib/apt/lists/
+        RUN install2.r ggplot2 rmarkdown
+        RUN installGithub.r daroczig/binancer
+        ADD report.Rmd /app/report.Rmd
+        ADD plumber.R /app/plumber.R
+        EXPOSE 8000
+        WORKDIR /app
+        CMD ["plumber.R"]
+        ```
+
+3. Build the Docker image:
+
+```sh
+sudo docker build -t btc-report-api .
+```
+
+4. Run a container based on the above image:
+
+```sh
+sudo docker run -p 8000:8000 --rm -ti btc-report-api
+```
+
+5. Test by visiting the `8000` port or the Caddy proxy at
+   <https://<USERNAME>.count-down-timer.eu.org/8000>, e.g. Swagger docs at
+   <https://<USERNAME>.count-down-timer.eu.org/8000/__docs__> (R) or
+   <https://<USERNAME>.count-down-timer.eu.org/8000/docs> (Python) or
+   an actualendpoint directly at eg
+   <https://<USERNAME>.count-down-timer.eu.org/8000/report>.
+
+### Docker registry
+
+Now let's make the above created and tested Docker image available outside of the RStudio Server by uploading the Docker image to Elastic Container Registry (ECR):
+
+1. Create a new private repository at https://eu-west-1.console.aws.amazon.com/ecr/home?region=eu-west-1, call it `de3-example-api`
+2. 💪 Assign the `EC2InstanceProfileForImageBuilderECRContainerBuilds` policy to the `ceudataserver` IAM role so that we get RW access to the ECR repositories. Tighten this role up in prod!
+3. Let's login to ECR on the RStudio Server so that we can upload the Docker image:
+
+    ```sh
+    aws ecr get-login-password --region eu-west-1 | sudo docker login --username AWS --password-stdin 657609838022.dkr.ecr.eu-west-1.amazonaws.com
+    ```
+
+4. Tag the already build Docker image for upload:
+
+    ```sh
+    sudo docker tag btc-report-api:latest 657609838022.dkr.ecr.eu-west-1.amazonaws.com/de3-example-api:latest
+    ```
+
+5. Push the Docker image:
+
+    ```sh
+    sudo docker push 657609838022.dkr.ecr.eu-west-1.amazonaws.com/de3-example-api:latest
+    ```
+
+6. Check the Docker repository in the AWS console, e.g. at https://eu-west-1.console.aws.amazon.com/ecr/repositories/private/657609838022/de3-example-api?region=eu-west-1 if using the above repository name.
+
+### Docker service
+
+1. Go to the Elastic Container Service (ECS) dashboard at https://eu-west-1.console.aws.amazon.com/ecs/home?region=eu-west-1#/
+2. Create a task definition for the Docker run:
+
+    1. Task name: `btc-api`
+    2. Container name: `api`
+    3. Image URI: `657609838022.dkr.ecr.eu-west-1.amazonaws.com/de3-example-api`
+    4. Container port: 8000
+    5. Review Task size, but default values should fine for this simple task
+
+3. Create a new cluster, call it `BTC_API`, using Fargate. Don't forget to add the `Class` tag!
+4. Create a Service in the newly created Cluster at https://eu-west-1.console.aws.amazon.com/ecs/v2/clusters/btc-api/services?region=eu-west-1
+
+    1. Compute option can be "Launch type" for now
+    2. Specify the Task Family as `btc-api`
+    3. Provide the same as service name
+    4. Use the `de3` security group
+    5. Create a load balancer listening on port 80 (would need to create an SSL cert for HTTPS), and specify `/stats` as the healthcheck path, with a 10 seconds grace period
+    6. Test the deployed service behind the load balancer, e.g. https://btc-api-1417435399.eu-west-1.elb.amazonaws.com/report
+
+## Homeworks
+
+### Week 1
+
+Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
+
+
+## Home assignment
+
+The goal of this assignment is to confirm that you have a general understanding
+on how to build data pipelines using Amazon Web Services and R or Python, and
+can actually implement a stream processing application (either running in almost
+real-time or batched/scheduled way) or R- or Python-based API in practice.
+
+### Tech setup
+
+To minimize the system administration and some of the already-covered
+engineering tasks for the students, the below pre-configured tools are provided
+as free options, but students can decide to build their own environment (on the
+top of or independently from these) and feel free to use any other tools:
+
+* `de3` Amazon Machine Image that you can use to spin up an EC2 node with
+  RStudio Server, Shiny Server, Jenkins, Redis and Docker installed &
+  pre-configured (use your AWS username and the password shared on Slack
+  previously).
+* `de3` EC2 IAM role with full access to Kinesis, Dynamodb, Cloudwatch and the
+  `slack` token in the Parameter Store
+* `de3` security group with open ports for RStudio Server and Jenkins
+* lecture and seminar notes at https://github.com/daroczig/CEU-R-prod
+
+### Required output
+
+Make sure to clean-up your EC2 nodes, security groups, keys etc created in the
+past weeks, as left-over AWS resources will contribute negative points to your
+final grade! E.g. the EC2 node you created on the second week should be
+terminated.
+
+* Minimal project (for grade up to "B"): schedule a Jenkins job that runs every
+  hour getting the past hour's 1-minute interval klines data on ETH prices (in
+  USD). The job should be configured to pull the R or Python script at the start
+  of the job either from a private or public git repo or gist. Then
+
+    * Find the min and max price of ETH in the past hour, and post these stats
+      in the `#bots-bots-bots` MS Teams channel. Make sure to set your username
+      for the message, and use a custom emoji as the icon.
+    * Set up email notification for the job when it fails.
+
+* Recommended project (for grade up to "A"): Deploy an R- or Python-based API in
+  ECS (like we did on the last week) for analyzing recent Binance (or any other
+  real-time) data. The API should include at least 4 endpoints using different
+  serializers, and these endpoints should be other than the ones we covered in
+  the class. **At least one endpoint should have at least a few parameters.**
+  Build a Docker image, push it to ECR, and deploy as service in ECS. Document
+  the steps required to set up ECR/ECS with screenshots, then delete all
+  services after confirming that everything works correctly.
+
+Regarding feedback: by default, I add a super short feedback on Moodle as a
+comment to your submission (e.g. "good job" or "excellent" for grade A, or short
+details on why it was not A). If you want to receive more detailed feedback,
+please send me an email to schedule a quick call. If you want early feedback
+(before grading), send me an email at least a week before the submission
+deadline!
+
+### Delivery method
+
+* Create a PDF document that describes your solution and all the main steps
+  involved with low level details: attach screenshots (including the URL nav bar
+  and the date/time widget of your OS, so like full-screen and not area-picked
+  screenshots) of your browser showing what you are doing in RStudio Server,
+  Jenkins, in the AWS dashboards, or example messages posted in MS Teams, and
+  make sure that the code you wrote is either visible on the screenshots, or
+  included in the PDF.
+
+* STOP the EC2 Instance you worked on, but don’t terminate it, so I can start it
+  and check how it works. Note that your instance will be terminated by me after
+  the end of the class.
+* Include the `instance_id` on the first page of the PDF, along with your name
+  or student id.
+* Upload the PDF to Moodle.
+
+### Submission deadline
+
+Midnight (CET) on March 13, 2026.
