@@ -1009,8 +1009,21 @@ Today we used:
 
 Quiz: https://forms.office.com/e/wRAxGqirdV (5 mins to convince me -- using your own words -- that you understand the concepts)
 
-Read the [rOpenSci Docker tutorial](https://ropenscilabs.github.io/r-docker-tutorial/) -- quiz next week! Think about why we might want to use Docker.
+### Recap on Week 1
 
+1. 2FA/MFA in AWS
+2. Creating EC2 nodes
+3. Connecting to EC2 nodes via SSH/Putty or EC2 Instance Connect
+4. Updating security groups
+5. Installing RStudio Server
+6. Setting up a reserved proxy along with a domain name and SSL certificate
+7. The difference between R console and Shell
+8. The use of `sudo` and how to grant `root` (system administrator) privileges
+9. Adding new Linux users, setting password, adding to group
+10. Installing Python packages within RStudio Server and in a virtual environment
+11. Installing Jenkins
+12. Scheduling basic commands on Jenkins
+13. Installing VS Code "Server"
 
 ## Getting help
 
