@@ -2397,3 +2397,7 @@ deadline!
 ### Submission deadline
 
 Midnight (CET) on March 13, 2026.
+
+## Getting help
+
+File a [GitHub ticket](https://github.com/daroczig/CEU-R-prod/issues).
